@@ -53,7 +53,6 @@ interface Player {
   inventory: string[];          // Array of owned Item IDs
 
   // === Skills ===
-  skillPoints: number;          // Unspent skill points
   skills: {
     [skillId: string]: {
       level: number;            // Current skill level (0 = not unlocked)
@@ -75,8 +74,55 @@ interface Player {
     totalCriticals: number;     // Lifetime critical hits
     timePlayed: number;         // Total milliseconds played
   };
+
+  // === Settings (User Preferences) ===
+  settings: {
+    soundVolume: number;        // 0.0 to 1.0
+    musicVolume: number;        // 0.0 to 1.0
+    showDamageNumbers: boolean; // Toggle floating damage
+    screenShake: boolean;       // Toggle screen shake effects
+    autoSave: boolean;          // Auto-save enabled
+  };
+
+  // === Tutorial State ===
+  tutorial: {
+    completed: boolean;         // Has finished tutorial
+    step: number;               // Current tutorial step (if not completed)
+  };
 }
 ```
+
+---
+
+## Runtime State (Not Saved)
+
+These fields exist during gameplay but are NOT persisted to localStorage:
+
+```typescript
+interface RuntimeState {
+  // === Active Buffs ===
+  buffs: {
+    [buffId: string]: {
+      stat: string;           // Which stat is affected
+      value: number;          // Bonus value
+      expiresAt: number;      // Timestamp when buff expires
+    };
+  };
+
+  // === Combat Modifiers ===
+  nextAttackModifier: number | null;  // Multiplier for next attack (Power Strike)
+
+  // === Current Combat ===
+  currentMonster: MonsterInstance | null;
+  combatState: 'idle' | 'active' | 'dying' | 'waiting';
+
+  // === UI State ===
+  currentScreen: 'combat' | 'shop' | 'skills' | 'zones';
+  isModalOpen: boolean;
+}
+```
+
+These are managed in `game.js` and reset on page load.
 
 ---
 
@@ -212,7 +258,6 @@ const DEFAULT_PLAYER = {
 
   inventory: [],
 
-  skillPoints: 0,
   skills: {},
 
   currentZone: "whisperwood",
@@ -226,6 +271,19 @@ const DEFAULT_PLAYER = {
     highestDamage: 0,
     totalCriticals: 0,
     timePlayed: 0
+  },
+
+  settings: {
+    soundVolume: 0.8,
+    musicVolume: 0.5,
+    showDamageNumbers: true,
+    screenShake: false,
+    autoSave: true
+  },
+
+  tutorial: {
+    completed: false,
+    step: 0
   }
 };
 ```

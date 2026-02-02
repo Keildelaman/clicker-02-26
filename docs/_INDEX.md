@@ -21,6 +21,10 @@
 | `docs/systems/loot.system.md` | Drop rates & reward calculation | ✅ |
 | `docs/systems/progression.system.md` | XP, leveling, unlocks | ✅ |
 | `docs/systems/economy.system.md` | Gold flow & pricing | ✅ |
+| `docs/systems/ui.system.md` | User interface & screens | ✅ |
+| **Architecture** | Code structure & standards | |
+| `docs/architecture/architecture.md` | System architecture | ✅ |
+| `docs/architecture/coding-standards.md` | Code conventions | ✅ |
 | **Data** | Actual game content | |
 | `docs/data/zones.data.md` | All zone definitions | ✅ |
 | `docs/data/monsters.data.md` | All monster definitions | ✅ |
