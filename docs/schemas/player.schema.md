@@ -4,7 +4,7 @@
 
 ## Overview
 
-The player object contains all persistent state: identity, progression, stats, inventory, and unlocks.
+The player object contains all persistent state: identity, progression, stats, inventory, skills, and ascension data.
 
 ---
 
@@ -32,63 +32,128 @@ interface Player {
   totalGoldEarned: number;      // Lifetime gold (for stats)
   totalGoldSpent: number;       // Lifetime spent (for stats)
 
+  // === Health & Energy (NEW) ===
+  hp: number;                   // Current HP
+  maxHP: number;                // Calculated max HP
+  energy: number;               // Current Energy (0-100)
+  maxEnergy: number;            // Max Energy (100, can increase)
+
   // === Combat Stats ===
   stats: {
     attack: number;             // Base attack power
-    critChance: number;         // 0.0 to 1.0 (0% to 100%)
+    critChance: number;         // 0.0 to 1.0 (5% base)
     critDamage: number;         // Multiplier (2.0 = 200%)
-    goldFind: number;           // 0.0 to X (0% to X%)
-    xpBonus: number;            // 0.0 to X (0% to X%)
-    autoAttack: number;         // Clicks per second
+    goldFind: number;           // 0.0 to X (bonus %)
+    xpBonus: number;            // 0.0 to X (bonus %)
+    hpRegen: number;            // % of max HP per second (0.005 = 0.5%)
+    damageReduction: number;    // 0.0 to 1.0 (reduction %)
+    energyGain: number;         // Bonus % to energy from clicks
+    armorPen: number;           // % of armor ignored
   };
 
   // === Equipment ===
   equipment: {
     weapon: string | null;      // Item ID or null
-    armor: string | null;       // Item ID or null (future)
-    accessory: string | null;   // Item ID or null (future)
+    accessory: string | null;   // Item ID or null
   };
 
   // === Inventory ===
   inventory: string[];          // Array of owned Item IDs
 
-  // === Skills ===
+  // === Skills (NEW STRUCTURE) ===
   skills: {
     [skillId: string]: {
-      level: number;            // Current skill level (0 = not unlocked)
+      unlocked: boolean;        // Has player unlocked this skill
+      level: number;            // Current skill level (1-5, or 1-10 with ascension)
       lastUsed: number | null;  // Timestamp for cooldown (active skills)
     };
   };
+
+  // === Equipped Skills (NEW) ===
+  equippedActiveSkills: (string | null)[];   // 4 slots for active skills
+  equippedPassiveSkills: (string | null)[];  // 3 slots for passive skills
 
   // === Zone Progress ===
   currentZone: string;          // Zone ID where player is
   unlockedZones: string[];      // Array of unlocked Zone IDs
   bossesDefeated: string[];     // Array of defeated Boss IDs
 
+  // === Ascension (NEW) ===
+  ascension: {
+    level: number;              // Current ascension level (0 = never ascended)
+    totalAscensions: number;    // Lifetime count
+    damageBonus: number;        // Permanent % bonus
+    goldBonus: number;          // Permanent % bonus
+    xpBonus: number;            // Permanent % bonus
+    flatHP: number;             // Permanent flat HP bonus
+    fastestRun: number | null;  // Fastest time to 100 (ms)
+    history: AscensionRecord[]; // Past ascension records
+  };
+
+  // === Vault (NEW - for ascension) ===
+  vault: string[];              // Item IDs stored in vault
+
+  // === Consumables (NEW) ===
+  consumables: {
+    healthPotion: number;       // Count owned
+    energyPotion: number;       // Count owned
+    shieldPotion: number;       // Count owned
+  };
+  consumableCooldowns: {
+    healthPotion: number | null;  // Timestamp when usable
+    energyPotion: number | null;
+    shieldPotion: number | null;
+  };
+
   // === Statistics ===
   statistics: {
-    totalClicks: number;        // Lifetime clicks
-    totalKills: number;         // Lifetime monster kills
-    totalBossKills: number;     // Lifetime boss kills
-    highestDamage: number;      // Highest single hit
-    totalCriticals: number;     // Lifetime critical hits
-    timePlayed: number;         // Total milliseconds played
+    totalClicks: number;
+    totalKills: number;
+    totalBossKills: number;
+    highestDamage: number;
+    totalCriticals: number;
+    timePlayed: number;
+    totalDeaths: number;        // NEW
+    totalHealingDone: number;   // NEW
+    totalDamageTaken: number;   // NEW
   };
 
-  // === Settings (User Preferences) ===
+  // === Settings ===
   settings: {
-    soundVolume: number;        // 0.0 to 1.0
-    musicVolume: number;        // 0.0 to 1.0
-    showDamageNumbers: boolean; // Toggle floating damage
-    screenShake: boolean;       // Toggle screen shake effects
-    autoSave: boolean;          // Auto-save enabled
+    soundVolume: number;
+    musicVolume: number;
+    showDamageNumbers: boolean;
+    screenShake: boolean;
+    autoSave: boolean;
   };
 
-  // === Tutorial State ===
+  // === Tutorial State (EXPANDED) ===
   tutorial: {
-    completed: boolean;         // Has finished tutorial
-    step: number;               // Current tutorial step (if not completed)
+    completed: {
+      first_load: boolean;
+      first_kill: boolean;
+      first_level_up: boolean;
+      first_skill_unlock: boolean;
+      first_skill_use: boolean;
+      first_energy_full: boolean;
+      first_shop_visit: boolean;
+      first_item_bought: boolean;
+      first_aggressive_monster: boolean;
+      first_damage_taken: boolean;
+      first_zone_unlock: boolean;
+      first_boss_killed: boolean;
+      first_death: boolean;
+    };
+    tipsShown: number;
+    lastTipTime: number | null;
+    tutorialEnabled: boolean;
   };
+}
+
+interface AscensionRecord {
+  level: number;
+  timestamp: number;
+  runTime: number;
 }
 ```
 
@@ -96,128 +161,56 @@ interface Player {
 
 ## Runtime State (Not Saved)
 
-These fields exist during gameplay but are NOT persisted to localStorage:
+These fields exist during gameplay but are NOT persisted:
 
 ```typescript
 interface RuntimeState {
   // === Active Buffs ===
   buffs: {
     [buffId: string]: {
-      stat: string;           // Which stat is affected
-      value: number;          // Bonus value
-      expiresAt: number;      // Timestamp when buff expires
+      stat: string;
+      value: number;
+      duration: number;
+      expiresAt: number;
+      // Additional buff-specific data
+      damageMultiplier?: number;
+      damageTakenMultiplier?: number;
+      damageReduction?: number;
+      reflectMultiplier?: number;
+      survivePercent?: number;
+      invulnerable?: boolean;
     };
   };
 
   // === Combat Modifiers ===
-  nextAttackModifier: number | null;  // Multiplier for next attack (Power Strike)
+  nextAttackModifier: number | null;
 
   // === Current Combat ===
   currentMonster: MonsterInstance | null;
-  combatState: 'idle' | 'active' | 'dying' | 'waiting';
+  combatState: 'idle' | 'spawning' | 'active' | 'monster_attacking' | 'dying' | 'waiting';
+
+  // === Timing Mode (Perfect Strike) ===
+  timingMode: {
+    active: boolean;
+    expiresAt: number | null;
+    goodMultiplier: number;
+    perfectMultiplier: number;
+    missMultiplier: number;
+  } | null;
+
+  // === Shield (temporary) ===
+  shield: number;
+  maxShield: number;
 
   // === UI State ===
-  currentScreen: 'combat' | 'shop' | 'skills' | 'zones';
+  currentScreen: 'combat' | 'shop' | 'skills' | 'zones' | 'stats';
   isModalOpen: boolean;
+  activeModal: string | null;
+
+  // === Energy Tracking ===
+  lastEnergyGain: number;       // Timestamp for internal cooldown
 }
 ```
-
-These are managed in `game.js` and reset on page load.
-
----
-
-## Field Details
-
-### Meta Fields
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `saveVersion` | number | `1` | Save format version for migrations |
-| `createdAt` | number | `Date.now()` | When save was first created |
-| `lastSavedAt` | number | `Date.now()` | Last save timestamp |
-| `totalPlayTime` | number | `0` | Accumulated play time in ms |
-
-### Identity Fields
-
-| Field | Type | Default | Validation |
-|-------|------|---------|------------|
-| `name` | string | `"Hero"` | 1-20 characters, alphanumeric + spaces |
-
-### Progression Fields
-
-| Field | Type | Default | Notes |
-|-------|------|---------|-------|
-| `level` | number | `1` | Min: 1, Max: 100 (MAX_PLAYER_LEVEL) |
-| `xp` | number | `0` | Resets to 0 on level up |
-| `xpToNextLevel` | number | `100` | Calculated via formula |
-| `totalXpEarned` | number | `0` | Never resets |
-
-### Currency Fields
-
-| Field | Type | Default | Notes |
-|-------|------|---------|-------|
-| `gold` | number | `0` | Can only be >= 0 |
-| `totalGoldEarned` | number | `0` | Never decreases |
-| `totalGoldSpent` | number | `0` | Never decreases |
-
-### Stats Object
-
-| Stat | Type | Default | Range | Source |
-|------|------|---------|-------|--------|
-| `attack` | number | `5` | 1 - ∞ | Base + Equipment + Skills |
-| `critChance` | number | `0.05` | 0.0 - 1.0 | Base + Equipment + Skills |
-| `critDamage` | number | `2.0` | 1.0 - ∞ | Base + Equipment + Skills |
-| `goldFind` | number | `0.0` | 0.0 - ∞ | Equipment + Skills |
-| `xpBonus` | number | `0.0` | 0.0 - ∞ | Equipment + Skills |
-| `autoAttack` | number | `0.0` | 0.0 - 100.0 | Skills only |
-
-### Equipment Object
-
-| Slot | Type | Default | Accepts |
-|------|------|---------|---------|
-| `weapon` | string \| null | `null` | Item IDs with type `weapon` |
-| `armor` | string \| null | `null` | Item IDs with type `armor` |
-| `accessory` | string \| null | `null` | Item IDs with type `accessory` |
-
-### Inventory
-
-- Type: `string[]`
-- Default: `[]`
-- Contains: Item IDs of owned items (not equipped)
-- Max size: `100` items (MVP), expandable later
-
-### Skills Object
-
-```typescript
-skills: {
-  "skill_passive_sharp_blades": { level: 3, lastUsed: null },
-  "skill_active_power_strike": { level: 1, lastUsed: 1699999999999 }
-}
-```
-
-- `level: 0` means skill is visible but not unlocked
-- `lastUsed` is only used for active skills with cooldowns
-
-### Zone Progress
-
-| Field | Type | Default | Notes |
-|-------|------|---------|-------|
-| `currentZone` | string | `"whisperwood"` | Must be in unlockedZones |
-| `unlockedZones` | string[] | `["whisperwood"]` | Grows as bosses defeated |
-| `bossesDefeated` | string[] | `[]` | Tracks completed bosses |
-
-### Statistics Object
-
-All statistics are lifetime values, never reset (until prestige system).
-
-| Stat | Type | Default |
-|------|------|---------|
-| `totalClicks` | number | `0` |
-| `totalKills` | number | `0` |
-| `totalBossKills` | number | `0` |
-| `highestDamage` | number | `0` |
-| `totalCriticals` | number | `0` |
-| `timePlayed` | number | `0` |
 
 ---
 
@@ -225,7 +218,7 @@ All statistics are lifetime values, never reset (until prestige system).
 
 ```javascript
 const DEFAULT_PLAYER = {
-  saveVersion: 1,
+  saveVersion: 2,
   createdAt: Date.now(),
   lastSavedAt: Date.now(),
   totalPlayTime: 0,
@@ -241,28 +234,65 @@ const DEFAULT_PLAYER = {
   totalGoldEarned: 0,
   totalGoldSpent: 0,
 
+  hp: 100,
+  maxHP: 100,
+  energy: 0,
+  maxEnergy: 100,
+
   stats: {
     attack: 5,
     critChance: 0.05,
     critDamage: 2.0,
     goldFind: 0.0,
     xpBonus: 0.0,
-    autoAttack: 0.0
+    hpRegen: 0.005,      // 0.5% per second
+    damageReduction: 0.0,
+    energyGain: 0.0,
+    armorPen: 0.0
   },
 
   equipment: {
     weapon: null,
-    armor: null,
     accessory: null
   },
 
   inventory: [],
 
-  skills: {},
+  skills: {
+    // Power Strike is auto-unlocked at level 1
+    "skill_power_strike": { unlocked: true, level: 1, lastUsed: null }
+  },
+
+  equippedActiveSkills: ["skill_power_strike", null, null, null],
+  equippedPassiveSkills: [null, null, null],
 
   currentZone: "whisperwood",
   unlockedZones: ["whisperwood"],
   bossesDefeated: [],
+
+  ascension: {
+    level: 0,
+    totalAscensions: 0,
+    damageBonus: 0,
+    goldBonus: 0,
+    xpBonus: 0,
+    flatHP: 0,
+    fastestRun: null,
+    history: []
+  },
+
+  vault: [],
+
+  consumables: {
+    healthPotion: 0,
+    energyPotion: 0,
+    shieldPotion: 0
+  },
+  consumableCooldowns: {
+    healthPotion: null,
+    energyPotion: null,
+    shieldPotion: null
+  },
 
   statistics: {
     totalClicks: 0,
@@ -270,7 +300,10 @@ const DEFAULT_PLAYER = {
     totalBossKills: 0,
     highestDamage: 0,
     totalCriticals: 0,
-    timePlayed: 0
+    timePlayed: 0,
+    totalDeaths: 0,
+    totalHealingDone: 0,
+    totalDamageTaken: 0
   },
 
   settings: {
@@ -282,84 +315,195 @@ const DEFAULT_PLAYER = {
   },
 
   tutorial: {
-    completed: false,
-    step: 0
+    completed: {
+      first_load: false,
+      first_kill: false,
+      first_level_up: false,
+      first_skill_unlock: false,
+      first_skill_use: false,
+      first_energy_full: false,
+      first_shop_visit: false,
+      first_item_bought: false,
+      first_aggressive_monster: false,
+      first_damage_taken: false,
+      first_zone_unlock: false,
+      first_boss_killed: false,
+      first_death: false
+    },
+    tipsShown: 0,
+    lastTipTime: null,
+    tutorialEnabled: true
   }
 };
 ```
 
 ---
 
-## Calculated Properties
-
-These are derived from the player state, not stored:
+## HP Calculation
 
 ```javascript
-// Total attack including equipment and skills
-function getTotalAttack(player) {
-  let total = player.stats.attack;
-  // Add equipment bonuses
-  // Add skill bonuses
-  return total;
-}
+function calculateMaxHP(player) {
+  const BASE_HP = 100;
+  const HP_PER_LEVEL = 10;
 
-// Check if can afford purchase
-function canAfford(player, cost) {
-  return player.gold >= cost;
-}
+  // Base HP from level
+  let maxHP = BASE_HP + (HP_PER_LEVEL * (player.level - 1));
 
-// Check if zone is unlocked
-function isZoneUnlocked(player, zoneId) {
-  return player.unlockedZones.includes(zoneId);
+  // Add ascension flat HP
+  maxHP += player.ascension.flatHP;
+
+  // Apply Thick Skin passive (if equipped)
+  const thickSkinBonus = getPassiveBonus(player, 'skill_thick_skin', 'maxHP');
+  maxHP = Math.floor(maxHP * (1 + thickSkinBonus));
+
+  // Apply equipment bonuses
+  maxHP = Math.floor(maxHP * (1 + getEquipmentBonus(player, 'maxHP')));
+
+  return maxHP;
 }
 ```
 
 ---
 
-## Save/Load Considerations
+## Skill Slot Management
+
+```javascript
+// Equip active skill
+function equipActiveSkill(player, skillId, slotIndex) {
+  if (slotIndex < 0 || slotIndex >= 4) return false;
+  if (!player.skills[skillId]?.unlocked) return false;
+
+  // Remove from current slot if already equipped
+  const currentSlot = player.equippedActiveSkills.indexOf(skillId);
+  if (currentSlot !== -1) {
+    player.equippedActiveSkills[currentSlot] = null;
+  }
+
+  player.equippedActiveSkills[slotIndex] = skillId;
+  return true;
+}
+
+// Equip passive skill
+function equipPassiveSkill(player, skillId, slotIndex) {
+  if (slotIndex < 0 || slotIndex >= 3) return false;
+  if (!player.skills[skillId]?.unlocked) return false;
+
+  const skill = getSkill(skillId);
+  if (skill.type !== 'passive') return false;
+
+  const currentSlot = player.equippedPassiveSkills.indexOf(skillId);
+  if (currentSlot !== -1) {
+    player.equippedPassiveSkills[currentSlot] = null;
+  }
+
+  player.equippedPassiveSkills[slotIndex] = skillId;
+  return true;
+}
+```
+
+---
+
+## Ascension Functions
+
+```javascript
+function performAscension(player) {
+  // Record history
+  player.ascension.history.push({
+    level: player.ascension.level + 1,
+    timestamp: Date.now(),
+    runTime: player.totalPlayTime
+  });
+
+  // Increment ascension
+  player.ascension.level++;
+  player.ascension.totalAscensions++;
+
+  // Add permanent bonuses
+  player.ascension.damageBonus += 0.05;
+  player.ascension.goldBonus += 0.05;
+  player.ascension.xpBonus += 0.05;
+  player.ascension.flatHP += 50;
+
+  // Track fastest run
+  if (!player.ascension.fastestRun ||
+      player.totalPlayTime < player.ascension.fastestRun) {
+    player.ascension.fastestRun = player.totalPlayTime;
+  }
+
+  // Move equipment to vault
+  for (const slot of Object.keys(player.equipment)) {
+    if (player.equipment[slot]) {
+      player.vault.push(player.equipment[slot]);
+      player.equipment[slot] = null;
+    }
+  }
+  for (const itemId of player.inventory) {
+    player.vault.push(itemId);
+  }
+  player.inventory = [];
+
+  // Reset progress
+  player.level = 1;
+  player.xp = 0;
+  player.gold = 0;
+  player.totalPlayTime = 0;
+
+  // Reset skill levels (keep unlocks)
+  for (const skillId of Object.keys(player.skills)) {
+    if (player.skills[skillId].unlocked) {
+      player.skills[skillId].level = 1;
+      player.skills[skillId].lastUsed = null;
+    }
+  }
+
+  // Full heal
+  player.hp = calculateMaxHP(player);
+  player.energy = 0;
+}
+```
+
+---
+
+## Save/Load
 
 ### LocalStorage Key
 ```
-SAVE_KEY = "clickoria_save_v1"
-```
-
-### Save Format
-```javascript
-// Save
-localStorage.setItem(SAVE_KEY, JSON.stringify(player));
-
-// Load
-const player = JSON.parse(localStorage.getItem(SAVE_KEY));
+SAVE_KEY = "clickoria_save_v2"
 ```
 
 ### Migration
-When `saveVersion` doesn't match current version, run migration:
 ```javascript
 function migrate(oldSave) {
   if (oldSave.saveVersion === 1) {
-    // Already current
-    return oldSave;
+    // Migrate from v1 to v2
+    return {
+      ...oldSave,
+      saveVersion: 2,
+      hp: 100,
+      maxHP: 100,
+      energy: 0,
+      maxEnergy: 100,
+      stats: {
+        ...oldSave.stats,
+        hpRegen: 0.005,
+        damageReduction: 0,
+        energyGain: 0,
+        armorPen: 0
+      },
+      equippedActiveSkills: [null, null, null, null],
+      equippedPassiveSkills: [null, null, null],
+      ascension: { level: 0, totalAscensions: 0, damageBonus: 0, goldBonus: 0, xpBonus: 0, flatHP: 0, fastestRun: null, history: [] },
+      vault: [],
+      consumables: { healthPotion: 0, energyPotion: 0, shieldPotion: 0 },
+      consumableCooldowns: { healthPotion: null, energyPotion: null, shieldPotion: null },
+      tutorial: { completed: {}, tipsShown: 0, lastTipTime: null, tutorialEnabled: true }
+    };
   }
-  // Future: handle older versions
+  return oldSave;
 }
 ```
 
 ---
 
-## Validation Rules
-
-Before saving, validate:
-
-1. `level` is between 1 and MAX_PLAYER_LEVEL
-2. `xp` is >= 0
-3. `gold` is >= 0
-4. `stats.critChance` is between 0.0 and 1.0
-5. All IDs in `equipment` exist in item definitions or are null
-6. All IDs in `inventory` exist in item definitions
-7. All IDs in `unlockedZones` exist in zone definitions
-8. `currentZone` is in `unlockedZones`
-
----
-
-*Referenced by: storage.js, game.js, ui.js*
-*References: _INDEX.md (global constants), item.schema.md, zone.schema.md, skill.schema.md*
+*Referenced by: storage.js, game.js, combat.js, skills.js*
+*References: _INDEX.md, item.schema.md, zone.schema.md, skill.schema.md*

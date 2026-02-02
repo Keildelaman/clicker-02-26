@@ -1,121 +1,482 @@
 # Combat System
 
-> Defines all combat mechanics, damage calculations, and fight flow.
+> Defines all combat mechanics, damage calculations, monster types, and fight flow.
+
+---
 
 ## Overview
 
-Combat is the core loop: Player clicks → Monster takes damage → Monster dies → Rewards given → New monster spawns. Simple but satisfying.
+Combat is the core loop with strategic depth:
+- Player clicks to deal damage and build Energy
+- Monsters have unique mechanics requiring adaptation
+- Some monsters attack back, requiring timing
+- Skills provide tactical options
+- Health management adds stakes
 
 ---
 
 ## Combat Flow
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                    COMBAT LOOP                       │
-├─────────────────────────────────────────────────────┤
-│                                                      │
-│  ┌─────────┐    ┌─────────────┐    ┌─────────────┐  │
-│  │  SPAWN  │───▶│   COMBAT    │───▶│    DEATH    │  │
-│  │ Monster │    │   (Click)   │    │  (Rewards)  │  │
-│  └─────────┘    └─────────────┘    └─────────────┘  │
-│       ▲                                    │         │
-│       │                                    │         │
-│       └────────────────────────────────────┘         │
-│                   (500ms delay)                      │
-│                                                      │
-└─────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                       COMBAT LOOP                            │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌─────────┐    ┌─────────────┐    ┌─────────────┐          │
+│  │  SPAWN  │───▶│   COMBAT    │───▶│    DEATH    │          │
+│  │ Monster │    │             │    │  (Rewards)  │          │
+│  └─────────┘    │ ┌─────────┐ │    └─────────────┘          │
+│       ▲         │ │ Player  │ │           │                  │
+│       │         │ │ Clicks  │ │           │                  │
+│       │         │ └────┬────┘ │           │                  │
+│       │         │      │      │           │                  │
+│       │         │ ┌────▼────┐ │           │                  │
+│       │         │ │ Monster │ │           │                  │
+│       │         │ │ Actions │ │           │                  │
+│       │         │ └─────────┘ │           │                  │
+│       │         └─────────────┘           │                  │
+│       │                                   │                  │
+│       └───────────────────────────────────┘                  │
+│                   (500ms delay)                              │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ### State Machine
 
 ```javascript
 const CombatState = {
-  SPAWNING: "spawning",     // Monster appearing
-  ACTIVE: "active",         // Monster alive, can attack
-  DYING: "dying",           // Death animation playing
-  WAITING: "waiting"        // Delay before next spawn
+  SPAWNING: "spawning",         // Monster appearing
+  ACTIVE: "active",             // Normal combat
+  MONSTER_ATTACKING: "attacking", // Monster attack window (don't click!)
+  DYING: "dying",               // Death animation
+  WAITING: "waiting"            // Delay before next spawn
 };
 ```
 
 ---
 
-## Monster Spawning
+## Monster Types
 
-### Spawn Trigger
-- On game start (if no active monster)
-- After MONSTER_SPAWN_DELAY (500ms) following monster death
-- When changing zones (immediate)
+### Overview
 
-### Spawn Selection Algorithm
+Six distinct monster types with unique mechanics:
+
+| Type | Mechanic | Counter Strategy |
+|------|----------|------------------|
+| Normal | Standard HP | Basic clicking |
+| Armored | Damage reduction | Big hits (skills) |
+| Swift | Escape timer | Fast damage |
+| Regenerating | HP regen | Sustained DPS |
+| Shielded | Shield bar | Break shield first |
+| Aggressive | Attacks player | Time clicks carefully |
+
+---
+
+### Type 1: Normal
 
 ```javascript
-function spawnMonster(zone) {
-  // 1. Get all non-boss monsters in zone
-  const monsters = getZoneMonsters(zone.id).filter(m => !m.isBoss);
+// No special mechanics
+// Standard HP pool
+// Does not attack
 
-  // 2. Calculate total spawn weight
-  const totalWeight = monsters.reduce((sum, m) => sum + m.spawnWeight, 0);
+const NORMAL_MONSTER = {
+  type: "normal",
+  mechanics: null,
+  attacksPlayer: false
+};
+```
 
-  // 3. Random weighted selection
-  let roll = Math.random() * totalWeight;
-  for (const monster of monsters) {
-    roll -= monster.spawnWeight;
-    if (roll <= 0) {
-      return createMonsterInstance(monster);
+**Behavior:**
+- Spawns with HP
+- Player clicks to damage
+- Dies when HP reaches 0
+- No special considerations
+
+**Examples:** Forest Sprite (early), some later monsters
+
+---
+
+### Type 2: Armored
+
+```javascript
+const ARMORED_MONSTER = {
+  type: "armored",
+  mechanics: {
+    armor: 10,  // Flat damage reduction
+    armorScaling: 2  // +2 armor per monster level above base
+  },
+  attacksPlayer: false
+};
+
+function calculateDamageVsArmor(baseDamage, monster) {
+  const armor = monster.mechanics.armor +
+    (monster.mechanics.armorScaling * (monster.level - monster.levelMin));
+
+  // Armor reduces damage by flat amount (minimum 1 damage)
+  return Math.max(baseDamage - armor, 1);
+}
+```
+
+**Behavior:**
+- Each hit is reduced by armor value
+- Small hits are nearly useless
+- Big skill hits are effective
+
+**Visual:** 🛡️ icon, metallic sheen on monster
+
+**Counter:** Use Power Strike, Execute, or other high-damage skills
+
+**Examples:** Grumpy Treant, Stone Golem, Iron Elemental
+
+---
+
+### Type 3: Swift
+
+```javascript
+const SWIFT_MONSTER = {
+  type: "swift",
+  mechanics: {
+    escapeTime: 8000,  // ms before escape
+    escapeTimeScaling: -500  // Faster in later zones
+  },
+  attacksPlayer: false,
+  onEscape: {
+    playerDamage: 0.05,  // 5% max HP damage
+    lootLost: true
+  }
+};
+
+function updateSwiftTimer(monster, deltaTime) {
+  monster.escapeTimer -= deltaTime;
+
+  if (monster.escapeTimer <= 0) {
+    // Monster escapes!
+    handleMonsterEscape(monster);
+  }
+}
+
+function handleMonsterEscape(monster) {
+  // Damage player
+  const damage = Math.floor(player.maxHP * 0.05);
+  player.hp -= damage;
+  showDamageToPlayer(damage);
+
+  // No loot
+  showMessage("The monster escaped!");
+
+  // Spawn next
+  spawnNextMonster();
+}
+```
+
+**Behavior:**
+- Timer bar appears above HP
+- Timer counts down (8-5 seconds based on zone)
+- If timer expires: monster escapes, player takes 5% HP damage, no rewards
+- Killing before timer = normal rewards
+
+**Visual:** ⏱️ timer bar, speed lines on monster
+
+**Counter:** Fast clicking, Time Warp skill, burst damage
+
+**Examples:** Forest Sprite (some), Dust Devil, Shadow Wisp
+
+---
+
+### Type 4: Regenerating
+
+```javascript
+const REGENERATING_MONSTER = {
+  type: "regenerating",
+  mechanics: {
+    regenPercent: 0.03,  // 3% max HP per second
+    regenCap: 1.0  // Cannot regen above spawn HP
+  },
+  attacksPlayer: false
+};
+
+function updateRegeneration(monster, deltaTime) {
+  const regenAmount = monster.maxHealth * monster.mechanics.regenPercent * deltaTime;
+  const newHP = monster.currentHealth + regenAmount;
+
+  // Cap at max (spawn) HP
+  monster.currentHealth = Math.min(newHP, monster.maxHealth);
+}
+```
+
+**Behavior:**
+- Regenerates 3% max HP per second
+- Never heals above spawn HP
+- Must deal damage faster than regen to kill
+
+**Visual:** 💚 pulses, HP bar has green tint
+
+**Counter:** Sustained high damage, Berserk Rage, don't stop clicking
+
+**Examples:** Mire Hag, Swamp Husk, Void Horror
+
+---
+
+### Type 5: Shielded
+
+```javascript
+const SHIELDED_MONSTER = {
+  type: "shielded",
+  mechanics: {
+    shieldPercent: 0.30,  // Shield = 30% of HP
+    shieldDamageReduction: 0.50  // 50% damage reduction while shielded
+  },
+  attacksPlayer: false
+};
+
+function createShieldedMonster(definition) {
+  const monster = createMonsterInstance(definition);
+  monster.shield = Math.floor(monster.maxHealth * 0.30);
+  monster.maxShield = monster.shield;
+  return monster;
+}
+
+function damageShieldedMonster(monster, damage) {
+  if (monster.shield > 0) {
+    // Damage reduction while shielded
+    const reducedDamage = Math.floor(damage * 0.5);
+
+    if (reducedDamage >= monster.shield) {
+      // Shield breaks
+      const overflow = reducedDamage - monster.shield;
+      monster.shield = 0;
+      monster.currentHealth -= overflow;
+      showShieldBreak();
+    } else {
+      monster.shield -= reducedDamage;
     }
+  } else {
+    // No shield, normal damage
+    monster.currentHealth -= damage;
   }
 }
 ```
 
-### Monster Instance Creation
+**Behavior:**
+- Spawns with shield bar (30% of HP)
+- While shielded, takes 50% reduced damage
+- Must break shield, then deal HP damage
+- Shield does not regenerate
+
+**Visual:** 🔷 blue bar above HP bar, shimmer effect
+
+**Counter:** Shield Breaker skill, high sustained damage
+
+**Examples:** Void Walker, Crystal Elemental, Frost Sentinel
+
+---
+
+### Type 6: Aggressive
 
 ```javascript
-function createMonsterInstance(definition) {
-  // Roll level within range
-  const level = randomInt(definition.levelMin, definition.levelMax);
+const AGGRESSIVE_MONSTER = {
+  type: "aggressive",
+  mechanics: {
+    attackCycle: 4000,      // ms between attack cycles
+    warningDuration: 1500,  // ms of warning before attack
+    attackDuration: 500,    // ms of attack window
+    safeDuration: 2000,     // ms of safe window after attack
+    damagePercent: 0.10     // 10% of player max HP
+  },
+  attacksPlayer: true
+};
 
-  // Calculate stats
-  const levelBonus = level - definition.levelMin;
-  const maxHealth = definition.baseHealth + (definition.healthPerLevel * levelBonus);
+// Attack cycle phases
+const AttackPhase = {
+  SAFE: "safe",         // Can click freely
+  WARNING: "warning",   // Monster glowing, attack coming
+  ATTACKING: "attacking" // DON'T CLICK or take damage
+};
+```
 
-  // Pre-calculate rewards
-  const baseGold = randomInt(definition.goldMin, definition.goldMax);
-  const goldReward = baseGold + (definition.goldPerLevel * levelBonus);
+**Attack Cycle:**
 
-  const baseXP = randomInt(definition.xpMin, definition.xpMax);
-  const xpReward = baseXP + (definition.xpPerLevel * levelBonus);
+```
+TIME:    0s      2s       3.5s    4s       6s       7.5s    8s
+         │       │        │       │        │        │       │
+PHASE:   ├─SAFE──┤WARNING─┤ATTACK─┤─SAFE───┤WARNING─┤ATTACK─┤
+         │       │        │       │        │        │       │
+ACTION:  Click!  Prepare! STOP!   Click!   Prepare! STOP!
+```
 
-  return {
-    definitionId: definition.id,
-    name: definition.name,
-    level: level,
-    maxHealth: maxHealth,
-    currentHealth: maxHealth,
-    goldReward: goldReward,
-    xpReward: xpReward,
-    emoji: definition.emoji,
-    deathEmoji: definition.deathEmoji
-  };
+**Implementation:**
+
+```javascript
+function updateAggressiveMonster(monster, deltaTime) {
+  monster.attackTimer += deltaTime;
+
+  const cycle = monster.mechanics.attackCycle;
+  const warning = monster.mechanics.warningDuration;
+  const attack = monster.mechanics.attackDuration;
+
+  const cyclePosition = monster.attackTimer % cycle;
+
+  if (cyclePosition < cycle - warning - attack) {
+    // Safe phase
+    monster.attackPhase = AttackPhase.SAFE;
+    combatState = CombatState.ACTIVE;
+  } else if (cyclePosition < cycle - attack) {
+    // Warning phase
+    monster.attackPhase = AttackPhase.WARNING;
+    combatState = CombatState.ACTIVE;
+    showWarningIndicator();
+  } else {
+    // Attack phase
+    monster.attackPhase = AttackPhase.ATTACKING;
+    combatState = CombatState.MONSTER_ATTACKING;
+  }
+}
+
+function onPlayerClick() {
+  // ... existing checks ...
+
+  // Check if clicking during attack phase
+  if (currentMonster.type === "aggressive" &&
+      currentMonster.attackPhase === AttackPhase.ATTACKING) {
+    // Player takes damage!
+    const damage = Math.floor(player.maxHP * currentMonster.mechanics.damagePercent);
+    damagePlayer(damage);
+    showMessage("Hit during attack!");
+    return;
+  }
+
+  // Normal damage to monster
+  dealDamageToMonster();
+}
+```
+
+**Behavior:**
+- Cycles through Safe → Warning → Attack phases
+- During Warning: Monster glows red, "!" appears
+- During Attack: If player clicks, player takes damage
+- Must time clicks to avoid attack window
+
+**Visual:**
+- Safe: Normal appearance
+- Warning: Red glow, "!" icon, pulsing
+- Attack: Full red, attack animation
+
+**Counter:** Watch for warning, stop clicking during attack, Quick Reflexes passive
+
+**Examples:** Timber Wolf, Bandit, all Bosses
+
+---
+
+## Player Damage
+
+### Taking Damage
+
+```javascript
+function damagePlayer(amount) {
+  // Check for damage reduction buffs
+  let finalDamage = amount;
+
+  // Iron Skin reduction
+  if (player.buffs.ironSkin) {
+    finalDamage = Math.floor(finalDamage * (1 - player.buffs.ironSkinReduction));
+  }
+
+  // Equipment damage reduction
+  finalDamage = Math.floor(finalDamage * (1 - player.stats.damageReduction));
+
+  // Check Undying
+  if (player.hp - finalDamage <= 0 && player.buffs.undying) {
+    player.hp = Math.floor(player.maxHP * player.buffs.undyingSurvivePercent);
+    player.buffs.undying = null;
+    showUndyingTrigger();
+    return;
+  }
+
+  // Check Reflect
+  if (player.buffs.reflect) {
+    const reflectDamage = Math.floor(finalDamage * player.buffs.reflectMultiplier);
+    currentMonster.currentHealth -= reflectDamage;
+    showReflectAnimation(reflectDamage);
+    player.buffs.reflect = null;
+
+    if (currentMonster.currentHealth <= 0) {
+      killMonster();
+    }
+    return;
+  }
+
+  // Apply damage
+  player.hp -= finalDamage;
+
+  // Visual feedback
+  showPlayerDamage(finalDamage);
+  flashScreen("red");
+
+  // Check death
+  if (player.hp <= 0) {
+    handlePlayerDeath();
+  }
+}
+```
+
+### Player Death
+
+```javascript
+function handlePlayerDeath() {
+  // Reset to last milestone
+  const milestone = Math.floor(player.level / 10) * 10;
+  const levelsLost = player.level - Math.max(milestone, 1);
+  player.level = Math.max(milestone, 1);
+
+  // Lose 50% gold
+  const goldLost = Math.floor(player.gold * 0.5);
+  player.gold -= goldLost;
+
+  // Full heal
+  player.hp = player.maxHP;
+  player.energy = 0;
+
+  // Clear current monster
+  currentMonster = null;
+  combatState = CombatState.WAITING;
+
+  // Show death modal
+  showDeathModal({
+    levelsLost: levelsLost,
+    goldLost: goldLost,
+    newLevel: player.level
+  });
+
+  // Spawn new monster after modal dismissed
 }
 ```
 
 ---
 
-## Click Attack
+## Click Mechanics
 
-### Click Event Handler
+### Click Handler
 
 ```javascript
 function onPlayerClick() {
-  if (combatState !== CombatState.ACTIVE) return;
+  // State checks
+  if (combatState !== CombatState.ACTIVE) {
+    if (combatState === CombatState.MONSTER_ATTACKING) {
+      // Clicked during attack - take damage (handled above)
+    }
+    return;
+  }
   if (currentMonster === null) return;
 
   // Calculate damage
   const result = calculateDamage();
 
-  // Apply damage
-  currentMonster.currentHealth -= result.damage;
+  // Apply damage (considering monster type)
+  applyDamageToMonster(result.damage);
+
+  // Grant Energy (with internal cooldown)
+  grantEnergy();
 
   // Update statistics
   player.statistics.totalClicks++;
@@ -136,11 +497,39 @@ function onPlayerClick() {
 }
 ```
 
+### Energy on Click
+
+```javascript
+let lastEnergyGain = 0;
+const ENERGY_GAIN_COOLDOWN = 200; // ms
+
+function grantEnergy() {
+  const now = Date.now();
+
+  // Internal cooldown
+  if (now - lastEnergyGain < ENERGY_GAIN_COOLDOWN) {
+    return;
+  }
+
+  lastEnergyGain = now;
+
+  // Base Energy gain
+  let energyGain = ENERGY_PER_CLICK; // 5
+
+  // Energy Flow passive bonus
+  const energyFlowLevel = player.passiveSkills.energyFlow || 0;
+  energyGain = Math.floor(energyGain * (1 + energyFlowLevel * 0.10));
+
+  // Apply
+  player.energy = Math.min(player.energy + energyGain, player.maxEnergy);
+}
+```
+
 ### Damage Calculation
 
 ```javascript
 function calculateDamage() {
-  // Get total attack (base + equipment + skills)
+  // Base attack from all sources
   const attack = getTotalAttack(player);
 
   // Roll for critical
@@ -154,220 +543,76 @@ function calculateDamage() {
     damage = Math.floor(attack * critDamage);
   }
 
+  // Apply next attack modifier (from skills)
+  if (player.nextAttackModifier) {
+    damage = Math.floor(damage * player.nextAttackModifier);
+    player.nextAttackModifier = null;
+  }
+
+  // Ascension bonus
+  damage = Math.floor(damage * (1 + player.ascension.damageBonus));
+
   // Ensure minimum damage
   damage = Math.max(damage, MIN_DAMAGE);
 
-  return {
-    damage: damage,
-    isCritical: isCritical
-  };
+  return { damage, isCritical };
 }
 ```
 
-### Total Stat Calculations
+### Applying Damage to Monster
 
 ```javascript
-function getTotalAttack(player) {
-  let total = player.stats.attack;  // Base attack (starts at 5)
-
-  // Add equipment
-  if (player.equipment.weapon) {
-    const weapon = getItem(player.equipment.weapon);
-    total += weapon.stats.attack || 0;
+function applyDamageToMonster(damage) {
+  switch (currentMonster.type) {
+    case "armored":
+      damage = calculateDamageVsArmor(damage, currentMonster);
+      break;
+    case "shielded":
+      damageShieldedMonster(currentMonster, damage);
+      return; // Already applied
+    default:
+      // Normal damage
+      break;
   }
 
-  // Add skill bonuses (percentage based)
-  const sharpBlades = getSkillLevel(player, "skill_passive_sharp_blades");
-  if (sharpBlades > 0) {
-    const bonus = 5 + (5 * (sharpBlades - 1));  // 5% per level
-    total = Math.floor(total * (1 + bonus / 100));
-  }
-
-  // Add active skill modifiers
-  if (player.nextAttackModifier) {
-    total = Math.floor(total * player.nextAttackModifier);
-    player.nextAttackModifier = null;  // Consume modifier
-  }
-
-  return total;
-}
-
-function getTotalCritChance(player) {
-  let total = player.stats.critChance;  // Base 0.05 (5%)
-
-  // Add equipment
-  for (const slot of ["weapon", "accessory"]) {
-    if (player.equipment[slot]) {
-      const item = getItem(player.equipment[slot]);
-      total += item.stats.critChance || 0;
-    }
-  }
-
-  // Add skill bonus
-  const luckyStrikes = getSkillLevel(player, "skill_passive_lucky_strikes");
-  if (luckyStrikes > 0) {
-    total += (2 + (2 * (luckyStrikes - 1))) / 100;  // 2% per level
-  }
-
-  // Add active buffs
-  if (player.buffs.criticalFrenzy) {
-    total = 1.0;  // 100% crit during frenzy
-  }
-
-  // Cap at 100%
-  return Math.min(total, 1.0);
-}
-
-function getTotalCritDamage(player) {
-  let total = player.stats.critDamage;  // Base 2.0 (200%)
-
-  // Add equipment
-  for (const slot of ["weapon", "accessory"]) {
-    if (player.equipment[slot]) {
-      const item = getItem(player.equipment[slot]);
-      total += item.stats.critDamage || 0;
-    }
-  }
-
-  return total;
+  currentMonster.currentHealth -= damage;
 }
 ```
 
 ---
 
-## Monster Death
-
-### Death Handler
-
-```javascript
-function killMonster() {
-  combatState = CombatState.DYING;
-
-  // Calculate final rewards (with player bonuses)
-  const goldFind = getTotalGoldFind(player);
-  const xpBonus = getTotalXPBonus(player);
-
-  const goldReward = Math.floor(currentMonster.goldReward * (1 + goldFind));
-  const xpReward = Math.floor(currentMonster.xpReward * (1 + xpBonus));
-
-  // Award rewards
-  giveGold(player, goldReward);
-  giveXP(player, xpReward);
-
-  // Update statistics
-  player.statistics.totalKills++;
-
-  // Roll for loot drops
-  rollLootDrops(currentMonster.definitionId);
-
-  // Play death animation
-  playDeathAnimation(currentMonster.deathEmoji);
-
-  // After animation, spawn next
-  setTimeout(() => {
-    combatState = CombatState.WAITING;
-    setTimeout(() => {
-      spawnNextMonster();
-    }, MONSTER_SPAWN_DELAY);
-  }, DEATH_ANIMATION_DURATION);
-}
-```
-
-### Gold Find Calculation
-
-```javascript
-function getTotalGoldFind(player) {
-  let total = player.stats.goldFind;  // Base 0
-
-  // Equipment
-  if (player.equipment.accessory) {
-    const acc = getItem(player.equipment.accessory);
-    total += acc.stats.goldFind || 0;
-  }
-
-  // Skills
-  const deepPockets = getSkillLevel(player, "skill_passive_deep_pockets");
-  if (deepPockets > 0) {
-    total += (5 + (5 * (deepPockets - 1))) / 100;
-  }
-
-  // Active buffs
-  if (player.buffs.goldRush) {
-    total += 1.0;  // +100% during Gold Rush
-  }
-
-  return total;
-}
-```
-
----
-
-## Auto Attack
-
-### Auto Attack System
-
-```javascript
-let autoAttackInterval = null;
-
-function updateAutoAttack() {
-  // Clear existing interval
-  if (autoAttackInterval) {
-    clearInterval(autoAttackInterval);
-    autoAttackInterval = null;
-  }
-
-  // Get auto attack speed
-  const autoAttackSpeed = getTotalAutoAttack(player);
-  if (autoAttackSpeed <= 0) return;
-
-  // Calculate interval (attacks per second → ms between attacks)
-  const intervalMs = Math.floor(1000 / autoAttackSpeed);
-
-  // Start auto attacking
-  autoAttackInterval = setInterval(() => {
-    if (combatState === CombatState.ACTIVE) {
-      onPlayerClick();  // Simulate click
-    }
-  }, intervalMs);
-}
-
-function getTotalAutoAttack(player) {
-  let total = player.stats.autoAttack;  // Base 0
-
-  // Skills only (no equipment gives auto attack)
-  const autoClicker = getSkillLevel(player, "skill_passive_auto_clicker");
-  if (autoClicker > 0) {
-    total += autoClicker;  // 1 click/sec per level
-  }
-
-  return total;
-}
-```
-
----
-
-## Active Skills in Combat
+## Skill Usage in Combat
 
 ### Using Active Skills
 
 ```javascript
-function useActiveSkill(skillId) {
+function useActiveSkill(slotIndex) {
+  const skillId = player.equippedActiveSkills[slotIndex];
+  if (!skillId) {
+    showMessage("No skill in this slot!");
+    return false;
+  }
+
   const skill = getSkill(skillId);
   const playerSkill = player.skills[skillId];
 
-  // Check if unlocked
-  if (!playerSkill || playerSkill.level === 0) {
-    showMessage("Skill not unlocked!");
+  // Check Energy
+  if (player.energy < skill.energyCost) {
+    showMessage("Not enough Energy!");
+    flashEnergyBar("red");
     return false;
   }
 
   // Check cooldown
   const now = Date.now();
-  if (playerSkill.lastUsed && now - playerSkill.lastUsed < skill.cooldown) {
-    const remaining = Math.ceil((skill.cooldown - (now - playerSkill.lastUsed)) / 1000);
-    showMessage(`Skill on cooldown: ${remaining}s`);
+  const cooldownRemaining = (playerSkill.lastUsed + skill.cooldown) - now;
+  if (cooldownRemaining > 0) {
+    showMessage(`Cooldown: ${Math.ceil(cooldownRemaining / 1000)}s`);
     return false;
   }
+
+  // Spend Energy
+  player.energy -= skill.energyCost;
 
   // Apply effect
   applySkillEffect(skill, playerSkill.level);
@@ -375,198 +620,321 @@ function useActiveSkill(skillId) {
   // Start cooldown
   playerSkill.lastUsed = now;
 
+  // Visual feedback
+  showSkillActivation(skill);
+
   return true;
 }
+```
 
+### Skill Effects
+
+```javascript
 function applySkillEffect(skill, level) {
-  const value = skill.effect.baseValue + (skill.effect.perLevel * (level - 1));
+  const effects = skill.effectsAtLevel[level];
 
-  switch (skill.effect.type) {
-    case "next_attack":
-      player.nextAttackModifier = value;
-      showMessage(`Next attack: ${value}x damage!`);
+  switch (skill.effectType) {
+    case "nextAttackMultiplier":
+      player.nextAttackModifier = effects.multiplier;
+      showMessage(`Next attack: ${effects.multiplier}x damage!`);
       break;
 
     case "buff":
       player.buffs[skill.id] = {
-        stat: skill.effect.stat,
-        value: skill.effect.value,
-        expiresAt: Date.now() + skill.effect.duration
+        ...effects,
+        expiresAt: Date.now() + effects.duration
       };
-      showMessage(`${skill.name} activated!`);
+      showBuffActivation(skill.name);
       break;
 
-    case "instant":
-      if (skill.id === "skill_active_monster_slayer") {
-        if (currentMonster && !currentMonster.isBoss) {
-          currentMonster.currentHealth = 0;
-          killMonster();
-          showMessage("Monster slain!");
-        } else {
-          showMessage("Cannot use on bosses!");
-        }
+    case "instantHeal":
+      const healAmount = Math.floor(player.maxHP * effects.healPercent);
+      player.hp = Math.min(player.hp + healAmount, player.maxHP);
+      showHealNumber(healAmount);
+      break;
+
+    case "monsterFreeze":
+      currentMonster.frozen = true;
+      currentMonster.frozenUntil = Date.now() + effects.duration;
+      showFreezeEffect();
+      break;
+
+    case "percentDamage":
+      // Soul Rend - damage based on monster HP
+      const damage = Math.floor(currentMonster.maxHealth * effects.percent);
+      const clampedDamage = Math.max(
+        Math.min(damage, player.stats.attack * 10),
+        player.stats.attack
+      );
+      applyDamageToMonster(clampedDamage);
+      displayDamageNumber(clampedDamage, false, "purple");
+      break;
+
+    case "shieldBreak":
+      if (currentMonster.shield > 0) {
+        currentMonster.shield = 0;
+        showShieldBreak();
       }
+      // Bonus damage to shielded monsters
+      player.buffs.shieldBreakerBonus = {
+        damageBonus: effects.bonusDamage,
+        expiresAt: Date.now() + effects.duration
+      };
       break;
   }
 }
 ```
 
-### Buff Management
+---
+
+## Monster Spawning
+
+### Spawn Logic
 
 ```javascript
-function updateBuffs() {
-  const now = Date.now();
+function spawnNextMonster() {
+  combatState = CombatState.SPAWNING;
 
-  for (const [buffId, buff] of Object.entries(player.buffs)) {
-    if (buff.expiresAt <= now) {
-      delete player.buffs[buffId];
-      showMessage(`${getSkill(buffId).name} expired`);
-    }
-  }
+  // Select monster
+  const monster = selectMonster(currentZone);
+
+  // Create instance
+  currentMonster = createMonsterInstance(monster);
+
+  // Initialize type-specific mechanics
+  initializeMonsterMechanics(currentMonster);
+
+  // Play spawn animation
+  playSpawnAnimation(currentMonster);
+
+  // Enter combat
+  setTimeout(() => {
+    combatState = CombatState.ACTIVE;
+  }, SPAWN_ANIMATION_DURATION);
 }
 
-// Call in game loop
-setInterval(updateBuffs, 100);
+function initializeMonsterMechanics(monster) {
+  switch (monster.type) {
+    case "swift":
+      monster.escapeTimer = monster.mechanics.escapeTime;
+      break;
+    case "shielded":
+      monster.shield = Math.floor(monster.maxHealth * 0.30);
+      monster.maxShield = monster.shield;
+      break;
+    case "aggressive":
+      monster.attackTimer = 0;
+      monster.attackPhase = AttackPhase.SAFE;
+      break;
+    case "regenerating":
+      // No special init needed
+      break;
+    case "armored":
+      // No special init needed
+      break;
+  }
+}
+```
+
+### Monster Selection
+
+```javascript
+function selectMonster(zone) {
+  const monsters = getZoneMonsters(zone.id).filter(m => !m.isBoss);
+
+  // Calculate total spawn weight
+  const totalWeight = monsters.reduce((sum, m) => sum + m.spawnWeight, 0);
+
+  // Weighted random selection
+  let roll = Math.random() * totalWeight;
+  for (const monster of monsters) {
+    roll -= monster.spawnWeight;
+    if (roll <= 0) {
+      return monster;
+    }
+  }
+
+  return monsters[0]; // Fallback
+}
+```
+
+---
+
+## Monster Death
+
+### Kill Handler
+
+```javascript
+function killMonster() {
+  combatState = CombatState.DYING;
+
+  // Calculate rewards
+  const goldReward = calculateGoldReward(currentMonster);
+  const xpReward = calculateXPReward(currentMonster);
+
+  // Grant rewards
+  giveGold(player, goldReward);
+  giveXP(player, xpReward);
+
+  // Grant bonus Energy
+  const bonusEnergy = currentMonster.isBoss ? ENERGY_ON_BOSS_KILL : ENERGY_ON_KILL;
+  player.energy = Math.min(player.energy + bonusEnergy, player.maxEnergy);
+
+  // Update statistics
+  player.statistics.totalKills++;
+  if (currentMonster.isBoss) {
+    player.statistics.totalBossKills++;
+  }
+
+  // Roll for loot
+  rollLootDrops(currentMonster);
+
+  // Play death animation
+  playDeathAnimation(currentMonster.deathEmoji);
+
+  // Check for boss-specific handling
+  if (currentMonster.isBoss) {
+    handleBossDeath();
+  }
+
+  // Schedule next spawn
+  setTimeout(() => {
+    combatState = CombatState.WAITING;
+    setTimeout(spawnNextMonster, MONSTER_SPAWN_DELAY);
+  }, DEATH_ANIMATION_DURATION);
+}
 ```
 
 ---
 
 ## Boss Combat
 
-### Boss Encounter
+### Boss Differences
+
+Bosses are always Aggressive type PLUS may have additional type:
 
 ```javascript
-function startBossFight(bossId) {
-  // Check if already defeated
-  if (player.bossesDefeated.includes(bossId)) {
-    showMessage("Boss already defeated!");
-    return;
-  }
+function createBossInstance(bossDefinition) {
+  const boss = createMonsterInstance(bossDefinition);
+  boss.isBoss = true;
 
-  // Check level requirement
-  const boss = getMonster(bossId);
-  if (player.level < boss.levelMin) {
-    showMessage(`Reach level ${boss.levelMin} first!`);
-    return;
-  }
+  // Bosses always attack
+  boss.attacksPlayer = true;
+  boss.attackPhase = AttackPhase.SAFE;
+  boss.attackTimer = 0;
 
-  // Spawn boss
-  currentMonster = createMonsterInstance(boss);
-  currentMonster.isBoss = true;
-  combatState = CombatState.ACTIVE;
+  // Boss attack cycle (faster, more dangerous)
+  boss.mechanics = {
+    ...boss.mechanics,
+    attackCycle: 3000,      // Faster than regular aggressive
+    warningDuration: 1200,
+    attackDuration: 600,
+    damagePercent: 0.15     // 15% damage (more than regular)
+  };
 
-  showMessage(`${boss.name} appears!`);
-  playBossMusic();  // Future
+  return boss;
 }
 ```
 
 ### Boss Death
 
 ```javascript
-function killBoss() {
-  // Normal rewards
-  const goldReward = calculateGoldReward(currentMonster);
-  const xpReward = calculateXPReward(currentMonster);
-  giveGold(player, goldReward);
-  giveXP(player, xpReward);
+function handleBossDeath() {
+  const bossId = currentMonster.definitionId;
 
-  // Mark defeated
-  player.bossesDefeated.push(currentMonster.definitionId);
-  player.statistics.totalBossKills++;
+  // First kill only
+  if (!player.bossesDefeated.includes(bossId)) {
+    player.bossesDefeated.push(bossId);
 
-  // Unlock next zone
-  const nextZone = getNextZone(player.currentZone);
-  if (nextZone && !player.unlockedZones.includes(nextZone.id)) {
-    player.unlockedZones.push(nextZone.id);
-    showZoneUnlockCelebration(nextZone);
-  }
+    // Unlock next zone
+    const nextZone = getNextZone(currentZone.id);
+    if (nextZone && !player.unlockedZones.includes(nextZone.id)) {
+      player.unlockedZones.push(nextZone.id);
+    }
 
-  // Guaranteed loot
-  const boss = getMonster(currentMonster.definitionId);
-  for (const loot of boss.lootTable) {
-    if (loot.chance >= 1.0) {
+    // Guaranteed drops
+    const boss = getMonster(bossId);
+    for (const loot of boss.lootTable.filter(l => l.chance >= 1.0)) {
       giveItem(player, loot.itemId);
     }
-  }
 
-  // Celebration
-  showBossDefeatCelebration();
+    // Celebration modal
+    showBossDefeatCelebration(boss, nextZone);
+  } else {
+    // Repeat kill - reduced rewards
+    // Regular loot rolls only, no guarantees
+  }
 }
 ```
 
 ---
 
-## Damage Numbers
+## Game Loop Updates
 
-### Display System
+### Monster Updates
 
 ```javascript
-function displayDamageNumber(damage, isCritical) {
-  const damageEl = document.createElement("div");
-  damageEl.className = "damage-number";
-  damageEl.textContent = damage;
+function updateCombat(deltaTime) {
+  if (!currentMonster || combatState !== CombatState.ACTIVE) return;
 
-  if (isCritical) {
-    damageEl.classList.add("critical");
-    damageEl.textContent = damage + "!";
+  // Type-specific updates
+  switch (currentMonster.type) {
+    case "swift":
+      updateSwiftTimer(currentMonster, deltaTime);
+      break;
+    case "regenerating":
+      updateRegeneration(currentMonster, deltaTime);
+      break;
+    case "aggressive":
+      updateAggressiveMonster(currentMonster, deltaTime);
+      break;
   }
 
-  // Random horizontal offset
-  const offsetX = (Math.random() - 0.5) * 60;
-  damageEl.style.left = `calc(50% + ${offsetX}px)`;
-
-  // Add to container
-  combatContainer.appendChild(damageEl);
-
-  // Remove after animation
-  setTimeout(() => {
-    damageEl.remove();
-  }, DAMAGE_NUMBER_DURATION);
+  // Check frozen status
+  if (currentMonster.frozen) {
+    if (Date.now() >= currentMonster.frozenUntil) {
+      currentMonster.frozen = false;
+    }
+  }
 }
 ```
 
-### CSS Animation
+### Buff Updates
 
-```css
-.damage-number {
-  position: absolute;
-  font-size: 24px;
-  font-weight: bold;
-  color: white;
-  text-shadow: 2px 2px 0 black;
-  animation: float-up 0.8s ease-out forwards;
-  pointer-events: none;
-}
+```javascript
+function updateBuffs(deltaTime) {
+  const now = Date.now();
 
-.damage-number.critical {
-  font-size: 32px;
-  color: #ff4444;
-  animation: float-up-crit 0.8s ease-out forwards;
-}
-
-@keyframes float-up {
-  0% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-80px);
+  for (const [buffId, buff] of Object.entries(player.buffs)) {
+    if (buff.expiresAt && buff.expiresAt <= now) {
+      delete player.buffs[buffId];
+      showBuffExpired(buffId);
+    }
   }
 }
+```
 
-@keyframes float-up-crit {
-  0% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  50% {
-    transform: translateY(-40px) scale(1.3);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-80px) scale(1);
-  }
+### HP Regeneration
+
+```javascript
+function updatePlayerRegen(deltaTime) {
+  if (player.hp >= player.maxHP) return;
+
+  const regenRate = calculateRegenRate(player);
+  const regenAmount = player.maxHP * regenRate * deltaTime;
+
+  player.hp = Math.min(player.hp + regenAmount, player.maxHP);
+}
+```
+
+### Energy Regeneration
+
+```javascript
+function updateEnergyRegen(deltaTime) {
+  if (player.energy >= player.maxEnergy) return;
+
+  const regenAmount = ENERGY_REGEN_PER_SECOND * deltaTime;
+  player.energy = Math.min(player.energy + regenAmount, player.maxEnergy);
 }
 ```
 
@@ -574,21 +942,45 @@ function displayDamageNumber(damage, isCritical) {
 
 ## Constants Reference
 
-From `_INDEX.md`:
-
 ```javascript
 const COMBAT_CONSTANTS = {
-  MONSTER_SPAWN_DELAY: 500,       // ms
-  DAMAGE_NUMBER_DURATION: 800,    // ms
-  DEATH_ANIMATION_DURATION: 300,  // ms
+  // Timing
+  MONSTER_SPAWN_DELAY: 500,         // ms
+  SPAWN_ANIMATION_DURATION: 200,    // ms
+  DEATH_ANIMATION_DURATION: 300,    // ms
+  DAMAGE_NUMBER_DURATION: 800,      // ms
+
+  // Base stats
   MIN_DAMAGE: 1,
   BASE_PLAYER_ATTACK: 5,
   BASE_CRIT_CHANCE: 0.05,
-  BASE_CRIT_MULTIPLIER: 2.0
+  BASE_CRIT_MULTIPLIER: 2.0,
+
+  // Energy
+  ENERGY_PER_CLICK: 5,
+  ENERGY_GAIN_COOLDOWN: 200,        // ms
+  ENERGY_ON_KILL: 15,
+  ENERGY_ON_BOSS_KILL: 50,
+  ENERGY_REGEN_PER_SECOND: 2,
+
+  // Monster type defaults
+  SWIFT_BASE_TIME: 8000,            // ms
+  REGEN_PERCENT_PER_SECOND: 0.03,
+  SHIELD_PERCENT: 0.30,
+  SHIELD_DAMAGE_REDUCTION: 0.50,
+
+  // Aggressive monsters
+  ATTACK_CYCLE: 4000,               // ms
+  WARNING_DURATION: 1500,           // ms
+  ATTACK_DURATION: 500,             // ms
+  ATTACK_DAMAGE_PERCENT: 0.10,
+
+  // Boss modifiers
+  BOSS_ATTACK_CYCLE: 3000,
+  BOSS_DAMAGE_PERCENT: 0.15
 };
 ```
 
 ---
 
-*Referenced by: combat.js, game.js, ui.js*
-*References: _INDEX.md, player.schema.md, monster.schema.md, skill.schema.md*
+*Combat is the heart of the game. Every click should feel impactful, every monster should require thought, and victory should feel earned.*

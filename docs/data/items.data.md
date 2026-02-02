@@ -2,6 +2,25 @@
 
 > Complete definitions for all weapons and accessories.
 > Schema: `schemas/item.schema.md`
+> Health System: `systems/health.system.md`
+> Energy System: `systems/energy.system.md`
+
+---
+
+## Stat Reference
+
+| Stat ID | Display Name | Item Types | Description |
+|---------|--------------|------------|-------------|
+| `attack` | Attack | Weapons | Damage per click |
+| `critChance` | Crit Chance | All | % chance for critical hit |
+| `critDamage` | Crit Damage | All | Multiplier on critical hits |
+| `goldFind` | Gold Find | Accessories | % bonus gold from kills |
+| `xpBonus` | XP Bonus | Accessories | % bonus XP from kills |
+| `maxHP` | Max HP | Accessories | Bonus to maximum HP |
+| `hpRegen` | HP Regen | Accessories | % HP regeneration per second |
+| `damageReduction` | Damage Reduction | Accessories | % damage reduction from monsters |
+| `energyGain` | Energy Gain | Accessories | % bonus Energy from clicks |
+| `armorPen` | Armor Penetration | Weapons | Ignores X armor on armored monsters |
 
 ---
 
@@ -292,6 +311,29 @@
 }
 ```
 
+#### Bandit King's Medallion (Rare) - Boss Drop
+```javascript
+{
+  id: "accessory_dustwind_rare_01",
+  name: "Bandit King's Medallion",
+  description: "Redfang's symbol of authority. Those who carry it are treated with fear... and respect.",
+  type: "accessory",
+  rarity: "rare",
+  zone: "dustwind",
+  requiredLevel: 18,
+  stats: {
+    goldFind: 0.18,
+    damageReduction: 0.05,
+    energyGain: 0.10
+  },
+  buyPrice: 1200,
+  sellPrice: 300,
+  shopAvailable: false,
+  dropOnly: true,
+  emoji: "🏅"
+}
+```
+
 ---
 
 ## Zone 3: Shadowmire Swamp
@@ -430,6 +472,29 @@
 }
 ```
 
+#### Mire Mother's Tear (Rare) - Boss Drop
+```javascript
+{
+  id: "accessory_shadowmire_rare_01",
+  name: "Mire Mother's Tear",
+  description: "A crystallized tear from the primordial entity. Pulsates with dark vitality.",
+  type: "accessory",
+  rarity: "rare",
+  zone: "shadowmire",
+  requiredLevel: 28,
+  stats: {
+    maxHP: 50,
+    hpRegen: 0.005,
+    damageReduction: 0.08
+  },
+  buyPrice: 3000,
+  sellPrice: 750,
+  shopAvailable: false,
+  dropOnly: true,
+  emoji: "💧"
+}
+```
+
 ---
 
 ## Zone 4: Ironhold Peaks
@@ -514,7 +579,8 @@
   stats: {
     attack: 145,
     critChance: 0.06,
-    critDamage: 0.4
+    critDamage: 0.4,
+    armorPen: 15
   },
   buyPrice: 9000,
   sellPrice: 2250,
@@ -566,6 +632,29 @@
   shopAvailable: true,
   dropOnly: false,
   emoji: "💍"
+}
+```
+
+#### Grimstone's Core Fragment (Rare) - Boss Drop
+```javascript
+{
+  id: "accessory_ironhold_rare_01",
+  name: "Grimstone's Core Fragment",
+  description: "A shard of the eternal guardian's crystalline heart. Nearly indestructible.",
+  type: "accessory",
+  rarity: "rare",
+  zone: "ironhold",
+  requiredLevel: 42,
+  stats: {
+    maxHP: 100,
+    damageReduction: 0.12,
+    armorPen: 10
+  },
+  buyPrice: 9000,
+  sellPrice: 2250,
+  shopAvailable: false,
+  dropOnly: true,
+  emoji: "💠"
 }
 ```
 
@@ -653,7 +742,8 @@
   stats: {
     attack: 290,
     critChance: 0.07,
-    critDamage: 0.5
+    critDamage: 0.5,
+    armorPen: 20
   },
   buyPrice: 24000,
   sellPrice: 6000,
@@ -705,6 +795,29 @@
   shopAvailable: true,
   dropOnly: false,
   emoji: "🪶"
+}
+```
+
+#### Pyrax's Ember (Rare) - Boss Drop
+```javascript
+{
+  id: "accessory_emberfell_rare_01",
+  name: "Pyrax's Ember",
+  description: "An eternal flame that once burned at the Flamelord's core. Invigorating warmth.",
+  type: "accessory",
+  rarity: "rare",
+  zone: "emberfell",
+  requiredLevel: 57,
+  stats: {
+    maxHP: 150,
+    hpRegen: 0.01,
+    energyGain: 0.15
+  },
+  buyPrice: 24000,
+  sellPrice: 6000,
+  shopAvailable: false,
+  dropOnly: true,
+  emoji: "🔥"
 }
 ```
 
@@ -792,7 +905,8 @@
   stats: {
     attack: 580,
     critChance: 0.08,
-    critDamage: 0.6
+    critDamage: 0.6,
+    armorPen: 30
   },
   buyPrice: 60000,
   sellPrice: 15000,
@@ -844,6 +958,29 @@
   shopAvailable: true,
   dropOnly: false,
   emoji: "🌌"
+}
+```
+
+#### Glacielle's Heart (Rare) - Boss Drop
+```javascript
+{
+  id: "accessory_frostpeak_rare_01",
+  name: "Glacielle's Heart",
+  description: "The frozen heart the Winter Queen discarded for immortality. Grants unearthly resilience.",
+  type: "accessory",
+  rarity: "rare",
+  zone: "frostpeak",
+  requiredLevel: 72,
+  stats: {
+    maxHP: 200,
+    damageReduction: 0.15,
+    hpRegen: 0.015
+  },
+  buyPrice: 60000,
+  sellPrice: 15000,
+  shopAvailable: false,
+  dropOnly: true,
+  emoji: "💙"
 }
 ```
 
@@ -931,7 +1068,8 @@
   stats: {
     attack: 1150,
     critChance: 0.09,
-    critDamage: 0.7
+    critDamage: 0.7,
+    armorPen: 35
   },
   buyPrice: 150000,
   sellPrice: 37500,
@@ -954,7 +1092,8 @@
   stats: {
     attack: 1700,
     critChance: 0.10,
-    critDamage: 0.9
+    critDamage: 0.9,
+    armorPen: 45
   },
   buyPrice: 375000,
   sellPrice: 93750,
@@ -977,7 +1116,8 @@
   stats: {
     attack: 2500,
     critChance: 0.12,
-    critDamage: 1.0
+    critDamage: 1.0,
+    armorPen: 100
   },
   buyPrice: 1250000,
   sellPrice: 312500,
@@ -1045,13 +1185,38 @@
   stats: {
     goldFind: 0.30,
     xpBonus: 0.20,
-    critChance: 0.05
+    damageReduction: 0.10
   },
   buyPrice: 150000,
   sellPrice: 37500,
   shopAvailable: false,
   dropOnly: true,
   emoji: "⚓"
+}
+```
+
+#### Crown of the Void (Legendary) - Final Boss Drop
+```javascript
+{
+  id: "accessory_voidrift_legendary_01",
+  name: "Crown of the Void",
+  description: "The crown worn by the Void King himself. You have conquered the ultimate darkness.",
+  type: "accessory",
+  rarity: "legendary",
+  zone: "voidrift",
+  requiredLevel: 100,
+  stats: {
+    maxHP: 500,
+    damageReduction: 0.20,
+    hpRegen: 0.02,
+    energyGain: 0.25,
+    critChance: 0.10
+  },
+  buyPrice: 1250000,
+  sellPrice: 312500,
+  shopAvailable: false,
+  dropOnly: true,
+  emoji: "👑"
 }
 ```
 

@@ -33,24 +33,29 @@ docs/
 │   └── coding-standards.md      # Code conventions to follow
 │
 ├── schemas/                     # Data contracts
-│   ├── player.schema.md         # Player state (what gets saved)
+│   ├── player.schema.md         # Player state (HP, Energy, skills, etc.)
 │   ├── monster.schema.md        # Monster definitions
 │   ├── item.schema.md           # Equipment system
 │   ├── zone.schema.md           # World structure
 │   └── skill.schema.md          # Skill system
 │
 ├── systems/                     # Game logic
-│   ├── combat.system.md         # Click → damage → death
+│   ├── combat.system.md         # Combat, monster types (6 types), damage
+│   ├── skill.system.md          # Skills, slots, unlocks, upgrades
+│   ├── energy.system.md         # Energy resource system
+│   ├── health.system.md         # Player HP, damage, healing, death
 │   ├── loot.system.md           # Drops & rewards
 │   ├── progression.system.md    # XP & leveling
 │   ├── economy.system.md        # Gold flow & pricing
+│   ├── tutorial.system.md       # Onboarding, tips, first-time bonuses
+│   ├── ascension.system.md      # Prestige system (post-100)
 │   └── ui.system.md             # Screens, navigation, feedback
 │
 ├── data/                        # Actual content
 │   ├── zones.data.md            # 7 zones with themes
-│   ├── monsters.data.md         # 35 monsters with stats
-│   ├── items.data.md            # All weapons & accessories
-│   └── skills.data.md           # 11 skills with costs
+│   ├── monsters.data.md         # 35 monsters with types and stats
+│   ├── items.data.md            # Weapons, accessories, new stats
+│   └── skills.data.md           # 22 skills (active + passive)
 │
 └── balance/
     └── curves.balance.md        # XP tables, scaling formulas
@@ -221,23 +226,24 @@ export function giveGold(amount) { }
 ### Must Have (v1.0)
 - [x] Specifications complete
 - [ ] Click combat loop
-- [ ] Monster spawning & death
+- [ ] Monster spawning & death (with 6 types)
 - [ ] Gold & XP rewards
 - [ ] Player leveling
-- [ ] 3 zones (Whisperwood, Dustwind, Shadowmire)
-- [ ] Basic weapons (shop purchase)
+- [ ] Player HP and Energy system
+- [ ] Skill system (4 active + 3 passive slots)
+- [ ] All 7 zones with bosses
+- [ ] Shop (weapons, accessories, consumables)
 - [ ] Save/Load system
+- [ ] Tutorial system
 - [ ] Mobile-responsive UI
 
 ### Nice to Have (v1.1)
-- [ ] Skills system
-- [ ] All 7 zones
-- [ ] Equipment drops
-- [ ] Boss battles
+- [ ] Equipment drops from monsters
 - [ ] Sound effects
+- [ ] Advanced monster AI patterns
 
 ### Future (v2.0)
-- [ ] Prestige system
+- [ ] Ascension/Prestige system
 - [ ] Achievements
 - [ ] Offline progress
 - [ ] PWA support
@@ -248,14 +254,42 @@ export function giveGold(amount) { }
 
 ### Global Constants (from _INDEX.md)
 ```javascript
+// Game
 GAME_NAME = "Realms of Clickoria"
 MAX_PLAYER_LEVEL = 100
+
+// Combat
 BASE_PLAYER_ATTACK = 5
 BASE_CRIT_CHANCE = 0.05
 BASE_CRIT_MULTIPLIER = 2.0
+
+// Health
+BASE_PLAYER_HP = 100
+HP_PER_LEVEL = 10
+
+// Energy
+MAX_ENERGY = 100
+ENERGY_PER_CLICK = 5
+ENERGY_ON_KILL = 15
+
+// Skills
+ACTIVE_SKILL_SLOTS = 4
+PASSIVE_SKILL_SLOTS = 3
+
+// Timing
 AUTO_SAVE_INTERVAL = 30000  // 30 seconds
 MONSTER_SPAWN_DELAY = 500   // 0.5 seconds
 ```
+
+### Monster Types
+| Type | Mechanic |
+|------|----------|
+| Normal | Standard HP |
+| Swift | Escape timer, damages player on escape |
+| Aggressive | Attack cycle, damages player if clicked during attack |
+| Regenerating | Regenerates HP over time |
+| Armored | Flat damage reduction |
+| Shielded | Shield bar + damage reduction |
 
 ### XP Formula
 ```javascript
@@ -265,6 +299,11 @@ xpToNextLevel = floor(100 * 1.12^(level-1))
 ### Damage Formula
 ```javascript
 damage = isCrit ? floor(attack * critDamage) : attack
+```
+
+### HP Formula
+```javascript
+maxHP = 100 + (level - 1) * 10 + bonuses
 ```
 
 ---

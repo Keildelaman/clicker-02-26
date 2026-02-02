@@ -17,19 +17,24 @@
 | `docs/schemas/zone.schema.md` | Zone definition structure | ✅ |
 | `docs/schemas/skill.schema.md` | Skill definition structure | ✅ |
 | **Systems** | Game logic & formulas | |
-| `docs/systems/combat.system.md` | Combat mechanics & formulas | ✅ |
+| `docs/systems/combat.system.md` | Combat mechanics, monster types, damage | ✅ |
+| `docs/systems/skill.system.md` | Skills, slots, unlocks, upgrades | ✅ |
+| `docs/systems/energy.system.md` | Energy resource system | ✅ |
+| `docs/systems/health.system.md` | Player HP, damage, healing, death | ✅ |
 | `docs/systems/loot.system.md` | Drop rates & reward calculation | ✅ |
 | `docs/systems/progression.system.md` | XP, leveling, unlocks | ✅ |
 | `docs/systems/economy.system.md` | Gold flow & pricing | ✅ |
+| `docs/systems/tutorial.system.md` | Onboarding, tips, first-time bonuses | ✅ |
+| `docs/systems/ascension.system.md` | Prestige system, permanent bonuses | ✅ |
 | `docs/systems/ui.system.md` | User interface & screens | ✅ |
 | **Architecture** | Code structure & standards | |
 | `docs/architecture/architecture.md` | System architecture | ✅ |
 | `docs/architecture/coding-standards.md` | Code conventions | ✅ |
 | **Data** | Actual game content | |
 | `docs/data/zones.data.md` | All zone definitions | ✅ |
-| `docs/data/monsters.data.md` | All monster definitions | ✅ |
-| `docs/data/items.data.md` | All item definitions | ✅ |
-| `docs/data/skills.data.md` | All skill definitions | ✅ |
+| `docs/data/monsters.data.md` | All monster definitions (with types) | ✅ |
+| `docs/data/items.data.md` | All item definitions (with new stats) | ✅ |
+| `docs/data/skills.data.md` | All skill definitions (active + passive) | ✅ |
 | **Balance** | Tuning & curves | |
 | `docs/balance/curves.balance.md` | Scaling formulas & tables | ✅ |
 
@@ -52,6 +57,7 @@ AUTO_SAVE_INTERVAL = 30000      # 30 seconds
 MONSTER_SPAWN_DELAY = 500       # 0.5 seconds after kill
 DAMAGE_NUMBER_DURATION = 800    # Floating damage display
 LEVEL_UP_CELEBRATION = 2000     # Level up screen duration
+ENERGY_GAIN_COOLDOWN = 200      # 0.2s between Energy gains from clicks
 ```
 
 ### Combat Defaults
@@ -60,6 +66,30 @@ BASE_PLAYER_ATTACK = 5          # Starting attack power
 BASE_CRIT_CHANCE = 0.05         # 5% base crit chance
 BASE_CRIT_MULTIPLIER = 2.0      # Crits deal 2x damage
 MIN_DAMAGE = 1                  # Minimum damage per click
+```
+
+### Health Defaults
+```
+BASE_PLAYER_HP = 100            # Starting max HP
+HP_PER_LEVEL = 10               # +10 max HP per level
+BASE_HP_REGEN = 0.005           # 0.5% HP regen per second
+HP_CAUTION_THRESHOLD = 0.5      # Yellow bar below 50%
+HP_CRITICAL_THRESHOLD = 0.25    # Red bar below 25%
+```
+
+### Energy Defaults
+```
+MAX_ENERGY = 100                # Base Energy cap
+ENERGY_PER_CLICK = 5            # Energy gained per click
+ENERGY_ON_KILL = 15             # Energy gained on monster kill
+ENERGY_ON_BOSS_KILL = 50        # Energy gained on boss kill
+ENERGY_REGEN_PER_SECOND = 2     # Passive Energy regen
+```
+
+### Death Penalties
+```
+DEATH_GOLD_LOSS = 0.5           # Lose 50% gold on death
+DEATH_LEVEL_MILESTONE = 10      # Reset to nearest 10 (1, 10, 20, etc)
 ```
 
 ### Economy Defaults
@@ -73,7 +103,22 @@ SELL_PRICE_RATIO = 0.25         # Sell items for 25% of buy price
 STARTING_LEVEL = 1
 BASE_XP_REQUIREMENT = 100       # XP needed for level 2
 XP_GROWTH_RATE = 0.12           # 12% more XP per level
-STAT_POINTS_PER_LEVEL = 1       # Skill points gained per level
+```
+
+### Skill Defaults
+```
+ACTIVE_SKILL_SLOTS = 4          # Max equipped active skills
+PASSIVE_SKILL_SLOTS = 3         # Max equipped passive skills
+BASE_SKILL_MAX_LEVEL = 5        # Max skill level (before ascension)
+ASCENDED_SKILL_MAX_LEVEL = 10   # Max skill level (with ascension)
+```
+
+### Ascension Defaults
+```
+ASCENSION_DAMAGE_BONUS = 0.05   # +5% damage per ascension
+ASCENSION_GOLD_BONUS = 0.05     # +5% gold per ascension
+ASCENSION_XP_BONUS = 0.05       # +5% XP per ascension
+ASCENSION_HP_BONUS = 50         # +50 HP per ascension
 ```
 
 ---
@@ -110,13 +155,15 @@ All stats used in the game. Referenced by: Player, Items, Skills, Monsters
 | `critDamage` | Crit Damage | Multiplier on critical | 2.0 (200%) | Additive |
 | `goldFind` | Gold Find | % bonus gold from kills | 0 (0%) | Additive |
 | `xpBonus` | XP Bonus | % bonus XP from kills | 0 (0%) | Additive |
-| `autoAttack` | Auto Attack | Clicks per second | 0 | Additive |
-| `maxHealth` | Max Health | Player max HP (future) | 100 | Additive |
-| `defense` | Defense | Damage reduction (future) | 0 | Additive |
+| `maxHP` | Max HP | Flat bonus to max HP | 0 | Additive |
+| `hpRegen` | HP Regen | % HP regeneration per second | 0.005 (0.5%) | Additive |
+| `damageReduction` | Damage Reduction | % damage reduced from monsters | 0 (0%) | Multiplicative |
+| `energyGain` | Energy Gain | % bonus Energy from clicks/kills | 0 (0%) | Additive |
+| `armorPen` | Armor Penetration | Flat armor ignored on armored monsters | 0 | Additive |
 
 **Stacking Rules:**
 - `Additive`: Sum all sources. Example: 5 base attack + 10 weapon + 3 skill = 18 total
-- `Multiplicative` (future): Multiply together. Example: 1.1 × 1.2 = 1.32 (32% bonus)
+- `Multiplicative`: Multiply together. Example: 50% Iron Skin + 10% item = 1 - (0.5 × 0.9) = 55% total reduction
 
 ---
 
@@ -146,8 +193,20 @@ Consistent naming for all game entities.
 | Monster | `{zone}_{name}` | `whisperwood_sprite`, `dustwind_bandit` |
 | Boss | `boss_{name}` | `boss_mossback`, `boss_redfang` |
 | Item | `{type}_{zone}_{rarity}_{number}` | `weapon_whisperwood_common_01` |
-| Skill Active | `skill_active_{name}` | `skill_active_power_strike` |
-| Skill Passive | `skill_passive_{name}` | `skill_passive_sharp_blades` |
+| Skill | `skill_{name}` | `skill_power_strike`, `skill_heal` |
+
+## Monster Types
+
+| Type ID | Mechanic | First Zone |
+|---------|----------|------------|
+| `normal` | Standard HP, no special mechanic | Whisperwood (Zone 1) |
+| `swift` | Escape timer, damages player on escape | Dustwind (Zone 2) |
+| `aggressive` | Attack cycle, damages player if clicked during attack | Dustwind (Zone 2) |
+| `regenerating` | Regenerates HP over time | Shadowmire (Zone 3) |
+| `armored` | Flat damage reduction per hit | Ironhold (Zone 4) |
+| `shielded` | Shield bar, damage reduction while shielded | Ironhold (Zone 4) |
+
+Bosses are always `aggressive` and may have a secondary type (e.g., `aggressive+armored`).
 
 ---
 
@@ -189,8 +248,12 @@ totalXP = baseXP + bonusXP
 For future migration support.
 
 ```
-SAVE_VERSION = 1
+SAVE_VERSION = 2
 ```
+
+**Version History:**
+- v1: Initial release
+- v2: Added HP, Energy, skills, ascension, consumables, tutorial state
 
 Save structure defined in `schemas/player.schema.md`.
 
@@ -200,23 +263,29 @@ Save structure defined in `schemas/player.schema.md`.
 
 MVP (Version 1.0) must include:
 
-1. ✅ Core click combat loop
-2. ✅ Monster spawning & death
-3. ✅ Gold & XP rewards
-4. ✅ Player leveling
-5. ✅ 3 zones (Whisperwood, Dustwind, Shadowmire)
-6. ✅ Basic weapons (shop purchase)
-7. ✅ Save/Load system
-8. ✅ Mobile-responsive UI
+1. ✅ Specifications complete
+2. [ ] Core click combat loop
+3. [ ] Monster spawning & death (with 6 types)
+4. [ ] Gold & XP rewards
+5. [ ] Player leveling
+6. [ ] Player HP and Energy system
+7. [ ] Skill system (active + passive)
+8. [ ] All 7 zones with bosses
+9. [ ] Shop with weapons, accessories, consumables
+10. [ ] Save/Load system
+11. [ ] Mobile-responsive UI
+12. [ ] Tutorial system
 
-Post-MVP:
-- Skills system
-- All 7 zones
-- Equipment rarities & drops
-- Boss battles
-- Achievements
+Post-MVP (v1.1):
+- Equipment drops from monsters
 - Sound effects
-- Prestige system
+- Advanced monster AI patterns
+
+Future (v2.0):
+- Ascension/Prestige system
+- Achievements
+- Offline progress
+- PWA support
 
 ---
 
