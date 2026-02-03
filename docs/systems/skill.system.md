@@ -107,7 +107,7 @@ Skills cost MP to unlock based on their power tier:
 | Utility | 4 MP | Gold Rush, XP Boost, Reflect |
 | Combat | 5 MP | Execute, Berserk Rage, Crit Surge |
 | Advanced | 6 MP | Deep Pockets, Thick Skin |
-| Elite | 8 MP | Undying, Soul Rend |
+| Elite | 8 MP | Undying, Soul Rend, Shield Wall |
 | Master | 10 MP | Transcendence, Void Touch |
 
 **Power Strike is FREE** - Every player starts with it unlocked at Level 1.
@@ -202,7 +202,7 @@ const SKILL_SWAP_RULES = {
 
 ## Skill Categories
 
-### Active Skills (15 Total)
+### Active Skills (16 Total)
 
 #### Offense Active (5 skills)
 
@@ -214,7 +214,7 @@ const SKILL_SWAP_RULES = {
 | **Crit Surge** | Combat | 25 | 30s | +50-75% crit chance for 10-15s |
 | **Soul Rend** | Elite | 35 | 20s | Deal 10-15% of monster max HP |
 
-#### Defense Active (4 skills)
+#### Defense Active (5 skills)
 
 | Skill | Tier | Energy | Cooldown | Effect |
 |-------|------|--------|----------|--------|
@@ -222,6 +222,7 @@ const SKILL_SWAP_RULES = {
 | **Iron Skin** | Basic | 25 | 30s | 50-75% damage reduction for 10-15s |
 | **Reflect** | Utility | 30 | 25s | Reflect next attack at 100-200% |
 | **Undying** | Elite | 50 | 180s | Survive fatal blow with 1-25% HP |
+| **Shield Wall** | Elite | 40 | 60s | Gain 20-30% max HP as absorb shield |
 
 #### Utility Active (6 skills)
 
@@ -433,6 +434,22 @@ Levels:
   ★★★☆☆: 2.4x damage, 1.6x damage taken
   ★★★★☆: 2.6x damage, 1.4x damage taken
   ★★★★★: 3x damage, 1x damage taken (!)
+```
+
+### Shield Wall (Elite - 8 MP)
+```
+Type: Active (Defense)
+Tier: Elite (8 MP unlock)
+Energy: 40 | Cooldown: 60s
+
+Effect: Gain a damage-absorbing shield
+
+Levels:
+  ★☆☆☆☆: 20% max HP shield, 20s duration
+  ★★☆☆☆: 22% max HP shield, 22s duration
+  ★★★☆☆: 25% max HP shield, 25s duration
+  ★★★★☆: 28% max HP shield, 28s duration
+  ★★★★★: 30% max HP shield, 30s duration
 ```
 
 ### Transcendence (Master - 10 MP)
