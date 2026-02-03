@@ -129,27 +129,22 @@ Animation: Celebration particles
 │           +1 Base Attack                │
 │           +10 Max HP                    │
 │                                         │
-│           ────────────                  │
-│                                         │
-│     🆕 SKILL UNLOCKED!                  │
-│                                         │
-│     ⚔️ Power Strike                     │
-│     Deal 3x damage!                     │
-│     (Uses 15 Energy)                    │
-│                                         │
 │           [AWESOME!]                    │
 └─────────────────────────────────────────┘
+```
 
-Tutorial Addition:
-After dismissing modal, highlight skill bar:
+### Step 4b: Skill Bar Introduction (After First Kill)
 
+Power Strike is available from the start. After the player's first kill:
+
+```
 ┌──────────────────────────────────────┐
 │ This is your SKILL BAR               │
-│ Tap a skill when you have            │
-│ enough Energy to use it!             │
+│ You have Power Strike equipped!      │
+│ Tap it when you have enough Energy.  │
 └──────────────────────────────────────┘
       ↓
-[Power Strike] [ Empty ] [ Empty ] [ Empty ]
+[⚔️ Power Strike] [ Empty ] [ Empty ] [ Empty ]
 ```
 
 ### Step 5: First Energy Full

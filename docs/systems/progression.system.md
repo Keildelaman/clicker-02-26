@@ -107,8 +107,9 @@ function applyLevelUpStats(player) {
   // This is a small boost - main power comes from equipment
   player.stats.attack += 1;  // +1 attack per level
 
-  // Future: maxHealth increases
-  // player.stats.maxHealth += 5;
+  // Max HP increases
+  player.maxHP += HP_PER_LEVEL;  // +10 HP per level
+  player.hp = player.maxHP;      // Full heal on level up
 }
 ```
 
@@ -139,7 +140,7 @@ function applyLevelUpStats(player) {
 │      Level 15               │
 │                             │
 │      +1 Attack              │
-│      +1 Skill Point         │
+│      +10 Max HP             │
 │                             │
 │   🎉 New zone available! 🎉  │
 │      Shadowmire Swamp       │
@@ -244,40 +245,37 @@ function checkZoneUnlock(player, defeatedBossId) {
 
 ---
 
-## Skill Unlock System
+## Skill System
 
-Skills are unlocked through **level milestones** and **gold purchases**. See `skill.system.md` for full details.
+Skills are purchased using **Mastery Points (MP)**. See `skill.system.md` for full details.
 
-### Skill Unlock Flow
+### Mastery Points
 
-1. At certain level milestones, player CHOOSES one of two skills
-2. The unchosen skill can be purchased later with gold
-3. Skills are upgraded by spending gold
+- Earned by defeating monsters (1 MP per kill, 2 MP for bosses)
+- Spent to purchase and upgrade skills
+- Reset on ascension (start with bonus MP based on ascension level)
 
-### Level-Gated Skill Unlocks
+### Skill Purchase
 
-See `skill.system.md` for the complete unlock schedule. Key milestones:
+All skills (except Power Strike) must be purchased with MP:
 
-| Level | Unlock Type | Skills Available |
-|-------|-------------|------------------|
-| 1 | Auto-unlock | Power Strike (active, free) |
-| 3 | Choice | Sharp Blades OR Killer Instinct |
-| 5 | Choice | Heal OR Iron Skin |
-| 8 | Choice | Gold Rush OR XP Boost |
-| 10 | Choice | Execute OR Berserk Rage |
-| 15+ | Choice | More skills at 15, 20, 25, 30, 40, 50, 60, 75, 90 |
+| Skill Tier | MP Cost | Examples |
+|------------|---------|----------|
+| Starter | Free | Power Strike |
+| Basic | 3 MP | Sharp Blades, Deep Pockets |
+| Standard | 5 MP | Heal, Execute, Gold Rush |
+| Advanced | 7 MP | Shield Wall, Berserk |
+| Master | 10 MP | Void Strike, Eternal Guard |
+
+### Skill Upgrades
+
+Each skill level costs 1 MP to upgrade (Lv 2-5).
 
 ### Level Check Function
 
 ```javascript
 function checkLevelUnlocks(player) {
   const level = player.level;
-
-  // Check for skill unlock milestones
-  const skillMilestones = SKILL_UNLOCK_MILESTONES[level];
-  if (skillMilestones && !player.hasChosenSkillAt[level]) {
-    showSkillChoiceModal(skillMilestones);
-  }
 
   // Check for milestone messages
   const milestones = {

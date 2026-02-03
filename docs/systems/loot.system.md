@@ -145,13 +145,7 @@ function giveDrops(player, drops) {
   for (const itemId of drops) {
     const item = getItem(itemId);
 
-    // Check inventory space
-    if (player.inventory.length >= MAX_INVENTORY_SIZE) {
-      showMessage(`Inventory full! ${item.name} lost.`);
-      continue;
-    }
-
-    // Add to inventory
+    // Add to inventory (unlimited capacity)
     player.inventory.push(itemId);
     showItemDropAnimation(item);
     showMessage(`Found: ${item.name}!`);
@@ -351,8 +345,6 @@ function getDropChanceWithLuck(baseChance, player) {
 
 ```javascript
 const LOOT_CONSTANTS = {
-  MAX_INVENTORY_SIZE: 100,
-
   // Drop rate multipliers by zone
   ZONE_DROP_MULTIPLIERS: {
     whisperwood: 1.0,

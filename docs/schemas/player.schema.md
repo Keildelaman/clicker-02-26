@@ -391,27 +391,31 @@ function equipPassiveSkill(player, skillId, slotIndex) {
 
 ---
 
-## Skill Discovery System
+## Skill Purchase System
 
 ```javascript
-// Discover a skill from an offering
-function discoverSkill(player, skillId, offering) {
-  // Add to discovered
+// Purchase a skill with Mastery Points
+function purchaseSkill(player, skillId) {
+  const skillDef = getSkillDefinition(skillId);
+  if (!skillDef) return false;
+
+  // Check if already unlocked
+  if (player.unlockedSkills.includes(skillId)) return false;
+
+  // Check MP cost
+  const cost = skillDef.mpCost;  // 3-10 MP depending on skill tier
+  const availableMP = player.masteryPoints - player.masterySpent;
+  if (availableMP < cost) return false;
+
+  // Purchase!
+  player.masterySpent += cost;
   player.unlockedSkills.push(skillId);
   player.skills[skillId] = { level: 1, lastUsed: null };
 
-  // Mark others as LOST (cannot be discovered this run)
-  offering.filter(s => s !== skillId).forEach(s => {
-    if (!player.lostSkills.includes(s)) {
-      player.lostSkills.push(s);
-    }
-  });
-
-  // Check for synergies
-  checkAndUnlockSynergies(player);
+  return true;
 }
 
-// Upgrade a skill (costs Mastery Points + Gold)
+// Upgrade a skill (costs Mastery Points only)
 function upgradeSkill(player, skillId) {
   if (!player.unlockedSkills.includes(skillId)) return false;
 
@@ -421,31 +425,21 @@ function upgradeSkill(player, skillId) {
 
   if (targetLevel > maxLevel) return false;
 
-  const mpCost = MASTERY_COST_PER_LEVEL[targetLevel - 1];
-  const goldCost = GOLD_COST_PER_LEVEL[targetLevel - 1];
+  // Upgrade cost: 1 MP per level (Lv 2 = 1 MP, Lv 3 = 1 MP, etc.)
+  const mpCost = 1;
+  const availableMP = player.masteryPoints - player.masterySpent;
 
-  if (player.masteryPoints - player.masterySpent < mpCost) return false;
-  if (player.gold < goldCost) return false;
+  if (availableMP < mpCost) return false;
 
   player.masterySpent += mpCost;
-  player.gold -= goldCost;
   skill.level = targetLevel;
 
   return true;
 }
 
-// Check and unlock synergies
-function checkAndUnlockSynergies(player) {
-  for (const synergy of SYNERGIES) {
-    const hasAll = synergy.requiredSkills.every(
-      s => player.unlockedSkills.includes(s)
-    );
-
-    if (hasAll && !player.unlockedSynergies.includes(synergy.id)) {
-      player.unlockedSynergies.push(synergy.id);
-      showSynergyUnlockedModal(synergy);
-    }
-  }
+// Get available MP for display
+function getAvailableMasteryPoints(player) {
+  return player.masteryPoints - player.masterySpent;
 }
 ```
 

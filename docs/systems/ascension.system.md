@@ -71,7 +71,7 @@ Once available, shows in:
 │  YOU WILL RESET:                        │
 │  ┌─────────────────────────────────┐    │
 │  │ ⚠️ Level → 1                     │    │
-│  │ ⚠️ Gold → 0 (+ auto-sell bonus)  │    │
+│  │ ⚠️ Gold → 0                      │    │
 │  │ ⚠️ All Skills (fresh build!)     │    │
 │  │ ⚠️ Zone Progress → Whisperwood   │    │
 │  └─────────────────────────────────┘    │
@@ -214,7 +214,6 @@ function resetSkillsOnAscension(player) {
 | Statistics | ✓ | All-time stats preserved |
 | Settings | ✓ | Preferences unchanged |
 | Tutorial completion | ✓ | No re-tutorial |
-| Bonus gold | ✓ | From auto-sold items |
 
 ### What Resets
 
@@ -223,8 +222,9 @@ function resetSkillsOnAscension(player) {
 | Skills | ✓ | Fresh build each run (except Power Strike) |
 | Mastery Points | ✓ | Start with Ascension bonus MP only |
 | Level | ✓ | Back to 1 |
-| Gold | ✓ | Start at 0 (plus auto-sold bonus) |
+| Gold | ✓ | Start at 0 |
 | Zone progress | ✓ | Back to Whisperwood |
+| Non-vaulted items | ✓ | Lost forever if not in vault |
 
 ### Equipment Vault
 
@@ -235,7 +235,7 @@ The vault stores items you want to keep across ascensions.
 - Must **choose** which items to keep before ascending
 - Equipped items automatically selected (3 slots: weapon, armor, accessory)
 - Remaining 5 slots can be filled from inventory
-- Items NOT selected are **auto-sold** for gold (bonus starting gold next run)
+- Items NOT selected are **lost forever** (choose wisely!)
 - Can **withdraw** items when you meet level requirement
 - Withdrawal costs **gold** (25% of item's buy price)
 - Can **sell** vault items for gold at any level (25% of buy price)
@@ -248,7 +248,7 @@ The vault stores items you want to keep across ascensions.
 │          📦 SELECT VAULT ITEMS          │
 │                                         │
 │  Choose up to 8 items to keep:          │
-│  (Others will be sold automatically)    │
+│  (Others will be LOST forever!)         │
 │                                         │
 │  EQUIPPED (auto-selected):              │
 │  ┌─────────────────────────────────┐    │
@@ -266,9 +266,7 @@ The vault stores items you want to keep across ascensions.
 │  │ ☐ 💍 Lucky Charm                │    │
 │  └─────────────────────────────────┘    │
 │                                         │
-│  Items not selected: AUTO-SOLD          │
-│  Est. gold from sold items: 12,450g     │
-│  (Applied as bonus gold next run)       │
+│  ⚠️ Items not selected will be LOST!    │
 │                                         │
 │  Slots: 3/8 used                        │
 │                                         │
@@ -317,7 +315,7 @@ The vault stores items you want to keep across ascensions.
 | Store item (during ascension) | Free (limited to 8 slots) |
 | Withdraw item | 25% of buy price (gold) |
 | Sell vault item | 25% of buy price (gold) |
-| Auto-sell on ascension | 25% of buy price (added to next run) |
+| Items not vaulted | Lost forever |
 
 **Why Withdrawal Costs Gold:**
 - Creates a meaningful decision (spend gold now vs. save for shop)

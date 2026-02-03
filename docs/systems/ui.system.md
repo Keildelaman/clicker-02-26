@@ -335,7 +335,7 @@ Accessed from Shop screen. Shows items stored from previous ascensions.
 │  │ Deal 4x damage on next click    │    │
 │  │ Energy: 15 | Cooldown: 5s       │    │
 │  │ ─────────────────────────────── │    │
-│  │ [UPGRADE 500g]    [UNEQUIP]     │    │
+│  │ [UPGRADE 1 MP]    [UNEQUIP]     │    │
 │  └─────────────────────────────────┘    │
 │                                         │
 │  ┌─────────────────────────────────┐    │
@@ -343,52 +343,48 @@ Accessed from Shop screen. Shows items stored from previous ascensions.
 │  │ Restore 30% max HP              │    │
 │  │ Energy: 20 | Cooldown: 15s      │    │
 │  │ ─────────────────────────────── │    │
-│  │ [UPGRADE 400g]    [UNEQUIP]     │    │
+│  │ [UPGRADE 1 MP]    [UNEQUIP]     │    │
 │  └─────────────────────────────────┘    │
 │                                         │
 │  ┌─────────────────────────────────┐    │
-│  │ ☠️ Execute           🔒 LOCKED  │    │
+│  │ ☠️ Execute          NOT OWNED   │    │
 │  │ Instant kill if monster <15% HP │    │
-│  │ Unlocks at: Level 10            │    │
+│  │ Cost: 5 MP                      │    │
 │  │ ─────────────────────────────── │    │
-│  │ [LOCKED]                         │    │
+│  │ [BUY 5 MP]                      │    │
 │  └─────────────────────────────────┘    │
 │                                         │
 └─────────────────────────────────────────┘
 ```
 
-### Skill Unlock Modal
+### Skill Purchase Confirmation
 
-When player reaches a skill unlock milestone:
+When player clicks [BUY] on a skill:
 
 ```
 ┌─────────────────────────────────────────┐
-│          🎉 NEW SKILL AVAILABLE! 🎉     │
+│          ⚔️ PURCHASE SKILL?             │
 ├─────────────────────────────────────────┤
 │                                         │
-│     Choose ONE skill to unlock:         │
+│     Execute                             │
+│     "Instant kill if monster <15% HP"   │
 │                                         │
-│  ┌─────────────────────────────────┐    │
-│  │ ⚔️ Power Strike                 │    │
-│  │ Deal 3x damage on next click    │    │
-│  │ Great for burst damage          │    │
-│  │ ─────────────────────────────── │    │
-│  │         [CHOOSE THIS]           │    │
-│  └─────────────────────────────────┘    │
+│     Cost: 5 MP                          │
+│     Your MP: 8 available                │
 │                                         │
-│              ── OR ──                   │
+│     [CONFIRM]        [CANCEL]           │
 │                                         │
-│  ┌─────────────────────────────────┐    │
-│  │ 💚 Heal                          │    │
-│  │ Restore 25% max HP              │    │
-│  │ Essential for survival          │    │
-│  │ ─────────────────────────────── │    │
-│  │         [CHOOSE THIS]           │    │
-│  └─────────────────────────────────┘    │
-│                                         │
-│  Note: Unchosen skill can be bought     │
-│  later from the shop (500g)             │
-│                                         │
+└─────────────────────────────────────────┘
+```
+
+### Mastery Points Display (Skills Screen Header)
+
+```
+┌─────────────────────────────────────────┐
+│  ⭐ MASTERY POINTS: 8 / 23 spent        │
+│  ─────────────────────────────────────  │
+│  Earn MP by defeating monsters!         │
+│  Boss kills: +2 MP | Regular: +1 MP     │
 └─────────────────────────────────────────┘
 ```
 

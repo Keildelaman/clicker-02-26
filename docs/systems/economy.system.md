@@ -222,34 +222,7 @@ function calculateItemPrice(zone, rarity) {
 | Frostpeak | 10,000 | 25,000 | 60,000 | 150,000 | 500,000 |
 | Voidrift | 25,000 | 62,500 | 150,000 | 375,000 | 1,250,000 |
 
-### 2. Skills
-
-**Skill Unlock Costs:**
-
-Skills are unlocked at level milestones via choice (pick 1 of 2). Unchosen skills can be bought later:
-
-| Skill | Unlock Cost (if not chosen) | Upgrade Costs (1→5) |
-|-------|----------------------------|---------------------|
-| Sharp Blades | Free (auto-unlock) | 50→800 |
-| Power Strike | 50 | 200→1,500 |
-| Heal | 50 | 200→1,500 |
-| Deep Pockets | 75 | 100→600 |
-| Fast Learner | 75 | 100→600 |
-| Lucky Strikes | 100 | 150→900 |
-| Gold Rush | 300 | 600→2,500 |
-| Execute | 200 | 400→2,000 |
-| Shield Wall | 200 | 400→2,000 |
-| Berserk | 500 | 800→4,000 |
-| Iron Skin | 400 | 600→3,000 |
-
-**Total Skill Costs (all maxed, all purchased):**
-- Passive skills (11 skills × 5 levels): ~150,000 gold
-- Active skills (11 skills × 5 levels): ~150,000 gold
-- **Grand Total: ~300,000 gold**
-
-See `skills.data.md` for complete pricing.
-
-### 3. Selling Items
+### 2. Selling Items
 
 ```javascript
 function calculateSellPrice(buyPrice) {
@@ -347,12 +320,6 @@ function purchaseItem(player, itemId) {
   // Check gold
   if (player.gold < item.buyPrice) {
     showMessage("Not enough gold!");
-    return false;
-  }
-
-  // Check inventory space
-  if (player.inventory.length >= MAX_INVENTORY_SIZE) {
-    showMessage("Inventory full!");
     return false;
   }
 
@@ -500,7 +467,6 @@ const ACHIEVEMENTS = {
 ```javascript
 const ECONOMY_CONSTANTS = {
   SELL_PRICE_RATIO: 0.25,           // Sell for 25% of buy
-  MAX_INVENTORY_SIZE: 100,
 
   ZONE_BASE_PRICE: {
     whisperwood: 50,

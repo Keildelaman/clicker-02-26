@@ -410,20 +410,6 @@ const HEALTH_CONSTANTS = {
   DEATH_GOLD_LOSS: 0.5,             // 50%
   DEATH_LEVEL_MILESTONE: 10,        // Round down to nearest 10
 
-  // Potions
-  HEALTH_POTION: {
-    restore: 0.5,                   // 50% max HP
-    cost: 100,
-    cooldown: 60,
-    maxStack: 10
-  },
-  SHIELD_POTION: {
-    shield: 0.3,                    // 30% max HP as shield
-    cost: 200,
-    cooldown: 120,
-    maxStack: 5
-  },
-
   // Visual thresholds
   HP_CAUTION_THRESHOLD: 0.5,        // Yellow below 50%
   HP_CRITICAL_THRESHOLD: 0.25       // Red below 25%
