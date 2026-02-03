@@ -1,16 +1,18 @@
 # Skill System
 
-> Defines the skill tree, skill slots, skill acquisition, and skill mechanics.
+> Defines skill discovery, mastery, synergies, and meaningful build choices.
 
 ---
 
 ## Overview
 
-The skill system provides strategic depth through:
-- **Active Skills** - Manually triggered abilities with cooldowns
-- **Passive Skills** - Always-on bonuses (limited slots)
-- **Skill Tree** - Unlock paths with meaningful choices
-- **Build Diversity** - Limited slots force interesting decisions
+The skill system creates **meaningful, permanent choices** through:
+- **Roguelike Discovery** - Random skill offerings, unchosen skills are LOST
+- **Mastery Points** - Limited resource to level skills, forces prioritization
+- **Skill Synergies** - Combo bonuses reward themed builds
+- **Build Identity** - Each run creates a unique character
+
+**Core Philosophy: Every run should feel different.**
 
 ---
 
@@ -21,45 +23,45 @@ The skill system provides strategic depth through:
 ```
 ┌─────────────────────────────────────────┐
 │  [1]        [2]        [3]        [4]   │
-│  Power     Heal       Crit       Gold   │
-│  Strike    Surge      Surge      Rush   │
-│  ▓▓▓░░     READY      ▓▓▓▓▓░     READY  │
+│  Power     Heal       Execute    ???    │
+│  Strike    ★★☆       ★★★☆☆     Empty   │
+│  ▓▓▓░░     READY      ▓▓▓▓▓░            │
 │  2.1s                 4.8s              │
 └─────────────────────────────────────────┘
 ```
 
 - 4 active skill slots on the skill bar
-- Can unlock many skills, but only equip 4 at a time
-- Swap skills anytime outside of combat
+- Only equip skills you've **discovered** this run
+- Swap discovered skills anytime outside of combat
 - Each slot mapped to tap button or keyboard (1-4)
 
 ### Passive Skill Slots: 3
 
 ```
 Equipped Passives:
-├── Sharp Blades Lv 3 (+15% damage)
-├── Deep Pockets Lv 2 (+10% gold)
-└── Thick Skin Lv 1 (+5% HP)
+├── Sharp Blades ★★★ (+15% damage)
+├── Deep Pockets ★★ (+10% gold)
+└── [EMPTY SLOT]
 ```
 
 - 3 passive skill slots
-- Passives are always active once equipped
-- Can unlock many passives, but only equip 3 at a time
-- Swap passives anytime outside of combat
+- Only equip passives you've **discovered** this run
+- Swap discovered passives anytime outside of combat
 
 ---
 
-## Skill Acquisition
+## Skill Discovery (Roguelike System)
 
-### Choice-Based Unlocks
+### How It Works
 
-At milestone levels, players CHOOSE which skill to unlock:
+At milestone levels, you're offered **3 RANDOM skills** from the available pool:
 
 ```
 ┌─────────────────────────────────────────┐
 │         ⭐ LEVEL 10 REACHED! ⭐          │
 │                                         │
-│      Choose your new skill:             │
+│    Discover a new skill!                │
+│    (Unchosen skills are LOST forever)   │
 │                                         │
 │  ┌─────────────────────────────────┐    │
 │  │ ⚔️ EXECUTE                       │    │
@@ -75,63 +77,227 @@ At milestone levels, players CHOOSE which skill to unlock:
 │  │              [CHOOSE]           │    │
 │  └─────────────────────────────────┘    │
 │                                         │
-│      You can unlock the other           │
-│      skill later for 500g               │
+│  ┌─────────────────────────────────┐    │
+│  │ 💚 HEAL                          │    │
+│  │ Restore 25% of max HP           │    │
+│  │              [CHOOSE]           │    │
+│  └─────────────────────────────────┘    │
+│                                         │
+│      ⚠️ You can only pick ONE!          │
+│      The others will NOT be available   │
+│      this run.                          │
+│                                         │
 └─────────────────────────────────────────┘
 ```
 
-### Unlock Schedule
+### Key Rules
 
-| Level | Skill Choice | Alternative |
-|-------|--------------|-------------|
-| 1 | Power Strike (free) | - |
-| 3 | Sharp Blades OR Killer Instinct | 100g later |
-| 5 | Heal OR Iron Skin | 150g later |
-| 8 | Gold Rush OR XP Boost | 200g later |
-| 10 | Execute OR Berserk Rage | 500g later |
-| 15 | Crit Surge OR Perfect Strike | 750g later |
-| 20 | Reflect OR Time Warp | 1,000g later |
-| 25 | Deep Pockets OR Fast Learner | 1,500g later |
-| 30 | Regeneration OR Thick Skin | 2,000g later |
-| 40 | Undying | 5,000g |
-| 50 | Soul Rend | 10,000g |
-| 60 | Shield Breaker | 15,000g |
-| 75 | Void Touch | 25,000g |
-| 90 | Transcendence | 50,000g |
+1. **3 Random Offerings** - Each milestone offers 3 skills from the tier pool
+2. **Pick 1, Lose 2** - Unchosen skills are GONE this run (not buyable!)
+3. **No Guaranteed Skills** - Except Power Strike at Level 1
+4. **Weighted Randomness** - Early tiers have more basic skills, later tiers have specialized ones
 
-### Buying Unchosen Skills
+### Discovery Milestones
 
-When you reach a milestone and pick one skill, the other becomes "unchosen":
+| Level | Tier | Pool Size | Skills Offered |
+|-------|------|-----------|----------------|
+| 1 | Starter | 1 | Power Strike (guaranteed) |
+| 3 | Basic | 4 | Sharp Blades, Killer Instinct, Heal, Iron Skin |
+| 5 | Basic | 4 | (remaining from Basic pool) |
+| 8 | Utility | 4 | Gold Rush, XP Boost, Time Warp, Reflect |
+| 10 | Combat | 4 | Execute, Berserk Rage, Crit Surge, Perfect Strike |
+| 15 | Combat | 4 | (remaining from Combat pool) |
+| 20 | Advanced | 4 | Deep Pockets, Fast Learner, Thick Skin, Regeneration |
+| 30 | Advanced | 4 | (remaining from Advanced pool) |
+| 40 | Elite | 4 | Undying, Soul Rend, Shield Breaker, Energy Flow |
+| 50 | Elite | 4 | (remaining from Elite pool) |
+| 60 | Master | 3 | Quick Reflexes, Void Touch, Transcendence |
+| 75 | Master | 3 | (remaining from Master pool) |
+
+### Discovery Pool Management
+
+```javascript
+const SKILL_POOLS = {
+  basic: ['sharp_blades', 'killer_instinct', 'heal', 'iron_skin'],
+  utility: ['gold_rush', 'xp_boost', 'time_warp', 'reflect'],
+  combat: ['execute', 'berserk_rage', 'crit_surge', 'perfect_strike'],
+  advanced: ['deep_pockets', 'fast_learner', 'thick_skin', 'regeneration'],
+  elite: ['undying', 'soul_rend', 'shield_breaker', 'energy_flow'],
+  master: ['quick_reflexes', 'void_touch', 'transcendence']
+};
+
+function getSkillOffering(player, tier) {
+  const pool = SKILL_POOLS[tier];
+  const undiscovered = pool.filter(s => !player.discoveredSkills.includes(s));
+
+  // Offer 3 random from undiscovered (or all if less than 3 remain)
+  return shuffle(undiscovered).slice(0, 3);
+}
+
+function discoverSkill(player, skillId, offering) {
+  // Add to discovered
+  player.discoveredSkills.push(skillId);
+
+  // Mark others as LOST (cannot be discovered this run)
+  offering.filter(s => s !== skillId).forEach(s => {
+    player.lostSkills.push(s);
+  });
+}
+```
+
+### What This Creates
+
+**Run 1:** Discovered Sharp Blades, Heal, Execute, Deep Pockets...
+→ Offensive sustain build
+
+**Run 2:** Discovered Killer Instinct, Iron Skin, Berserk Rage, Thick Skin...
+→ Tanky crit build
+
+**Run 3:** Discovered Sharp Blades, Iron Skin, Crit Surge, Gold Rush...
+→ Farming build with balanced offense/defense
+
+**Every run is different!**
+
+---
+
+## Mastery Points (Limited Upgrades)
+
+### The Problem with Unlimited Upgrades
+
+If you can max every skill, there's no choice - just grind enough gold.
+
+### The Solution: Mastery Points
+
+**Mastery Points** are a limited resource used to upgrade skills:
+
+```javascript
+const MASTERY_CONFIG = {
+  // Total Mastery Points available per run
+  totalPoints: 20,
+
+  // Points earned at each milestone
+  pointsPerMilestone: {
+    3: 1, 5: 1, 8: 1, 10: 2,
+    15: 2, 20: 2, 30: 2, 40: 3,
+    50: 3, 60: 3
+  },
+
+  // Cost per skill level
+  levelCost: {
+    1: 0,  // Discovery gives Level 1 free
+    2: 1,
+    3: 2,
+    4: 3,
+    5: 4
+  }
+};
+```
+
+### Upgrade Costs
+
+| Skill Level | Mastery Cost | Gold Cost | Cumulative |
+|-------------|--------------|-----------|------------|
+| 1 (Discovery) | 0 | 0 | 0 MP |
+| 2 | 1 MP | 100g | 1 MP |
+| 3 | 2 MP | 250g | 3 MP |
+| 4 | 3 MP | 500g | 6 MP |
+| 5 | 4 MP | 1,000g | 10 MP |
+
+**To max 1 skill: 10 Mastery Points**
+**Total available: 20 Mastery Points**
+**Can max only 2 skills OR spread across many**
+
+### Strategic Implications
+
+With only 20 MP total, you must choose:
+- **Specialist:** Max 2 skills (10 + 10 = 20 MP)
+- **Generalist:** Level 3 on 6-7 skills (3 × 7 = 21 MP, close)
+- **Hybrid:** Max 1 skill + Level 3 on 3 skills (10 + 9 = 19 MP)
+
+### Mastery UI
 
 ```
 ┌─────────────────────────────────────────┐
-│          SKILLS - LOCKED               │
+│         MASTERY POINTS                  │
+│         ████████░░░░░░░░░░░░  8/20     │
 ├─────────────────────────────────────────┤
 │                                         │
-│  These skills can be purchased:         │
+│  ⚔️ Power Strike     ★★★★★  (MAXED)    │
+│     [10 MP invested]                    │
 │                                         │
-│  ┌─────────────────────────────────┐    │
-│  │ 🔥 Berserk Rage      🔒 LOCKED  │    │
-│  │ You chose Execute at Lv 10     │    │
-│  │ ─────────────────────────────── │    │
-│  │ [BUY FOR 500g]                  │    │
-│  └─────────────────────────────────┘    │
+│  💚 Heal             ★★☆☆☆             │
+│     [1 MP invested]                     │
+│     [UPGRADE ★★→★★★: 2 MP + 250g]      │
 │                                         │
-│  ┌─────────────────────────────────┐    │
-│  │ 🛡️ Iron Skin         🔒 LOCKED  │    │
-│  │ You chose Heal at Lv 5          │    │
-│  │ ─────────────────────────────── │    │
-│  │ [BUY FOR 150g]                  │    │
-│  └─────────────────────────────────┘    │
+│  ⚡ Execute          ★☆☆☆☆             │
+│     [0 MP invested]                     │
+│     [UPGRADE ★→★★: 1 MP + 100g]        │
 │                                         │
 └─────────────────────────────────────────┘
 ```
 
-**Key Points:**
-- Available in Skills screen under "Locked Skills" tab
-- Cost is fixed (shown in unlock schedule table)
-- No time penalty - same price whenever you buy
-- Once bought, skill is unlocked permanently
+---
+
+## Skill Synergies
+
+### What Are Synergies?
+
+When you discover certain skill combinations, you unlock **bonus effects**:
+
+```
+┌─────────────────────────────────────────┐
+│  🔗 SYNERGY UNLOCKED!                   │
+│                                         │
+│  "BERSERKER'S FURY"                     │
+│  Power Strike + Berserk Rage            │
+│                                         │
+│  Bonus: Power Strike deals +50%         │
+│  damage while Berserk is active!        │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+### Synergy List
+
+| Synergy Name | Skills Required | Bonus Effect |
+|--------------|-----------------|--------------|
+| **Berserker's Fury** | Power Strike + Berserk Rage | Power Strike +50% during Berserk |
+| **Executioner** | Execute + Killer Instinct | Execute threshold +10% |
+| **Life Siphon** | Heal + Soul Rend | Heal grants +10% lifesteal for 5s |
+| **Iron Fortress** | Iron Skin + Thick Skin | +5% permanent damage reduction |
+| **Gold Digger** | Gold Rush + Deep Pockets | +10% permanent gold find |
+| **Scholar** | XP Boost + Fast Learner | +10% permanent XP |
+| **Time Lord** | Time Warp + Perfect Strike | Time Warp also slows YOUR cooldowns |
+| **Critical Mass** | Crit Surge + Killer Instinct | Crits have 10% chance to refund Energy |
+| **Regenerator** | Heal + Regeneration | Out-of-combat regen doubled |
+| **Void Walker** | Void Touch + Soul Rend | Soul Rend ignores all armor |
+| **Transcendent** | Transcendence + Any 3 Master skills | Duration +15 seconds |
+
+### Synergy Discovery
+
+Synergies are discovered **automatically** when you have both required skills:
+
+```javascript
+function checkSynergies(player) {
+  for (const synergy of SYNERGIES) {
+    const hasAll = synergy.requiredSkills.every(
+      s => player.discoveredSkills.includes(s)
+    );
+
+    if (hasAll && !player.unlockedSynergies.includes(synergy.id)) {
+      player.unlockedSynergies.push(synergy.id);
+      showSynergyUnlockedModal(synergy);
+    }
+  }
+}
+```
+
+### Why Synergies Matter
+
+- **Rewards Themed Builds:** Going "all offense" unlocks offensive synergies
+- **Adds Discovery Joy:** "I got Execute AND Killer Instinct - that's a synergy!"
+- **Strategic Depth:** Sometimes pick a weaker skill to unlock a synergy
+- **Replayability:** "This run I'll try to unlock Gold Digger synergy"
 
 ---
 
@@ -139,684 +305,604 @@ When you reach a milestone and pick one skill, the other becomes "unchosen":
 
 ### Swapping Equipped Skills
 
-Players can swap skills **anytime outside of active combat**:
+Players can swap **discovered** skills anytime outside combat:
 
 ```javascript
 const SKILL_SWAP_RULES = {
-  // When can you swap?
   allowedDuring: ['idle', 'waiting', 'shop', 'skills_screen'],
   blockedDuring: ['combat', 'monster_attacking', 'boss_fight'],
-
-  // Cost to swap
-  swapCost: 0,  // Free to swap
-
-  // Cooldown after swap
-  swapCooldown: 0  // No cooldown
+  swapCost: 0,
+  swapCooldown: 0
 };
 ```
 
-**How to Swap:**
-1. Open Skills screen
-2. Tap an equipped skill slot
-3. Choose from your unlocked skills
-4. Skill is immediately equipped
+**You can only swap between skills you've DISCOVERED this run.**
 
-### Skill Choice Reroll (Optional Feature)
+### What Happens at Milestones?
 
-At milestone level-ups, you can **reroll** your skill choices once:
+```javascript
+function handleMilestone(player, level) {
+  const milestone = MILESTONES[level];
+  if (!milestone) return;
+
+  // 1. Award Mastery Points
+  const mpGain = MASTERY_CONFIG.pointsPerMilestone[level] || 0;
+  player.masteryPoints += mpGain;
+
+  // 2. Offer skill discovery (if applicable)
+  const tier = milestone.skillTier;
+  if (tier) {
+    const offering = getSkillOffering(player, tier);
+    if (offering.length > 0) {
+      showSkillDiscoveryModal(offering);
+    }
+  }
+}
+```
+
+### Skills Screen
 
 ```
 ┌─────────────────────────────────────────┐
-│         ⭐ LEVEL 10 REACHED! ⭐          │
+│ ← Back     SKILLS     MP: 8/20  💰12,450│
+├─────────────────────────────────────────┤
+│  [⚔️ Discovered]  [🔗 Synergies]        │
+├─────────────────────────────────────────┤
 │                                         │
-│      Choose your new skill:             │
+│  EQUIPPED ACTIVE (4/4):                 │
+│  ┌────┐ ┌────┐ ┌────┐ ┌────┐           │
+│  │ ⚔️ │ │ 💚 │ │ 💀 │ │ ░░ │           │
+│  │★★★★│ │★★☆ │ │★☆☆ │ │Emp │           │
+│  └────┘ └────┘ └────┘ └────┘           │
 │                                         │
-│  ┌─────────────────────────────────┐    │
-│  │ ⚔️ EXECUTE                       │    │
-│  │              [CHOOSE]           │    │
-│  └─────────────────────────────────┘    │
-│                                         │
-│  ┌─────────────────────────────────┐    │
-│  │ 🔥 BERSERK RAGE                  │    │
-│  │              [CHOOSE]           │    │
-│  └─────────────────────────────────┘    │
+│  EQUIPPED PASSIVE (2/3):                │
+│  ┌────────┐ ┌────────┐ ┌────────┐       │
+│  │Sharp ★★│ │Deep ★★ │ │ Empty  │       │
+│  └────────┘ └────────┘ └────────┘       │
 │                                         │
 │  ─────────────────────────────────────  │
-│  [🔄 REROLL - 100g] (1 reroll left)    │
 │                                         │
-│  Note: Unchosen skill costs 500g later  │
+│  YOUR DISCOVERED SKILLS:                │
+│                                         │
+│  ⚔️ Power Strike ★★★★★ (MAXED)          │
+│  💚 Heal ★★☆☆☆                          │
+│     [UPGRADE: 2 MP + 250g]              │
+│  💀 Execute ★☆☆☆☆                       │
+│     [UPGRADE: 1 MP + 100g]              │
+│  🗡️ Sharp Blades ★★☆☆☆                 │
+│     [UPGRADE: 2 MP + 250g]              │
+│  💰 Deep Pockets ★★☆☆☆                  │
+│     [UPGRADE: 2 MP + 250g]              │
+│                                         │
+│  ─────────────────────────────────────  │
+│  LOST THIS RUN: Killer Instinct, Iron   │
+│  Skin, Berserk Rage, Gold Rush...       │
+│                                         │
 └─────────────────────────────────────────┘
-```
-
-**Reroll Rules:**
-- 1 free reroll per milestone (optional)
-- Additional rerolls cost gold (milestone level × 10)
-- Reroll gives 2 NEW random skills from the same tier
-- All skills are balanced, so reroll is for preference not power
-
-### What If All Skills Unlocked?
-
-Once you've unlocked all skills (through choices + purchases):
-- No more choice modals appear at milestones
-- Level up just grants stats (HP, attack)
-- Focus shifts to upgrading existing skills
-- Endgame: All skills at max level
-
-```javascript
-function checkSkillMilestone(player, level) {
-  const milestone = SKILL_MILESTONES[level];
-  if (!milestone) return; // No milestone at this level
-
-  // Check if both skills already unlocked
-  const skill1Unlocked = player.skills[milestone.choice1]?.unlocked;
-  const skill2Unlocked = player.skills[milestone.choice2]?.unlocked;
-
-  if (skill1Unlocked && skill2Unlocked) {
-    // Both already unlocked - skip choice modal
-    showToast("All skills at this milestone already unlocked!");
-    return;
-  }
-
-  showSkillChoiceModal(milestone);
-}
 ```
 
 ---
 
 ## Skill Categories
 
-### Active Skills (12 Total)
+### Active Skills (15 Total)
 
-#### Offense (4 skills)
+#### Offense Active (5 skills)
 
-**Power Strike**
-```
-Type: Active
-Unlock: Level 1 (free, tutorial)
-Cost: 15 Energy
-Cooldown: 8 seconds
+| Skill | Pool | Energy | Cooldown | Effect |
+|-------|------|--------|----------|--------|
+| **Power Strike** | Starter | 15 | 8s | 3x-5x damage next attack |
+| **Execute** | Combat | 25 | 12s | 5x-7x damage if monster <30-40% HP |
+| **Berserk Rage** | Combat | 30 | 45s | 2x-3x damage, 2x-1x damage taken, 15s |
+| **Crit Surge** | Combat | 25 | 30s | +50-75% crit chance for 10-15s |
+| **Soul Rend** | Elite | 35 | 20s | Deal 10-15% of monster max HP |
 
-Effect: Deal 3x damage on next attack
+#### Defense Active (4 skills)
 
-Upgrades (per level):
-  Lv 1: 3x damage
-  Lv 2: 3.5x damage
-  Lv 3: 4x damage
-  Lv 4: 4.5x damage
-  Lv 5: 5x damage
+| Skill | Pool | Energy | Cooldown | Effect |
+|-------|------|--------|----------|--------|
+| **Heal** | Basic | 20 | 15s | Restore 25-50% max HP |
+| **Iron Skin** | Basic | 25 | 30s | 50-75% damage reduction for 10-15s |
+| **Reflect** | Utility | 30 | 25s | Reflect next attack at 100-200% |
+| **Undying** | Elite | 50 | 180s | Survive fatal blow with 1-25% HP |
 
-Upgrade costs: 100g → 250g → 500g → 1,000g
-```
+#### Utility Active (6 skills)
 
-**Execute**
-```
-Type: Active
-Unlock: Level 10 (choice with Berserk Rage)
-Cost: 25 Energy
-Cooldown: 12 seconds
+| Skill | Pool | Energy | Cooldown | Effect |
+|-------|------|--------|----------|--------|
+| **Gold Rush** | Utility | 20 | 60s | +100-200% gold for 30-45s |
+| **XP Boost** | Utility | 20 | 60s | +100-200% XP for 30-45s |
+| **Time Warp** | Utility | 40 | 90s | Freeze monster 5-10s |
+| **Perfect Strike** | Combat | 30 | 30s | Timing mode: 2-3x/4-6x damage |
+| **Shield Breaker** | Elite | 25 | 15s | Break shields, +50-75% vs shielded |
+| **Transcendence** | Master | 100 | 300s | Invulnerable +100-150% everything 30-45s |
 
-Effect: Deal 5x damage if monster is below 30% HP
-        Deal 1x damage otherwise (Energy refunded)
+### Passive Skills (9 Total)
 
-Upgrades (per level):
-  Lv 1: 5x damage, 30% threshold
-  Lv 2: 5.5x damage, 32% threshold
-  Lv 3: 6x damage, 34% threshold
-  Lv 4: 6.5x damage, 36% threshold
-  Lv 5: 7x damage, 40% threshold
+#### Offense Passive (3 skills)
 
-Upgrade costs: 200g → 500g → 1,000g → 2,500g
-```
+| Skill | Pool | Effect per Level |
+|-------|------|------------------|
+| **Sharp Blades** | Basic | +5% damage per level (max +25%) |
+| **Killer Instinct** | Basic | +3% crit chance per level (max +15%) |
+| **Void Touch** | Master | +5% armor penetration per level (max +25%) |
 
-**Berserk Rage**
-```
-Type: Active
-Unlock: Level 10 (choice with Execute)
-Cost: 30 Energy
-Cooldown: 45 seconds
+#### Defense Passive (3 skills)
 
-Effect: For 15 seconds:
-        - Deal 2x damage
-        - Take 2x damage
+| Skill | Pool | Effect per Level |
+|-------|------|------------------|
+| **Thick Skin** | Advanced | +10% max HP per level (max +50%) |
+| **Regeneration** | Advanced | +0.5% HP/sec per level (max +3%) |
+| **Quick Reflexes** | Master | +0.2s attack warning per level (max +1s) |
 
-Upgrades (per level):
-  Lv 1: 2x damage, 2x damage taken
-  Lv 2: 2.2x damage, 1.8x damage taken
-  Lv 3: 2.4x damage, 1.6x damage taken
-  Lv 4: 2.6x damage, 1.4x damage taken
-  Lv 5: 3x damage, 1x damage taken (!)
+#### Utility Passive (3 skills)
 
-Upgrade costs: 300g → 750g → 1,500g → 3,500g
-```
-
-**Crit Surge**
-```
-Type: Active
-Unlock: Level 15 (choice with Perfect Strike)
-Cost: 25 Energy
-Cooldown: 30 seconds
-
-Effect: +50% crit chance for 10 seconds
-
-Upgrades (per level):
-  Lv 1: +50% crit, 10 seconds
-  Lv 2: +55% crit, 11 seconds
-  Lv 3: +60% crit, 12 seconds
-  Lv 4: +65% crit, 13 seconds
-  Lv 5: +75% crit, 15 seconds
-
-Upgrade costs: 300g → 750g → 1,500g → 3,500g
-```
-
-#### Defense (4 skills)
-
-**Heal**
-```
-Type: Active
-Unlock: Level 5 (choice with Iron Skin)
-Cost: 20 Energy
-Cooldown: 15 seconds
-
-Effect: Restore 25% of max HP
-
-Upgrades (per level):
-  Lv 1: 25% HP restored
-  Lv 2: 30% HP restored
-  Lv 3: 35% HP restored
-  Lv 4: 40% HP restored
-  Lv 5: 50% HP restored
-
-Upgrade costs: 150g → 400g → 800g → 2,000g
-```
-
-**Iron Skin**
-```
-Type: Active
-Unlock: Level 5 (choice with Heal)
-Cost: 25 Energy
-Cooldown: 30 seconds
-
-Effect: Reduce damage taken by 50% for 10 seconds
-
-Upgrades (per level):
-  Lv 1: 50% reduction, 10 seconds
-  Lv 2: 55% reduction, 11 seconds
-  Lv 3: 60% reduction, 12 seconds
-  Lv 4: 65% reduction, 13 seconds
-  Lv 5: 75% reduction, 15 seconds
-
-Upgrade costs: 200g → 500g → 1,000g → 2,500g
-```
-
-**Reflect**
-```
-Type: Active
-Unlock: Level 20 (choice with Time Warp)
-Cost: 30 Energy
-Cooldown: 25 seconds
-
-Effect: Next monster attack is reflected back
-        (Monster takes the damage instead of you)
-
-Upgrades (per level):
-  Lv 1: Reflect 100% damage
-  Lv 2: Reflect 125% damage
-  Lv 3: Reflect 150% damage
-  Lv 4: Reflect 175% damage
-  Lv 5: Reflect 200% damage
-
-Upgrade costs: 500g → 1,000g → 2,500g → 5,000g
-```
-
-**Undying**
-```
-Type: Active
-Unlock: Level 40 (purchase only, 5,000g)
-Cost: 50 Energy
-Cooldown: 180 seconds (3 minutes)
-
-Effect: When you would take fatal damage,
-        survive with 1 HP instead.
-        Lasts 30 seconds or until triggered.
-
-Upgrades (per level):
-  Lv 1: Survive with 1 HP
-  Lv 2: Survive with 5% HP
-  Lv 3: Survive with 10% HP
-  Lv 4: Survive with 15% HP
-  Lv 5: Survive with 25% HP, cooldown 150s
-
-Upgrade costs: 2,000g → 5,000g → 10,000g → 25,000g
-```
-
-#### Utility (4 skills)
-
-**Gold Rush**
-```
-Type: Active
-Unlock: Level 8 (choice with XP Boost)
-Cost: 20 Energy
-Cooldown: 60 seconds
-
-Effect: +100% gold from kills for 30 seconds
-
-Upgrades (per level):
-  Lv 1: +100% gold, 30 seconds
-  Lv 2: +120% gold, 32 seconds
-  Lv 3: +140% gold, 34 seconds
-  Lv 4: +160% gold, 36 seconds
-  Lv 5: +200% gold, 45 seconds
-
-Upgrade costs: 250g → 600g → 1,200g → 3,000g
-```
-
-**XP Boost**
-```
-Type: Active
-Unlock: Level 8 (choice with Gold Rush)
-Cost: 20 Energy
-Cooldown: 60 seconds
-
-Effect: +100% XP from kills for 30 seconds
-
-Upgrades (per level):
-  Lv 1: +100% XP, 30 seconds
-  Lv 2: +120% XP, 32 seconds
-  Lv 3: +140% XP, 34 seconds
-  Lv 4: +160% XP, 36 seconds
-  Lv 5: +200% XP, 45 seconds
-
-Upgrade costs: 250g → 600g → 1,200g → 3,000g
-```
-
-**Perfect Strike**
-```
-Type: Active
-Unlock: Level 15 (choice with Crit Surge)
-Cost: 30 Energy
-Cooldown: 30 seconds
-
-Effect: For 5 seconds, enter timing mode:
-        - Click when indicator is in zone
-        - Good timing: 2x damage
-        - Perfect timing: 4x damage
-        - Miss timing: 0.5x damage
-
-Upgrades (per level):
-  Lv 1: 5 seconds, 2x/4x multipliers
-  Lv 2: 6 seconds, 2.2x/4.4x multipliers
-  Lv 3: 7 seconds, 2.4x/4.8x multipliers
-  Lv 4: 8 seconds, 2.6x/5.2x multipliers
-  Lv 5: 10 seconds, 3x/6x multipliers
-
-Upgrade costs: 400g → 1,000g → 2,000g → 5,000g
-```
-
-**Time Warp**
-```
-Type: Active
-Unlock: Level 20 (choice with Reflect)
-Cost: 40 Energy
-Cooldown: 90 seconds
-
-Effect: Freeze monster for 5 seconds
-        (Cannot attack, still takes damage)
-
-Upgrades (per level):
-  Lv 1: 5 second freeze
-  Lv 2: 6 second freeze
-  Lv 3: 7 second freeze
-  Lv 4: 8 second freeze
-  Lv 5: 10 second freeze, cooldown 75s
-
-Upgrade costs: 500g → 1,200g → 2,500g → 6,000g
-```
+| Skill | Pool | Effect per Level |
+|-------|------|------------------|
+| **Deep Pockets** | Advanced | +5% gold per level (max +25%) |
+| **Fast Learner** | Advanced | +5% XP per level (max +25%) |
+| **Energy Flow** | Elite | +10% Energy gain per level (max +50%) |
 
 ---
 
-### Passive Skills (8 Total)
+## Skill Details
 
-#### Offense Passives
+### Starter Pool (Level 1)
 
-**Sharp Blades**
+**Power Strike** - Guaranteed for all players
 ```
-Type: Passive
-Unlock: Level 3 (choice with Killer Instinct)
+Type: Active (Offense)
+Energy: 15 | Cooldown: 8s
 
-Effect: +5% damage per level
+Effect: Next attack deals multiplied damage
 
 Levels:
-  Lv 1: +5% damage (100g)
-  Lv 2: +10% damage (250g)
-  Lv 3: +15% damage (500g)
-  Lv 4: +20% damage (1,000g)
-  Lv 5: +25% damage (2,500g)
+  ★☆☆☆☆: 3.0x damage
+  ★★☆☆☆: 3.5x damage
+  ★★★☆☆: 4.0x damage
+  ★★★★☆: 4.5x damage
+  ★★★★★: 5.0x damage
 ```
 
-**Killer Instinct**
-```
-Type: Passive
-Unlock: Level 3 (choice with Sharp Blades)
+### Basic Pool (Levels 3, 5)
 
-Effect: +3% crit chance per level
+**Sharp Blades** (Passive)
+```
+Effect: Permanent damage increase
 
 Levels:
-  Lv 1: +3% crit (100g)
-  Lv 2: +6% crit (250g)
-  Lv 3: +9% crit (500g)
-  Lv 4: +12% crit (1,000g)
-  Lv 5: +15% crit (2,500g)
+  ★☆☆☆☆: +5% damage
+  ★★☆☆☆: +10% damage
+  ★★★☆☆: +15% damage
+  ★★★★☆: +20% damage
+  ★★★★★: +25% damage
 ```
 
-#### Defense Passives
-
-**Thick Skin**
+**Killer Instinct** (Passive)
 ```
-Type: Passive
-Unlock: Level 30 (choice with Regeneration)
-
-Effect: +10% max HP per level
+Effect: Permanent crit chance increase
 
 Levels:
-  Lv 1: +10% HP (500g)
-  Lv 2: +20% HP (1,000g)
-  Lv 3: +30% HP (2,000g)
-  Lv 4: +40% HP (4,000g)
-  Lv 5: +50% HP (8,000g)
+  ★☆☆☆☆: +3% crit
+  ★★☆☆☆: +6% crit
+  ★★★☆☆: +9% crit
+  ★★★★☆: +12% crit
+  ★★★★★: +15% crit
 ```
 
-**Regeneration**
+**Heal** (Active)
 ```
-Type: Passive
-Unlock: Level 30 (choice with Thick Skin)
+Energy: 20 | Cooldown: 15s
 
-Effect: Regenerate HP over time
+Effect: Restore percentage of max HP
 
 Levels:
-  Lv 1: +0.5% HP/sec (500g)
-  Lv 2: +1.0% HP/sec (1,000g)
-  Lv 3: +1.5% HP/sec (2,000g)
-  Lv 4: +2.0% HP/sec (4,000g)
-  Lv 5: +3.0% HP/sec (8,000g)
+  ★☆☆☆☆: 25% HP
+  ★★☆☆☆: 30% HP
+  ★★★☆☆: 35% HP
+  ★★★★☆: 40% HP
+  ★★★★★: 50% HP
 ```
 
-#### Utility Passives
-
-**Deep Pockets**
+**Iron Skin** (Active)
 ```
-Type: Passive
-Unlock: Level 25 (choice with Fast Learner)
+Energy: 25 | Cooldown: 30s
 
-Effect: +5% gold from all sources per level
+Effect: Reduce damage taken for duration
 
 Levels:
-  Lv 1: +5% gold (400g)
-  Lv 2: +10% gold (800g)
-  Lv 3: +15% gold (1,600g)
-  Lv 4: +20% gold (3,200g)
-  Lv 5: +25% gold (6,400g)
+  ★☆☆☆☆: 50% reduction, 10s
+  ★★☆☆☆: 55% reduction, 11s
+  ★★★☆☆: 60% reduction, 12s
+  ★★★★☆: 65% reduction, 13s
+  ★★★★★: 75% reduction, 15s
 ```
 
-**Fast Learner**
-```
-Type: Passive
-Unlock: Level 25 (choice with Deep Pockets)
+### Utility Pool (Level 8)
 
-Effect: +5% XP from all sources per level
+**Gold Rush** (Active)
+```
+Energy: 20 | Cooldown: 60s
+
+Effect: Bonus gold from kills
 
 Levels:
-  Lv 1: +5% XP (400g)
-  Lv 2: +10% XP (800g)
-  Lv 3: +15% XP (1,600g)
-  Lv 4: +20% XP (3,200g)
-  Lv 5: +25% XP (6,400g)
+  ★☆☆☆☆: +100% gold, 30s
+  ★★☆☆☆: +120% gold, 32s
+  ★★★☆☆: +140% gold, 34s
+  ★★★★☆: +160% gold, 36s
+  ★★★★★: +200% gold, 45s
 ```
 
-**Energy Flow**
+**XP Boost** (Active)
 ```
-Type: Passive
-Unlock: Level 50 (purchase only, 10,000g)
+Energy: 20 | Cooldown: 60s
 
-Effect: +10% Energy gain per level
+Effect: Bonus XP from kills
 
 Levels:
-  Lv 1: +10% Energy gain (2,000g)
-  Lv 2: +20% Energy gain (4,000g)
-  Lv 3: +30% Energy gain (8,000g)
-  Lv 4: +40% Energy gain (16,000g)
-  Lv 5: +50% Energy gain (32,000g)
+  ★☆☆☆☆: +100% XP, 30s
+  ★★☆☆☆: +120% XP, 32s
+  ★★★☆☆: +140% XP, 34s
+  ★★★★☆: +160% XP, 36s
+  ★★★★★: +200% XP, 45s
 ```
 
-**Quick Reflexes**
+**Time Warp** (Active)
 ```
-Type: Passive
-Unlock: Level 60 (purchase only, 15,000g)
+Energy: 40 | Cooldown: 90s
 
-Effect: Monster attack warning time increased
+Effect: Freeze monster (can still take damage)
 
 Levels:
-  Lv 1: +0.2s warning (3,000g)
-  Lv 2: +0.4s warning (6,000g)
-  Lv 3: +0.6s warning (12,000g)
-  Lv 4: +0.8s warning (24,000g)
-  Lv 5: +1.0s warning (48,000g)
+  ★☆☆☆☆: 5s freeze
+  ★★☆☆☆: 6s freeze
+  ★★★☆☆: 7s freeze
+  ★★★★☆: 8s freeze
+  ★★★★★: 10s freeze, 75s cooldown
+```
+
+**Reflect** (Active)
+```
+Energy: 30 | Cooldown: 25s
+
+Effect: Reflect next monster attack back
+
+Levels:
+  ★☆☆☆☆: 100% reflect
+  ★★☆☆☆: 125% reflect
+  ★★★☆☆: 150% reflect
+  ★★★★☆: 175% reflect
+  ★★★★★: 200% reflect
+```
+
+### Combat Pool (Levels 10, 15)
+
+**Execute** (Active)
+```
+Energy: 25 | Cooldown: 12s
+
+Effect: Massive damage to low-HP monsters
+        Normal damage if above threshold (Energy refunded)
+
+Levels:
+  ★☆☆☆☆: 5x damage below 30%
+  ★★☆☆☆: 5.5x damage below 32%
+  ★★★☆☆: 6x damage below 34%
+  ★★★★☆: 6.5x damage below 36%
+  ★★★★★: 7x damage below 40%
+```
+
+**Berserk Rage** (Active)
+```
+Energy: 30 | Cooldown: 45s
+
+Effect: Damage amp with risk for 15s
+
+Levels:
+  ★☆☆☆☆: 2x damage, 2x damage taken
+  ★★☆☆☆: 2.2x damage, 1.8x damage taken
+  ★★★☆☆: 2.4x damage, 1.6x damage taken
+  ★★★★☆: 2.6x damage, 1.4x damage taken
+  ★★★★★: 3x damage, 1x damage taken (!)
+```
+
+**Crit Surge** (Active)
+```
+Energy: 25 | Cooldown: 30s
+
+Effect: Temporary crit chance boost
+
+Levels:
+  ★☆☆☆☆: +50% crit, 10s
+  ★★☆☆☆: +55% crit, 11s
+  ★★★☆☆: +60% crit, 12s
+  ★★★★☆: +65% crit, 13s
+  ★★★★★: +75% crit, 15s
+```
+
+**Perfect Strike** (Active)
+```
+Energy: 30 | Cooldown: 30s
+
+Effect: Timing mini-game mode
+        Good timing: 2x | Perfect timing: 4x | Miss: 0.5x + 3% HP
+
+Levels:
+  ★☆☆☆☆: 5s, 2x/4x
+  ★★☆☆☆: 6s, 2.2x/4.4x
+  ★★★☆☆: 7s, 2.4x/4.8x
+  ★★★★☆: 8s, 2.6x/5.2x
+  ★★★★★: 10s, 3x/6x
+```
+
+### Advanced Pool (Levels 20, 30)
+
+**Deep Pockets** (Passive)
+```
+Effect: Permanent gold find increase
+
+Levels:
+  ★☆☆☆☆: +5% gold
+  ★★☆☆☆: +10% gold
+  ★★★☆☆: +15% gold
+  ★★★★☆: +20% gold
+  ★★★★★: +25% gold
+```
+
+**Fast Learner** (Passive)
+```
+Effect: Permanent XP increase
+
+Levels:
+  ★☆☆☆☆: +5% XP
+  ★★☆☆☆: +10% XP
+  ★★★☆☆: +15% XP
+  ★★★★☆: +20% XP
+  ★★★★★: +25% XP
+```
+
+**Thick Skin** (Passive)
+```
+Effect: Permanent max HP increase
+
+Levels:
+  ★☆☆☆☆: +10% HP
+  ★★☆☆☆: +20% HP
+  ★★★☆☆: +30% HP
+  ★★★★☆: +40% HP
+  ★★★★★: +50% HP
+```
+
+**Regeneration** (Passive)
+```
+Effect: HP regeneration per second
+
+Levels:
+  ★☆☆☆☆: +0.5% HP/sec
+  ★★☆☆☆: +1.0% HP/sec
+  ★★★☆☆: +1.5% HP/sec
+  ★★★★☆: +2.0% HP/sec
+  ★★★★★: +3.0% HP/sec
+```
+
+### Elite Pool (Levels 40, 50)
+
+**Undying** (Active)
+```
+Energy: 50 | Cooldown: 180s
+
+Effect: Survive fatal blow (30s duration)
+
+Levels:
+  ★☆☆☆☆: Survive with 1% HP
+  ★★☆☆☆: Survive with 5% HP
+  ★★★☆☆: Survive with 10% HP
+  ★★★★☆: Survive with 15% HP
+  ★★★★★: Survive with 25% HP
+```
+
+**Soul Rend** (Active)
+```
+Energy: 35 | Cooldown: 20s
+
+Effect: Deal % of monster's max HP
+        (Min: 1x attack, Max: 10x attack)
+
+Levels:
+  ★☆☆☆☆: 10% max HP
+  ★★☆☆☆: 11% max HP
+  ★★★☆☆: 12% max HP
+  ★★★★☆: 13% max HP
+  ★★★★★: 15% max HP
+```
+
+**Shield Breaker** (Active)
+```
+Energy: 25 | Cooldown: 15s
+
+Effect: Break shields, bonus vs shielded
+
+Levels:
+  ★☆☆☆☆: +50% vs shielded, 10s
+  ★★☆☆☆: +55% vs shielded, 11s
+  ★★★☆☆: +60% vs shielded, 12s
+  ★★★★☆: +65% vs shielded, 13s
+  ★★★★★: +75% vs shielded, 15s
+```
+
+**Energy Flow** (Passive)
+```
+Effect: Permanent Energy gain increase
+
+Levels:
+  ★☆☆☆☆: +10% Energy
+  ★★☆☆☆: +20% Energy
+  ★★★☆☆: +30% Energy
+  ★★★★☆: +40% Energy
+  ★★★★★: +50% Energy
+```
+
+### Master Pool (Levels 60, 75)
+
+**Quick Reflexes** (Passive)
+```
+Effect: More time to react to monster attacks
+
+Levels:
+  ★☆☆☆☆: +0.2s warning
+  ★★☆☆☆: +0.4s warning
+  ★★★☆☆: +0.6s warning
+  ★★★★☆: +0.8s warning
+  ★★★★★: +1.0s warning
+```
+
+**Void Touch** (Passive)
+```
+Effect: Ignore monster armor
+
+Levels:
+  ★☆☆☆☆: Ignore 5% armor
+  ★★☆☆☆: Ignore 10% armor
+  ★★★☆☆: Ignore 15% armor
+  ★★★★☆: Ignore 20% armor
+  ★★★★★: Ignore 25% armor
+```
+
+**Transcendence** (Active)
+```
+Energy: 100 | Cooldown: 300s
+
+Effect: Ultimate power mode
+
+Levels:
+  ★☆☆☆☆: Invulnerable, +100% all, 30s
+  ★★☆☆☆: Invulnerable, +110% all, 32s
+  ★★★☆☆: Invulnerable, +120% all, 34s
+  ★★★★☆: Invulnerable, +130% all, 36s
+  ★★★★★: Invulnerable, +150% all, 45s
 ```
 
 ---
-
-### Late-Game Skills (4 Total)
-
-Unlocked at high levels, powerful effects:
-
-**Soul Rend** (Level 50)
-```
-Type: Active
-Cost: 35 Energy
-Cooldown: 20 seconds
-
-Effect: Deal damage equal to 10% of monster's max HP
-        (Minimum: your attack, Maximum: 10x your attack)
-
-Great for high-HP monsters and bosses.
-```
-
-**Shield Breaker** (Level 60)
-```
-Type: Active
-Cost: 25 Energy
-Cooldown: 15 seconds
-
-Effect: Instantly destroy monster's shield
-        Deal 3x damage to shield
-        +50% damage to shielded monsters for 10s
-```
-
-**Void Touch** (Level 75)
-```
-Type: Passive
-Effect: Attacks ignore 5% of monster armor per level
-        At Lv 5: Ignore 25% armor
-```
-
-**Transcendence** (Level 90)
-```
-Type: Active
-Cost: 100 Energy
-Cooldown: 300 seconds (5 minutes)
-
-Effect: For 30 seconds:
-        - Invulnerable (cannot take damage)
-        - +100% damage
-        - +100% gold and XP
-
-The ultimate skill.
-```
-
----
-
-## Skill Upgrades
-
-### Upgrade Costs
-
-Skills have 5 levels. Upgrade costs scale:
-
-| Level | Cost Multiplier | Example (base 100g) |
-|-------|-----------------|---------------------|
-| 1→2 | 2.5x base unlock | 250g |
-| 2→3 | 5x base unlock | 500g |
-| 3→4 | 10x base unlock | 1,000g |
-| 4→5 | 25x base unlock | 2,500g |
-
-### Ascension Skill Levels
-
-After Ascension, skills can exceed level 5:
-
-| Ascension Level | Max Skill Level |
-|-----------------|-----------------|
-| 0 | 5 |
-| 1 | 6 |
-| 2 | 7 |
-| 3 | 8 |
-| 5 | 9 |
-| 10 | 10 |
-
-Level 6-10 upgrades cost significantly more but provide powerful bonuses.
 
 ---
 
 ## Build Examples
 
-### "Berserker" Build
-```
-Active Skills:
-  1. Power Strike (burst damage)
-  2. Berserk Rage (damage amp)
-  3. Execute (finish low HP)
-  4. Heal (survive)
+### Example Run 1: "Glass Cannon"
 
-Passive Skills:
-  - Sharp Blades (+damage)
-  - Killer Instinct (+crit)
-  - Thick Skin (+HP)
+**Discovered Skills:**
+- Power Strike (guaranteed)
+- Sharp Blades (from Basic)
+- Killer Instinct (from Basic)
+- Execute (from Combat)
+- Berserk Rage (from Combat) - Unlocked synergy: **Berserker's Fury!**
+- Fast Learner (from Advanced)
 
-Playstyle: High risk, high reward. Massive damage but vulnerable.
-```
+**Mastery Investment (20 MP):**
+- Power Strike ★★★★★ (10 MP) - Main damage
+- Killer Instinct ★★★ (3 MP) - Crit foundation
+- Execute ★★★ (3 MP) - Finish power
+- Berserk Rage ★★ (1 MP) - Synergy active
+- Others ★ (free)
 
-### "Tank" Build
-```
-Active Skills:
-  1. Heal (sustain)
-  2. Iron Skin (damage reduction)
-  3. Reflect (punish attackers)
-  4. Undying (safety net)
+**Synergies Unlocked:**
+- Berserker's Fury (+50% Power Strike during Berserk)
+- Executioner (+10% Execute threshold from Killer Instinct)
 
-Passive Skills:
-  - Thick Skin (+HP)
-  - Regeneration (+regen)
-  - Quick Reflexes (+dodge time)
-
-Playstyle: Nearly unkillable. Slow but steady progress.
-```
-
-### "Farmer" Build
-```
-Active Skills:
-  1. Gold Rush (bonus gold)
-  2. XP Boost (bonus XP)
-  3. Time Warp (safe damage)
-  4. Heal (sustain)
-
-Passive Skills:
-  - Deep Pockets (+gold)
-  - Fast Learner (+XP)
-  - Energy Flow (+Energy)
-
-Playstyle: Maximum resource gain. Great for grinding zones.
-```
-
-### "Precision" Build
-```
-Active Skills:
-  1. Perfect Strike (timing damage)
-  2. Crit Surge (crit chance)
-  3. Execute (finisher)
-  4. Power Strike (backup burst)
-
-Passive Skills:
-  - Killer Instinct (+crit)
-  - Sharp Blades (+damage)
-  - Energy Flow (+Energy)
-
-Playstyle: High skill ceiling. Rewards precise play.
-```
+**Playstyle:** Burst everything. Use Berserk + Power Strike combo for massive damage, Execute to finish. Squishy but deadly.
 
 ---
 
-## Skill UI
+### Example Run 2: "Immortal Farmer"
 
-### Skills Screen Layout
+**Discovered Skills:**
+- Power Strike (guaranteed)
+- Heal (from Basic)
+- Iron Skin (from Basic)
+- Gold Rush (from Utility)
+- Deep Pockets (from Advanced)
+- Thick Skin (from Advanced)
+- Undying (from Elite)
 
-```
-┌─────────────────────────────────────────┐
-│ ← Back        SKILLS          💰 12,450 │
-├─────────────────────────────────────────┤
-│  [⚔️ Active]  [🛡️ Passive]  [🔒 Locked] │
-├─────────────────────────────────────────┤
-│                                         │
-│  EQUIPPED ACTIVE SKILLS (4/4):          │
-│  ┌────┐ ┌────┐ ┌────┐ ┌────┐           │
-│  │ ⚔️ │ │ 💚 │ │ ⭐ │ │ 🪙 │           │
-│  │Pwr │ │Heal│ │Crit│ │Gold│           │
-│  │Lv3 │ │Lv2 │ │Lv1 │ │Lv2 │           │
-│  └────┘ └────┘ └────┘ └────┘           │
-│  [TAP TO SWAP]                          │
-│                                         │
-│  ─────────────────────────────────────  │
-│                                         │
-│  ALL ACTIVE SKILLS:                     │
-│                                         │
-│  ┌─────────────────────────────────┐    │
-│  │ ⚔️ Power Strike        Lv 3/5  │    │
-│  │ Deal 4x damage                  │    │
-│  │ Cost: 15 Energy  CD: 8s        │    │
-│  │ Next: 4.5x damage (500g)       │    │
-│  │ [UPGRADE 500g]      [EQUIPPED] │    │
-│  └─────────────────────────────────┘    │
-│                                         │
-│  ┌─────────────────────────────────┐    │
-│  │ 🔥 Execute             Lv 1/5  │    │
-│  │ Deal 5x to low HP monsters     │    │
-│  │ Cost: 25 Energy  CD: 12s       │    │
-│  │ Next: 5.5x, 32% threshold      │    │
-│  │ [UPGRADE 200g]        [EQUIP]  │    │
-│  └─────────────────────────────────┘    │
-│                                         │
-└─────────────────────────────────────────┘
-```
+**Mastery Investment (20 MP):**
+- Heal ★★★★★ (10 MP) - Max healing
+- Thick Skin ★★★★ (6 MP) - Huge HP pool
+- Deep Pockets ★★ (1 MP) - Gold bonus
+- Gold Rush ★★ (1 MP) - Active gold buff
+- Others ★ (free)
 
-### Passive Skills Tab
+**Synergies Unlocked:**
+- Iron Fortress (Iron Skin + Thick Skin = +5% permanent DR)
 
-```
-┌─────────────────────────────────────────┐
-│  EQUIPPED PASSIVES (3/3):               │
-│  ┌─────────┐ ┌─────────┐ ┌─────────┐   │
-│  │Sharp Lv3│ │Deep Lv2 │ │Thick Lv1│   │
-│  │+15% dmg │ │+10% gold│ │+10% HP  │   │
-│  └─────────┘ └─────────┘ └─────────┘   │
-│                                         │
-│  ALL PASSIVE SKILLS:                    │
-│  ...                                    │
-└─────────────────────────────────────────┘
-```
+**Playstyle:** Unkillable gold farmer. Lower DPS but never dies. Stack gold bonuses for maximum income.
 
 ---
 
-## Skill Swap Rules
+### Example Run 3: "Critical Master"
 
-- Can swap skills anytime in Skills screen
-- Cannot swap during active combat (monster spawned)
-- Swapping resets cooldowns to 50%
-- Swapping does not refund Energy
+**Discovered Skills:**
+- Power Strike (guaranteed)
+- Killer Instinct (from Basic)
+- Heal (from Basic)
+- Crit Surge (from Combat)
+- Perfect Strike (from Combat)
+- Energy Flow (from Elite)
+
+**Mastery Investment (20 MP):**
+- Killer Instinct ★★★★★ (10 MP) - 15% base crit
+- Crit Surge ★★★★ (6 MP) - Huge crit windows
+- Energy Flow ★★ (1 MP) - More skill uptime
+- Power Strike ★★ (1 MP)
+- Others ★ (free)
+
+**Synergies Unlocked:**
+- Critical Mass (Crit Surge + Killer Instinct = 10% crit Energy refund)
+
+**Playstyle:** Crit machine. Stack crit to absurd levels during Crit Surge, refund Energy on crits for more skill spam.
+
+---
+
+### Why These Runs Are Different
+
+| Aspect | Glass Cannon | Immortal Farmer | Critical Master |
+|--------|--------------|-----------------|-----------------|
+| Main Stat | Raw Damage | HP/Sustain | Crit Chance |
+| Survivability | Low | Very High | Medium |
+| Gold/min | Medium | High | Medium |
+| Skill Ceiling | Medium | Low | High |
+| Boss Speed | Fast | Slow | Variable |
+
+**Same game, completely different experiences!**
+
+---
+
+## Ascension & Skills
+
+### Skill Level Caps
+
+| Ascension Rank | Max Skill Level |
+|----------------|-----------------|
+| 0 | ★★★★★ (5) |
+| 1 | ★★★★★★ (6) |
+| 3 | ★★★★★★★ (7) |
+| 5 | ★★★★★★★★ (8) |
+| 7 | ★★★★★★★★★ (9) |
+| 10 | ★★★★★★★★★★ (10) |
+
+### Ascension Mastery Bonus
+
+Each Ascension rank grants **+2 Mastery Points** for the next run:
+
+| Ascension | Total Mastery Points |
+|-----------|---------------------|
+| 0 | 20 |
+| 1 | 22 |
+| 2 | 24 |
+| 5 | 30 |
+| 10 | 40 |
+
+More Ascension = More build flexibility!
 
 ---
 
@@ -824,28 +910,58 @@ Playstyle: High skill ceiling. Rewards precise play.
 
 ```javascript
 const SKILL_CONSTANTS = {
+  // Slots
   ACTIVE_SLOTS: 4,
   PASSIVE_SLOTS: 3,
-  MAX_SKILL_LEVEL: 5,           // Before ascension
-  MAX_SKILL_LEVEL_ASCENDED: 10, // After max ascension
 
-  SWAP_COOLDOWN_PENALTY: 0.5,   // 50% cooldown on swap
+  // Mastery System
+  BASE_MASTERY_POINTS: 20,
+  MASTERY_PER_ASCENSION: 2,
+  MASTERY_COST_PER_LEVEL: [0, 1, 2, 3, 4],  // Index = target level - 1
 
-  // Upgrade cost multipliers
-  UPGRADE_MULTIPLIERS: [1, 2.5, 5, 10, 25],
+  // Skill Levels
+  MAX_SKILL_LEVEL: 5,
+  MAX_SKILL_LEVEL_ASCENDED: 10,
 
-  // Ascension skill level unlocks
-  ASCENSION_SKILL_CAPS: {
-    0: 5,
-    1: 6,
-    2: 7,
-    3: 8,
-    5: 9,
-    10: 10
+  // Swap Rules
+  SWAP_COOLDOWN_PENALTY: 0.5,  // 50% cooldown on swap
+
+  // Gold costs per level (in addition to Mastery)
+  GOLD_COST_PER_LEVEL: [0, 100, 250, 500, 1000],
+
+  // Discovery
+  SKILLS_OFFERED_PER_MILESTONE: 3,
+
+  // Pools
+  SKILL_POOLS: {
+    starter: ['power_strike'],
+    basic: ['sharp_blades', 'killer_instinct', 'heal', 'iron_skin'],
+    utility: ['gold_rush', 'xp_boost', 'time_warp', 'reflect'],
+    combat: ['execute', 'berserk_rage', 'crit_surge', 'perfect_strike'],
+    advanced: ['deep_pockets', 'fast_learner', 'thick_skin', 'regeneration'],
+    elite: ['undying', 'soul_rend', 'shield_breaker', 'energy_flow'],
+    master: ['quick_reflexes', 'void_touch', 'transcendence']
   }
 };
 ```
 
 ---
 
-*Skills are the core of build diversity. Every skill must feel impactful and create meaningful choices.*
+## Summary: Why This System Works
+
+### Old System Problems
+- Pick 1 of 2, buy other later = No real choice
+- Eventually unlock everything = No identity
+- All builds converge = No replayability
+
+### New System Solutions
+- Pick 1 of 3, others GONE = Meaningful choice
+- Limited Mastery = Can't max everything
+- Random offerings = Every run unique
+- Synergies = Combos reward themed builds
+
+**Result: Players WANT to replay to try different builds!**
+
+---
+
+*Skills are the soul of your character. Make every choice count.*

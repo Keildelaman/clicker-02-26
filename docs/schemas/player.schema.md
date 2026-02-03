@@ -60,18 +60,26 @@ interface Player {
   // === Inventory ===
   inventory: string[];          // Array of owned Item IDs
 
-  // === Skills (NEW STRUCTURE) ===
+  // === Skill Discovery System (ROGUELIKE) ===
+  discoveredSkills: string[];     // Skills found THIS run
+  lostSkills: string[];           // Skills passed up THIS run (cannot discover)
+  masteryPoints: number;          // Points to upgrade skills (20 base)
+  masterySpent: number;           // Points already spent this run
+
+  // === Skills (per-skill state) ===
   skills: {
     [skillId: string]: {
-      unlocked: boolean;        // Has player unlocked this skill
       level: number;            // Current skill level (1-5, or 1-10 with ascension)
       lastUsed: number | null;  // Timestamp for cooldown (active skills)
     };
   };
 
-  // === Equipped Skills (NEW) ===
+  // === Equipped Skills ===
   equippedActiveSkills: (string | null)[];   // 4 slots for active skills
   equippedPassiveSkills: (string | null)[];  // 3 slots for passive skills
+
+  // === Unlocked Synergies ===
+  unlockedSynergies: string[];    // Synergy IDs unlocked this run
 
   // === Zone Progress ===
   currentZone: string;          // Zone ID where player is
@@ -246,13 +254,21 @@ const DEFAULT_PLAYER = {
 
   inventory: [],
 
+  // Skill Discovery (Roguelike System)
+  discoveredSkills: ["skill_power_strike"],  // Power Strike guaranteed at Level 1
+  lostSkills: [],                            // Skills passed up (cannot discover)
+  masteryPoints: 0,                          // Earned at milestones (20 total)
+  masterySpent: 0,
+
   skills: {
-    // Power Strike (active) is auto-unlocked at level 1
-    "skill_power_strike": { unlocked: true, level: 1, lastUsed: null }
+    // Power Strike is discovered at level 1
+    "skill_power_strike": { level: 1, lastUsed: null }
   },
 
   equippedActiveSkills: ["skill_power_strike", null, null, null],
   equippedPassiveSkills: [null, null, null],
+
+  unlockedSynergies: [],
 
   currentZone: "whisperwood",
   unlockedZones: ["whisperwood"],
@@ -345,10 +361,10 @@ function calculateMaxHP(player) {
 ## Skill Slot Management
 
 ```javascript
-// Equip active skill
+// Equip active skill (must be discovered)
 function equipActiveSkill(player, skillId, slotIndex) {
   if (slotIndex < 0 || slotIndex >= 4) return false;
-  if (!player.skills[skillId]?.unlocked) return false;
+  if (!player.discoveredSkills.includes(skillId)) return false;
 
   // Remove from current slot if already equipped
   const currentSlot = player.equippedActiveSkills.indexOf(skillId);
@@ -360,10 +376,10 @@ function equipActiveSkill(player, skillId, slotIndex) {
   return true;
 }
 
-// Equip passive skill
+// Equip passive skill (must be discovered)
 function equipPassiveSkill(player, skillId, slotIndex) {
   if (slotIndex < 0 || slotIndex >= 3) return false;
-  if (!player.skills[skillId]?.unlocked) return false;
+  if (!player.discoveredSkills.includes(skillId)) return false;
 
   const skill = getSkill(skillId);
   if (skill.type !== 'passive') return false;
@@ -375,6 +391,66 @@ function equipPassiveSkill(player, skillId, slotIndex) {
 
   player.equippedPassiveSkills[slotIndex] = skillId;
   return true;
+}
+```
+
+---
+
+## Skill Discovery System
+
+```javascript
+// Discover a skill from an offering
+function discoverSkill(player, skillId, offering) {
+  // Add to discovered
+  player.discoveredSkills.push(skillId);
+  player.skills[skillId] = { level: 1, lastUsed: null };
+
+  // Mark others as LOST (cannot be discovered this run)
+  offering.filter(s => s !== skillId).forEach(s => {
+    if (!player.lostSkills.includes(s)) {
+      player.lostSkills.push(s);
+    }
+  });
+
+  // Check for synergies
+  checkAndUnlockSynergies(player);
+}
+
+// Upgrade a skill (costs Mastery Points + Gold)
+function upgradeSkill(player, skillId) {
+  if (!player.discoveredSkills.includes(skillId)) return false;
+
+  const skill = player.skills[skillId];
+  const targetLevel = skill.level + 1;
+  const maxLevel = getMaxSkillLevel(player.ascension.level);
+
+  if (targetLevel > maxLevel) return false;
+
+  const mpCost = MASTERY_COST_PER_LEVEL[targetLevel - 1];
+  const goldCost = GOLD_COST_PER_LEVEL[targetLevel - 1];
+
+  if (player.masteryPoints - player.masterySpent < mpCost) return false;
+  if (player.gold < goldCost) return false;
+
+  player.masterySpent += mpCost;
+  player.gold -= goldCost;
+  skill.level = targetLevel;
+
+  return true;
+}
+
+// Check and unlock synergies
+function checkAndUnlockSynergies(player) {
+  for (const synergy of SYNERGIES) {
+    const hasAll = synergy.requiredSkills.every(
+      s => player.discoveredSkills.includes(s)
+    );
+
+    if (hasAll && !player.unlockedSynergies.includes(synergy.id)) {
+      player.unlockedSynergies.push(synergy.id);
+      showSynergyUnlockedModal(synergy);
+    }
+  }
 }
 ```
 
@@ -425,13 +501,21 @@ function performAscension(player) {
   player.gold = 0;
   player.totalPlayTime = 0;
 
-  // Reset skill levels (keep unlocks)
-  for (const skillId of Object.keys(player.skills)) {
-    if (player.skills[skillId].unlocked) {
-      player.skills[skillId].level = 1;
-      player.skills[skillId].lastUsed = null;
-    }
-  }
+  // Reset skill discovery (fresh start each run!)
+  player.discoveredSkills = ["skill_power_strike"];  // Power Strike guaranteed
+  player.lostSkills = [];
+  player.masteryPoints = 0;  // Will gain bonus from ascension
+  player.masterySpent = 0;
+  player.unlockedSynergies = [];
+
+  // Reset skills to just Power Strike
+  player.skills = {
+    "skill_power_strike": { level: 1, lastUsed: null }
+  };
+
+  // Reset equipped skills
+  player.equippedActiveSkills = ["skill_power_strike", null, null, null];
+  player.equippedPassiveSkills = [null, null, null];
 
   // Full heal
   player.hp = calculateMaxHP(player);

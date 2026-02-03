@@ -10,29 +10,45 @@
 
 - **Active Skills**: 4 slots, use Energy, have cooldowns
 - **Passive Skills**: 3 slots, always-on bonuses
-- **Choice System**: At milestones, choose 1 of 2 skills (other costs gold later)
+- **Discovery System**: At milestones, offered 3 random skills - pick 1, others LOST
+- **Mastery Points**: Limited resource (20 total) to upgrade skills
+- **Synergies**: Skill combos unlock bonus effects
 - **Level Cap**: 5 base, up to 10 with Ascension
 
 ---
 
-## Skill Unlock Schedule
+## Skill Discovery Pools
 
-| Level | Choice 1 | Choice 2 | Alt Cost |
-|-------|----------|----------|----------|
-| 1 | Power Strike (free) | - | - |
-| 3 | Sharp Blades | Killer Instinct | 100g |
-| 5 | Heal | Iron Skin | 150g |
-| 8 | Gold Rush | XP Boost | 200g |
-| 10 | Execute | Berserk Rage | 500g |
-| 15 | Crit Surge | Perfect Strike | 750g |
-| 20 | Reflect | Time Warp | 1,000g |
-| 25 | Deep Pockets | Fast Learner | 1,500g |
-| 30 | Thick Skin | Regeneration | 2,000g |
-| 40 | Undying | - | 5,000g |
-| 50 | Soul Rend | Energy Flow | 10,000g |
-| 60 | Shield Breaker | Quick Reflexes | 15,000g |
-| 75 | Void Touch | - | 25,000g |
-| 90 | Transcendence | - | 50,000g |
+### Pool Structure
+
+| Pool | Unlock Levels | Skills | Type Mix |
+|------|---------------|--------|----------|
+| **Starter** | 1 | 1 skill | 1 Active (guaranteed) |
+| **Basic** | 3, 5 | 4 skills | 2 Active, 2 Passive |
+| **Utility** | 8 | 4 skills | 4 Active |
+| **Combat** | 10, 15 | 4 skills | 4 Active |
+| **Advanced** | 20, 30 | 4 skills | 4 Passive |
+| **Elite** | 40, 50 | 4 skills | 3 Active, 1 Passive |
+| **Master** | 60, 75 | 3 skills | 1 Active, 2 Passive |
+
+### Discovery Schedule
+
+| Level | Pool | Offered | Notes |
+|-------|------|---------|-------|
+| 1 | Starter | 1 (guaranteed) | Power Strike - everyone gets this |
+| 3 | Basic | 3 of 4 | First real choice |
+| 5 | Basic | 3 of remaining | Complete Basic pool |
+| 8 | Utility | 3 of 4 | Utility focus |
+| 10 | Combat | 3 of 4 | Combat power spike |
+| 15 | Combat | 3 of remaining | Complete Combat pool |
+| 20 | Advanced | 3 of 4 | Passive bonuses |
+| 30 | Advanced | 3 of remaining | Complete Advanced pool |
+| 40 | Elite | 3 of 4 | Late-game power |
+| 50 | Elite | 3 of remaining | Complete Elite pool |
+| 60 | Master | 3 of 3 | Choose 1 of 3 |
+| 75 | Master | 2 of 2 | Final discovery |
+
+**Total Skills Discovered per Run:** 12 (out of 24 available)
 
 ---
 
@@ -762,42 +778,251 @@
 
 ---
 
-## Build Examples
+---
 
-### Berserker Build
-Active: Power Strike, Berserk Rage, Execute, Heal
-Passive: Sharp Blades, Killer Instinct, Thick Skin
+## Skill Synergies
 
-### Tank Build
-Active: Heal, Iron Skin, Reflect, Undying
-Passive: Thick Skin, Regeneration, Quick Reflexes
+Synergies unlock automatically when you discover both required skills.
 
-### Farmer Build
-Active: Gold Rush, XP Boost, Time Warp, Heal
-Passive: Deep Pockets, Fast Learner, Energy Flow
+### Offense Synergies
 
-### Precision Build
-Active: Perfect Strike, Crit Surge, Execute, Power Strike
-Passive: Killer Instinct, Sharp Blades, Energy Flow
+```javascript
+{
+  id: "synergy_berserkers_fury",
+  name: "Berserker's Fury",
+  requiredSkills: ["skill_power_strike", "skill_berserk_rage"],
+  effect: {
+    type: "skillBoost",
+    target: "power_strike",
+    condition: "during_berserk",
+    bonus: 0.50  // +50% Power Strike damage while Berserk
+  },
+  icon: "🔥",
+  description: "Power Strike deals +50% damage while Berserk Rage is active"
+}
+```
+
+```javascript
+{
+  id: "synergy_executioner",
+  name: "Executioner",
+  requiredSkills: ["skill_execute", "skill_killer_instinct"],
+  effect: {
+    type: "thresholdBonus",
+    target: "execute",
+    bonus: 0.10  // Execute threshold +10%
+  },
+  icon: "💀",
+  description: "Execute works on monsters with 10% more HP"
+}
+```
+
+```javascript
+{
+  id: "synergy_critical_mass",
+  name: "Critical Mass",
+  requiredSkills: ["skill_crit_surge", "skill_killer_instinct"],
+  effect: {
+    type: "energyRefund",
+    condition: "on_crit",
+    chance: 0.10  // 10% chance to refund Energy
+  },
+  icon: "⚡",
+  description: "Critical hits have 10% chance to refund Energy"
+}
+```
+
+### Defense Synergies
+
+```javascript
+{
+  id: "synergy_life_siphon",
+  name: "Life Siphon",
+  requiredSkills: ["skill_heal", "skill_soul_rend"],
+  effect: {
+    type: "buff",
+    trigger: "after_heal",
+    lifesteal: 0.10,
+    duration: 5000
+  },
+  icon: "💚",
+  description: "Using Heal grants 10% lifesteal for 5 seconds"
+}
+```
+
+```javascript
+{
+  id: "synergy_iron_fortress",
+  name: "Iron Fortress",
+  requiredSkills: ["skill_iron_skin", "skill_thick_skin"],
+  effect: {
+    type: "permanentBonus",
+    stat: "damageReduction",
+    bonus: 0.05  // +5% permanent DR
+  },
+  icon: "🏰",
+  description: "+5% permanent damage reduction"
+}
+```
+
+```javascript
+{
+  id: "synergy_regenerator",
+  name: "Regenerator",
+  requiredSkills: ["skill_heal", "skill_regeneration"],
+  effect: {
+    type: "regenMultiplier",
+    condition: "out_of_combat",
+    multiplier: 2.0
+  },
+  icon: "🌿",
+  description: "HP regeneration doubled when out of combat"
+}
+```
+
+### Utility Synergies
+
+```javascript
+{
+  id: "synergy_gold_digger",
+  name: "Gold Digger",
+  requiredSkills: ["skill_gold_rush", "skill_deep_pockets"],
+  effect: {
+    type: "permanentBonus",
+    stat: "goldFind",
+    bonus: 0.10  // +10% permanent gold
+  },
+  icon: "💰",
+  description: "+10% permanent gold find"
+}
+```
+
+```javascript
+{
+  id: "synergy_scholar",
+  name: "Scholar",
+  requiredSkills: ["skill_xp_boost", "skill_fast_learner"],
+  effect: {
+    type: "permanentBonus",
+    stat: "xpBonus",
+    bonus: 0.10  // +10% permanent XP
+  },
+  icon: "📚",
+  description: "+10% permanent XP gain"
+}
+```
+
+```javascript
+{
+  id: "synergy_time_lord",
+  name: "Time Lord",
+  requiredSkills: ["skill_time_warp", "skill_perfect_strike"],
+  effect: {
+    type: "cooldownReduction",
+    condition: "during_time_warp",
+    reduction: 0.50  // Cooldowns tick 50% faster
+  },
+  icon: "⏳",
+  description: "Your cooldowns tick 50% faster during Time Warp"
+}
+```
+
+### Master Synergies
+
+```javascript
+{
+  id: "synergy_void_walker",
+  name: "Void Walker",
+  requiredSkills: ["skill_void_touch", "skill_soul_rend"],
+  effect: {
+    type: "armorPen",
+    target: "soul_rend",
+    bonus: 1.0  // Soul Rend ignores ALL armor
+  },
+  icon: "🌀",
+  description: "Soul Rend ignores all monster armor"
+}
+```
+
+```javascript
+{
+  id: "synergy_transcendent",
+  name: "Transcendent",
+  requiredSkills: ["skill_transcendence"],
+  requiredCount: 3,  // Need 3+ Master skills
+  pool: "master",
+  effect: {
+    type: "durationBonus",
+    target: "transcendence",
+    bonus: 15000  // +15 seconds duration
+  },
+  icon: "✨",
+  description: "Transcendence duration +15 seconds"
+}
+```
+
+### Synergy Summary Table
+
+| Synergy | Skills Required | Bonus |
+|---------|-----------------|-------|
+| Berserker's Fury | Power Strike + Berserk Rage | +50% PS during Berserk |
+| Executioner | Execute + Killer Instinct | +10% Execute threshold |
+| Critical Mass | Crit Surge + Killer Instinct | 10% crit → Energy refund |
+| Life Siphon | Heal + Soul Rend | 10% lifesteal after Heal |
+| Iron Fortress | Iron Skin + Thick Skin | +5% permanent DR |
+| Regenerator | Heal + Regeneration | 2x regen out of combat |
+| Gold Digger | Gold Rush + Deep Pockets | +10% permanent gold |
+| Scholar | XP Boost + Fast Learner | +10% permanent XP |
+| Time Lord | Time Warp + Perfect Strike | 50% faster cooldowns |
+| Void Walker | Void Touch + Soul Rend | Soul Rend ignores armor |
+| Transcendent | Transcendence + 3 Master skills | +15s duration |
 
 ---
 
 ## Export
 
 ```javascript
-export const SKILLS = { /* all skills */ };
+export const SKILLS = { /* all skills from above */ };
 
-export const SKILL_UNLOCK_SCHEDULE = [
-  { level: 1, skills: ["skill_power_strike"] },
-  { level: 3, choice: ["skill_sharp_blades", "skill_killer_instinct"] },
-  { level: 5, choice: ["skill_heal", "skill_iron_skin"] },
-  // ... etc
+export const SKILL_POOLS = {
+  starter: ['skill_power_strike'],
+  basic: ['skill_sharp_blades', 'skill_killer_instinct', 'skill_heal', 'skill_iron_skin'],
+  utility: ['skill_gold_rush', 'skill_xp_boost', 'skill_time_warp', 'skill_reflect'],
+  combat: ['skill_execute', 'skill_berserk_rage', 'skill_crit_surge', 'skill_perfect_strike'],
+  advanced: ['skill_deep_pockets', 'skill_fast_learner', 'skill_thick_skin', 'skill_regeneration'],
+  elite: ['skill_undying', 'skill_soul_rend', 'skill_shield_breaker', 'skill_energy_flow'],
+  master: ['skill_quick_reflexes', 'skill_void_touch', 'skill_transcendence']
+};
+
+export const SKILL_DISCOVERY_SCHEDULE = [
+  { level: 1, pool: 'starter', guaranteed: true },
+  { level: 3, pool: 'basic' },
+  { level: 5, pool: 'basic' },
+  { level: 8, pool: 'utility' },
+  { level: 10, pool: 'combat' },
+  { level: 15, pool: 'combat' },
+  { level: 20, pool: 'advanced' },
+  { level: 30, pool: 'advanced' },
+  { level: 40, pool: 'elite' },
+  { level: 50, pool: 'elite' },
+  { level: 60, pool: 'master' },
+  { level: 75, pool: 'master' }
 ];
+
+export const MASTERY_POINTS_SCHEDULE = {
+  3: 1, 5: 1, 8: 1, 10: 2,
+  15: 2, 20: 2, 30: 2, 40: 3,
+  50: 3, 60: 3
+  // Total: 20 Mastery Points
+};
+
+export const SYNERGIES = { /* all synergies from above */ };
 
 export const ACTIVE_SKILL_SLOTS = 4;
 export const PASSIVE_SKILL_SLOTS = 3;
+export const BASE_MASTERY_POINTS = 20;
 ```
 
 ---
 
-*Note: Auto Clicker has been removed. Active engagement is rewarded through the Energy system.*
+*Note: Skills are discovered through roguelike random offerings. Each run creates a unique build!*

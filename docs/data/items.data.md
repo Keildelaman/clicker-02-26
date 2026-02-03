@@ -1754,6 +1754,188 @@
 
 ---
 
+## Epic & Legendary Items (Mid-Game)
+
+These powerful items fill the gap between Rare boss drops and endgame Legendaries.
+
+### Shadowmire Epic
+
+#### Witchbane Edge (Epic) - Elite Drop
+```javascript
+{
+  id: "weapon_shadowmire_epic_01",
+  name: "Witchbane Edge",
+  description: "Forged to slay the dark witches of the mire. Glows with purifying fire.",
+  type: "weapon",
+  rarity: "epic",
+  zone: "shadowmire",
+  requiredLevel: 27,
+  stats: {
+    attack: 85,
+    critChance: 0.06,
+    critDamage: 0.35,
+    armorPen: 8
+  },
+  buyPrice: 7500,
+  sellPrice: 1875,
+  shopAvailable: false,
+  dropOnly: true,
+  emoji: "🔮"
+}
+```
+
+### Ironhold Epic
+
+#### Runemaster's Warhammer (Epic) - Elite Drop
+```javascript
+{
+  id: "weapon_ironhold_epic_01",
+  name: "Runemaster's Warhammer",
+  description: "Ancient dwarven runes cover this massive hammer. Each strike echoes through stone.",
+  type: "weapon",
+  rarity: "epic",
+  zone: "ironhold",
+  requiredLevel: 40,
+  stats: {
+    attack: 175,
+    critChance: 0.07,
+    critDamage: 0.45,
+    armorPen: 25
+  },
+  buyPrice: 22500,
+  sellPrice: 5625,
+  shopAvailable: false,
+  dropOnly: true,
+  emoji: "🔨"
+}
+```
+
+#### Adamantine Bulwark (Epic) - Elite Drop
+```javascript
+{
+  id: "armor_ironhold_epic_01",
+  name: "Adamantine Bulwark",
+  description: "Armor forged from the rarest metal in the peaks. Nearly impervious to harm.",
+  type: "armor",
+  rarity: "epic",
+  zone: "ironhold",
+  requiredLevel: 42,
+  stats: {
+    damageReduction: 0.28,
+    maxHP: 400,
+    hpRegen: 0.018
+  },
+  buyPrice: 22500,
+  sellPrice: 5625,
+  shopAvailable: false,
+  dropOnly: true,
+  emoji: "🛡️"
+}
+```
+
+### Emberfell Epic
+
+#### Phoenix Talon (Epic) - Elite Drop
+```javascript
+{
+  id: "weapon_emberfell_epic_01",
+  name: "Phoenix Talon",
+  description: "A blade crafted from phoenix claw. Burns eternally with rebirth fire.",
+  type: "weapon",
+  rarity: "epic",
+  zone: "emberfell",
+  requiredLevel: 55,
+  stats: {
+    attack: 350,
+    critChance: 0.08,
+    critDamage: 0.55,
+    armorPen: 30
+  },
+  buyPrice: 60000,
+  sellPrice: 15000,
+  shopAvailable: false,
+  dropOnly: true,
+  emoji: "🔥"
+}
+```
+
+#### Magmaborn Plate (Epic) - Elite Drop
+```javascript
+{
+  id: "armor_emberfell_epic_01",
+  name: "Magmaborn Plate",
+  description: "Armor that emerged from a volcanic eruption, perfectly formed. Radiates intense heat.",
+  type: "armor",
+  rarity: "epic",
+  zone: "emberfell",
+  requiredLevel: 55,
+  stats: {
+    damageReduction: 0.28,
+    maxHP: 450,
+    hpRegen: 0.020,
+    critChance: 0.06
+  },
+  buyPrice: 60000,
+  sellPrice: 15000,
+  shopAvailable: false,
+  dropOnly: true,
+  emoji: "🌋"
+}
+```
+
+### Frostpeak Legendary
+
+#### Winterheart (Legendary) - Glacielle's Champion Drop
+```javascript
+{
+  id: "weapon_frostpeak_legendary_01",
+  name: "Winterheart",
+  description: "A sword blessed by the Winter Queen herself. Its wielder becomes one with the eternal cold.",
+  type: "weapon",
+  rarity: "legendary",
+  zone: "frostpeak",
+  requiredLevel: 73,
+  stats: {
+    attack: 750,
+    critChance: 0.10,
+    critDamage: 0.75,
+    armorPen: 40,
+    skillCooldown: 0.15
+  },
+  buyPrice: 500000,
+  sellPrice: 125000,
+  shopAvailable: false,
+  dropOnly: true,
+  emoji: "❄️"
+}
+```
+
+#### Permafrost Mantle (Legendary) - Glacielle's Favor Drop
+```javascript
+{
+  id: "armor_frostpeak_legendary_01",
+  name: "Permafrost Mantle",
+  description: "The frozen armor of Glacielle's personal guard. Grants immunity to all that would slow you.",
+  type: "armor",
+  rarity: "legendary",
+  zone: "frostpeak",
+  requiredLevel: 73,
+  stats: {
+    damageReduction: 0.32,
+    maxHP: 750,
+    hpRegen: 0.025,
+    skillEnergyCost: 0.20
+  },
+  buyPrice: 500000,
+  sellPrice: 125000,
+  shopAvailable: false,
+  dropOnly: true,
+  emoji: "🧊"
+}
+```
+
+---
+
 ## Special Items: Skill Enhancers
 
 These unique items boost specific skills, encouraging different "builds" each run.
@@ -2000,14 +2182,41 @@ These unique items boost specific skills, encouraging different "builds" each ru
 
 ## Item Summary Table
 
-| Zone | Item | Type | Rarity | Level | Attack | Special |
-|------|------|------|--------|-------|--------|---------|
-| Whisperwood | Rusty Sword | Weapon | Common | 1 | 4 | - |
-| Whisperwood | Wooden Club | Weapon | Common | 3 | 6 | - |
-| Whisperwood | Hunter's Blade | Weapon | Uncommon | 5 | 8 | +2% crit |
-| Whisperwood | Mossback's Branch | Weapon | Rare | 8 | 12 | +3% crit |
-| ... | ... | ... | ... | ... | ... | ... |
-| Voidrift | Xal'theron's Demise | Weapon | Legendary | 100 | 2500 | +12% crit, +100% crit dmg |
+### Rarity Distribution
+
+| Rarity | Count | Zones | Source |
+|--------|-------|-------|--------|
+| **Common** | 28 | All | Shop + Drops |
+| **Uncommon** | 21 | All | Shop + Drops |
+| **Rare** | 28 | All | Boss drops + Some shop |
+| **Epic** | 10 | Shadowmire+ | Elite drops + Skill enhancers |
+| **Legendary** | 9 | Frostpeak+ | Boss drops only |
+
+### Epic Items Summary
+
+| Zone | Item | Type | Key Stats |
+|------|------|------|-----------|
+| Shadowmire | Witchbane Edge | Weapon | 85 ATK, 6% crit, 8 ArP |
+| Ironhold | Runemaster's Warhammer | Weapon | 175 ATK, 7% crit, 25 ArP |
+| Ironhold | Adamantine Bulwark | Armor | 28% DR, 400 HP |
+| Emberfell | Phoenix Talon | Weapon | 350 ATK, 8% crit, 30 ArP |
+| Emberfell | Magmaborn Plate | Armor | 28% DR, 450 HP, 6% crit |
+| Emberfell | Devastator's Ring | Accessory | +50% Power Strike, 10% CDR |
+| Frostpeak | Life Guardian's Amulet | Accessory | +50% Heal, 15% energy cost |
+| Frostpeak | Sage's Focus Crystal | Accessory | 15% CDR, 10% energy cost |
+| Voidrift | Abyssal Devastator | Weapon | 1700 ATK, 10% crit, 45 ArP |
+
+### Legendary Items Summary
+
+| Zone | Item | Type | Unique Feature |
+|------|------|------|----------------|
+| Emberfell | Fury Incarnate | Accessory | +50% Berserk, -10% DR (risk!) |
+| Frostpeak | Winterheart | Weapon | 750 ATK, 15% CDR |
+| Frostpeak | Permafrost Mantle | Armor | 32% DR, 20% energy cost |
+| Voidrift | Xal'theron's Demise | Weapon | 2500 ATK, 100 ArP (final boss) |
+| Voidrift | Crown of the Void | Accessory | All stats, 25% energy gain |
+| Voidrift | Xal'theron's Mantle | Armor | 35% DR, 1000 HP, 20% CDR |
+| Voidrift | Death's Judgment | Accessory | +15% Execute threshold |
 
 ---
 

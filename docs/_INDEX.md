@@ -113,6 +113,25 @@ BASE_SKILL_MAX_LEVEL = 5        # Max skill level (before ascension)
 ASCENDED_SKILL_MAX_LEVEL = 10   # Max skill level (with ascension)
 ```
 
+### Skill Discovery System (Roguelike)
+```
+BASE_MASTERY_POINTS = 20        # Total Mastery Points available per run
+MASTERY_PER_ASCENSION = 2       # Bonus MP per ascension level
+SKILLS_OFFERED = 3              # Skills offered at each milestone
+TOTAL_SKILLS = 24               # Total skills in the game
+MAX_DISCOVERIES = 12            # Max skills discoverable per run
+```
+
+### Mastery Point Costs (per level)
+```
+MASTERY_COST = [0, 1, 2, 3, 4]  # Cost for level 1→2, 2→3, etc.
+# Level 1: Free (discovery)
+# Level 2: 1 MP
+# Level 3: 2 MP (3 total)
+# Level 4: 3 MP (6 total)
+# Level 5: 4 MP (10 total)
+```
+
 ### Ascension Defaults
 ```
 ASCENSION_DAMAGE_BONUS = 0.05   # +5% damage per ascension
