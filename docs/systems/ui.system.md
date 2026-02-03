@@ -95,14 +95,16 @@ ATTACK PHASE:      Monster border = red
     ┌──────────┐    ┌──────────┐    ┌──────────┐
     │  ZONES   │    │   SHOP   │    │  SKILLS  │
     │ (Modal)  │    │ (Screen) │    │ (Screen) │
-    └──────────┘    └──────────┘    └──────────┘
-                           │
-                    ┌──────┴──────┐
-                    ▼             ▼
-             ┌──────────┐  ┌──────────┐
-             │ Weapons  │  │ Access.  │
-             │  (Tab)   │  │  (Tab)   │
-             └──────────┘  └──────────┘
+    └──────────┘    └────┬─────┘    └──────────┘
+                         │
+         ┌───────────────┼───────────────┐
+         ▼               ▼               ▼
+    ┌──────────┐  ┌──────────┐    ┌──────────┐
+    │ Weapons  │  │Inventory │    │  Vault   │
+    │ /Armor/  │  │  (Tab)   │    │  (Tab)   │
+    │ Accessor │  └──────────┘    └──────────┘
+    │  (Tabs)  │
+    └──────────┘
 
     ┌──────────┐
     │ SETTINGS │ ← From gear icon
@@ -126,7 +128,7 @@ ATTACK PHASE:      Monster border = red
 ┌─────────────────────────────────────────┐
 │ ← Back        SHOP           💰 1,234   │
 ├─────────────────────────────────────────┤
-│  [⚔️ Weapons]  [🛡️ Armor]  [💍 Access]  │ ← Tabs
+│  [⚔️ Weapons] [🛡️ Armor] [💍 Access] [📦 Inv] │ ← Tabs
 ├─────────────────────────────────────────┤
 │                                         │
 │  ┌─────────────────────────────────┐    │
@@ -160,6 +162,147 @@ ATTACK PHASE:      Monster border = red
 | Too Expensive | Price in red, button grayed | None (show cost) |
 | Level Locked | Lock icon, grayed | Show requirement |
 | Drop Only | "Drop Only" text, no button | None |
+
+---
+
+## Inventory Screen
+
+Accessed from Shop screen via "Inventory" tab.
+
+```
+┌─────────────────────────────────────────┐
+│ ← Back      INVENTORY        💰 1,234   │
+├─────────────────────────────────────────┤
+│  EQUIPPED:                              │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐    │
+│  │ ⚔️ Void  │ │ 🛡️ Abyss│ │ 💍 Band │    │
+│  │ Reaver  │ │ Plate   │ │ of Luck │    │
+│  │ Lv.80   │ │ Lv.75   │ │ Lv.60   │    │
+│  └─────────┘ └─────────┘ └─────────┘    │
+│   Weapon      Armor      Accessory      │
+│                                         │
+├─────────────────────────────────────────┤
+│  INVENTORY (12 items)    [SELL ALL ▼]   │
+│  Sort: [Rarity ▼] Filter: [All ▼]       │
+├─────────────────────────────────────────┤
+│                                         │
+│  ┌─────────────────────────────────┐    │
+│  │ ✵ Frostbite Blade    LEGENDARY  │    │
+│  │ ⚔️ +280 Attack, +12% Crit       │    │
+│  │ Requires: Level 65              │    │
+│  │ [EQUIP] [SELL 12,500g]          │    │
+│  └─────────────────────────────────┘    │
+│                                         │
+│  ┌─────────────────────────────────┐    │
+│  │ ✧ Ember Sword          EPIC     │    │
+│  │ ⚔️ +180 Attack, +8% Crit        │    │
+│  │ Requires: Level 50              │    │
+│  │ [EQUIP] [SELL 6,000g]           │    │
+│  └─────────────────────────────────┘    │
+│                                         │
+│  ┌─────────────────────────────────┐    │
+│  │ ★ Iron Buckler          RARE    │    │
+│  │ 🛡️ +10% DR, +50 HP              │    │
+│  │ Requires: Level 30              │    │
+│  │ [EQUIP] [SELL 1,500g]           │    │
+│  └─────────────────────────────────┘    │
+│                                         │
+│  ┌─────────────────────────────────┐    │
+│  │ ✦ Lucky Charm        UNCOMMON   │    │
+│  │ 💍 +8% Gold Find                │    │
+│  │ Requires: Level 5               │    │
+│  │ [EQUIP] [SELL 125g]             │    │
+│  └─────────────────────────────────┘    │
+│                                         │
+│  [SCROLL FOR MORE...]                   │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+### Inventory Features
+
+| Feature | Description |
+|---------|-------------|
+| **Sorting** | By rarity (best first, default), level req, type, name |
+| **Filtering** | All, Weapons, Armor, Accessories |
+| **Quick Sell** | Sell button on each item |
+| **Bulk Sell** | "Sell All Common", "Sell All Below Rare" options |
+| **Scrollable** | Infinite scroll for any number of items |
+| **Equip Action** | One-tap equip (swaps with current) |
+
+### Bulk Sell Menu
+
+```
+┌─────────────────────────────────────────┐
+│         SELL ALL ▼                      │
+├─────────────────────────────────────────┤
+│  Sell All Common (5 items) → 250g       │
+│  Sell All Uncommon (3 items) → 375g     │
+│  Sell Below Rare (8 items) → 625g       │
+│  ─────────────────────────────────────  │
+│  Cancel                                 │
+└─────────────────────────────────────────┘
+```
+
+### Inventory Rules
+
+- **Unlimited capacity** - No artificial limit, collect everything
+- **Items sorted by rarity** - Legendary first, Common last
+- **Long-press for details** - Shows full item stats and description
+- **Swipe to sell** - Quick gesture to sell items (optional)
+
+---
+
+## Vault Screen
+
+Accessed from Shop screen. Shows items stored from previous ascensions.
+
+```
+┌─────────────────────────────────────────┐
+│ ← Back        VAULT          💰 15,230  │
+├─────────────────────────────────────────┤
+│  Stored items from past ascensions      │
+│  Slots: 3/8                             │
+├─────────────────────────────────────────┤
+│                                         │
+│  ┌─────────────────────────────────┐    │
+│  │ ✵ Void Reaver        LEGENDARY  │    │
+│  │ ⚔️ +450 Attack, +15% Crit       │    │
+│  │ ⚠️ Requires: Level 80           │    │
+│  │ [WITHDRAW 6,250g] [SELL 6,250g] │    │
+│  └─────────────────────────────────┘    │
+│                                         │
+│  ┌─────────────────────────────────┐    │
+│  │ ✧ Glacial Band          EPIC    │    │
+│  │ 💍 +20% Gold, +100 HP           │    │
+│  │ ⚠️ Requires: Level 65           │    │
+│  │ [WITHDRAW 2,500g] [SELL 2,500g] │    │
+│  └─────────────────────────────────┘    │
+│                                         │
+│  ┌─────────────────────────────────┐    │
+│  │ ★ Ironhold Shield        RARE   │    │
+│  │ 🛡️ +15% DR                      │    │
+│  │ ✓ Level 35 - Can withdraw!      │    │
+│  │ [WITHDRAW 1,500g] [SELL 1,500g] │    │
+│  └─────────────────────────────────┘    │
+│                                         │
+│  ─────────────────────────────────────  │
+│  Empty Slot                             │
+│  Empty Slot                             │
+│  Empty Slot                             │
+│  Empty Slot                             │
+│  Empty Slot                             │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+### Vault States
+
+| State | Visual | Actions |
+|-------|--------|---------|
+| Can Withdraw | Green "✓ Level met" | Withdraw (costs gold), Sell |
+| Level Locked | Orange "⚠️ Requires Lv X" | Sell only |
+| Empty Slot | Gray "Empty Slot" | None |
 
 ---
 

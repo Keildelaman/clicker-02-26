@@ -98,6 +98,12 @@ STARTING_GOLD = 0
 SELL_PRICE_RATIO = 0.25         # Sell items for 25% of buy price
 ```
 
+### Equipment Slots
+```
+EQUIPMENT_SLOTS = ["weapon", "armor", "accessory"]  # 3 equipment slots
+INVENTORY_CAPACITY = unlimited  # No artificial limit on inventory
+```
+
 ### Progression Defaults
 ```
 STARTING_LEVEL = 1
@@ -111,25 +117,37 @@ ACTIVE_SKILL_SLOTS = 4          # Max equipped active skills
 PASSIVE_SKILL_SLOTS = 3         # Max equipped passive skills
 BASE_SKILL_MAX_LEVEL = 5        # Max skill level (before ascension)
 ASCENDED_SKILL_MAX_LEVEL = 10   # Max skill level (with ascension)
-```
-
-### Skill Discovery System (Roguelike)
-```
-BASE_MASTERY_POINTS = 20        # Total Mastery Points available per run
-MASTERY_PER_ASCENSION = 2       # Bonus MP per ascension level
-SKILLS_OFFERED = 3              # Skills offered at each milestone
 TOTAL_SKILLS = 24               # Total skills in the game
-MAX_DISCOVERIES = 12            # Max skills discoverable per run
 ```
 
-### Mastery Point Costs (per level)
+### Mastery Points System
 ```
-MASTERY_COST = [0, 1, 2, 3, 4]  # Cost for level 1→2, 2→3, etc.
-# Level 1: Free (discovery)
-# Level 2: 1 MP
-# Level 3: 2 MP (3 total)
-# Level 4: 3 MP (6 total)
-# Level 5: 4 MP (10 total)
+# Earning MP
+MASTERY_PER_BOSS = 2            # MP earned per boss kill
+MASTERY_PER_ASCENSION = 3       # Bonus starting MP per ascension level
+# Level milestones: 5→3, 10→3, 15→3, 20→3, 30→4, 40→4, 50→5, 60→5, 75→5, 90→5
+# Base total: ~54 MP (40 from levels + 14 from 7 bosses)
+
+# Skill Unlock Costs (vary by power)
+UNLOCK_COST_BASIC = 3           # Heal, Sharp Blades, etc.
+UNLOCK_COST_UTILITY = 4         # Gold Rush, XP Boost, etc.
+UNLOCK_COST_COMBAT = 5          # Execute, Berserk Rage, etc.
+UNLOCK_COST_ADVANCED = 6        # Deep Pockets, Thick Skin, etc.
+UNLOCK_COST_ELITE = 8           # Undying, Soul Rend, etc.
+UNLOCK_COST_MASTER = 10         # Transcendence, Void Touch, etc.
+
+# Upgrade Costs (per level)
+UPGRADE_COST = [1, 2, 3, 4]     # Cost for level 2, 3, 4, 5
+UPGRADE_COST_EXTENDED = [5, 6, 7, 8, 10]  # Cost for levels 6-10
+# Total to max (Lv5): 10 MP
+# Total to max (Lv10): 46 MP
+```
+
+### Vault System
+```
+VAULT_MAX_SLOTS = 8             # Maximum items stored in vault
+VAULT_WITHDRAW_COST = 0.25      # 25% of buy price to withdraw
+VAULT_SELL_RATIO = 0.25         # 25% of buy price when selling
 ```
 
 ### Ascension Defaults
@@ -138,6 +156,7 @@ ASCENSION_DAMAGE_BONUS = 0.05   # +5% damage per ascension
 ASCENSION_GOLD_BONUS = 0.05     # +5% gold per ascension
 ASCENSION_XP_BONUS = 0.05       # +5% XP per ascension
 ASCENSION_HP_BONUS = 50         # +50 HP per ascension
+ASCENSION_MP_BONUS = 3          # +3 starting Mastery Points per ascension
 ```
 
 ---

@@ -54,17 +54,17 @@ interface Player {
   // === Equipment ===
   equipment: {
     weapon: string | null;      // Item ID or null
+    armor: string | null;       // Item ID or null
     accessory: string | null;   // Item ID or null
   };
 
   // === Inventory ===
   inventory: string[];          // Array of owned Item IDs
 
-  // === Skill Discovery System (ROGUELIKE) ===
-  discoveredSkills: string[];     // Skills found THIS run
-  lostSkills: string[];           // Skills passed up THIS run (cannot discover)
-  masteryPoints: number;          // Points to upgrade skills (20 base)
-  masterySpent: number;           // Points already spent this run
+  // === Skill System (Mastery Points) ===
+  unlockedSkills: string[];       // Skills unlocked THIS run (bought with MP)
+  masteryPoints: number;          // Current available MP
+  masterySpent: number;           // Total MP spent this run
 
   // === Skills (per-skill state) ===
   skills: {
@@ -77,9 +77,6 @@ interface Player {
   // === Equipped Skills ===
   equippedActiveSkills: (string | null)[];   // 4 slots for active skills
   equippedPassiveSkills: (string | null)[];  // 3 slots for passive skills
-
-  // === Unlocked Synergies ===
-  unlockedSynergies: string[];    // Synergy IDs unlocked this run
 
   // === Zone Progress ===
   currentZone: string;          // Zone ID where player is
@@ -249,15 +246,15 @@ const DEFAULT_PLAYER = {
 
   equipment: {
     weapon: null,
+    armor: null,
     accessory: null
   },
 
   inventory: [],
 
-  // Skill Discovery (Roguelike System)
-  discoveredSkills: ["skill_power_strike"],  // Power Strike guaranteed at Level 1
-  lostSkills: [],                            // Skills passed up (cannot discover)
-  masteryPoints: 0,                          // Earned at milestones (20 total)
+  // Skill System (Mastery Points)
+  unlockedSkills: ["skill_power_strike"],  // Power Strike free at start
+  masteryPoints: 0,                        // Earned from levels + bosses
   masterySpent: 0,
 
   skills: {
@@ -267,8 +264,6 @@ const DEFAULT_PLAYER = {
 
   equippedActiveSkills: ["skill_power_strike", null, null, null],
   equippedPassiveSkills: [null, null, null],
-
-  unlockedSynergies: [],
 
   currentZone: "whisperwood",
   unlockedZones: ["whisperwood"],
@@ -364,7 +359,7 @@ function calculateMaxHP(player) {
 // Equip active skill (must be discovered)
 function equipActiveSkill(player, skillId, slotIndex) {
   if (slotIndex < 0 || slotIndex >= 4) return false;
-  if (!player.discoveredSkills.includes(skillId)) return false;
+  if (!player.unlockedSkills.includes(skillId)) return false;
 
   // Remove from current slot if already equipped
   const currentSlot = player.equippedActiveSkills.indexOf(skillId);
@@ -379,7 +374,7 @@ function equipActiveSkill(player, skillId, slotIndex) {
 // Equip passive skill (must be discovered)
 function equipPassiveSkill(player, skillId, slotIndex) {
   if (slotIndex < 0 || slotIndex >= 3) return false;
-  if (!player.discoveredSkills.includes(skillId)) return false;
+  if (!player.unlockedSkills.includes(skillId)) return false;
 
   const skill = getSkill(skillId);
   if (skill.type !== 'passive') return false;
@@ -402,7 +397,7 @@ function equipPassiveSkill(player, skillId, slotIndex) {
 // Discover a skill from an offering
 function discoverSkill(player, skillId, offering) {
   // Add to discovered
-  player.discoveredSkills.push(skillId);
+  player.unlockedSkills.push(skillId);
   player.skills[skillId] = { level: 1, lastUsed: null };
 
   // Mark others as LOST (cannot be discovered this run)
@@ -418,7 +413,7 @@ function discoverSkill(player, skillId, offering) {
 
 // Upgrade a skill (costs Mastery Points + Gold)
 function upgradeSkill(player, skillId) {
-  if (!player.discoveredSkills.includes(skillId)) return false;
+  if (!player.unlockedSkills.includes(skillId)) return false;
 
   const skill = player.skills[skillId];
   const targetLevel = skill.level + 1;
@@ -443,7 +438,7 @@ function upgradeSkill(player, skillId) {
 function checkAndUnlockSynergies(player) {
   for (const synergy of SYNERGIES) {
     const hasAll = synergy.requiredSkills.every(
-      s => player.discoveredSkills.includes(s)
+      s => player.unlockedSkills.includes(s)
     );
 
     if (hasAll && !player.unlockedSynergies.includes(synergy.id)) {
@@ -501,12 +496,10 @@ function performAscension(player) {
   player.gold = 0;
   player.totalPlayTime = 0;
 
-  // Reset skill discovery (fresh start each run!)
-  player.discoveredSkills = ["skill_power_strike"];  // Power Strike guaranteed
-  player.lostSkills = [];
-  player.masteryPoints = 0;  // Will gain bonus from ascension
+  // Reset skills (fresh build each run!)
+  player.unlockedSkills = ["skill_power_strike"];  // Power Strike always free
+  player.masteryPoints = player.ascension.level * 3;  // Ascension bonus MP
   player.masterySpent = 0;
-  player.unlockedSynergies = [];
 
   // Reset skills to just Power Strike
   player.skills = {

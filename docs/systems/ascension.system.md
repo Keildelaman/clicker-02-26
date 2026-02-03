@@ -71,17 +71,17 @@ Once available, shows in:
 │  YOU WILL RESET:                        │
 │  ┌─────────────────────────────────┐    │
 │  │ ⚠️ Level → 1                     │    │
-│  │ ⚠️ Gold → 0                      │    │
-│  │ ⚠️ Skill Levels → 1 (keep unlocks)│   │
+│  │ ⚠️ Gold → 0 (+ auto-sell bonus)  │    │
+│  │ ⚠️ All Skills (fresh build!)     │    │
 │  │ ⚠️ Zone Progress → Whisperwood   │    │
 │  └─────────────────────────────────┘    │
 │                                         │
 │  YOU WILL KEEP:                         │
 │  ┌─────────────────────────────────┐    │
 │  │ ✓ All permanent bonuses         │    │
-│  │ ✓ All skill unlocks             │    │
-│  │ ✓ Equipment (moved to Vault)    │    │
+│  │ ✓ Equipment (choose 8 → Vault)  │    │
 │  │ ✓ Statistics                    │    │
+│  │ ✓ Ascension bonus MP            │    │
 │  └─────────────────────────────────┘    │
 │                                         │
 │      [ASCEND NOW]      [NOT YET]        │
@@ -175,23 +175,31 @@ const POWER_STRIKE_EXTENDED = {
 | HP | Any | Full |
 | Energy | Any | 0 |
 
-### Skills Reset Details
+### Skills Full Reset
 
 ```javascript
 function resetSkillsOnAscension(player) {
-  // Keep unlocked skills
-  // Reset all levels to 1
+  // FULL RESET - fresh build each run!
+  player.unlockedSkills = ["skill_power_strike"];  // Only Power Strike
+  player.skills = {
+    "skill_power_strike": { level: 1, lastUsed: null }
+  };
 
-  for (const skill of player.skills) {
-    if (skill.unlocked) {
-      skill.level = 1;
-    }
-  }
+  // Clear equipped skills
+  player.equippedActiveSkills = ["skill_power_strike", null, null, null];
+  player.equippedPassiveSkills = [null, null, null];
 
-  // Keep equipped slots configuration
-  // Skills are still equipped, just at level 1
+  // Reset MP (apply ascension bonus)
+  player.masterySpent = 0;
+  player.masteryPoints = player.ascension.level * 3;  // +3 MP per ascension
 }
 ```
+
+**Why Full Reset?**
+- Each run is a fresh build opportunity
+- Encourages trying different skill combinations
+- Ascension bonus MP rewards experienced players
+- No "solved" optimal build - experiment each run!
 
 ---
 
@@ -202,43 +210,120 @@ function resetSkillsOnAscension(player) {
 | Attribute | Kept | Notes |
 |-----------|------|-------|
 | Ascension bonuses | ✓ | Cumulative forever |
-| Skill unlocks | ✓ | Don't need to unlock again |
-| Equipment | ✓ | Moved to Vault |
+| Equipment (up to 8) | ✓ | Choose items → Vault (limited slots) |
 | Statistics | ✓ | All-time stats preserved |
 | Settings | ✓ | Preferences unchanged |
 | Tutorial completion | ✓ | No re-tutorial |
+| Bonus gold | ✓ | From auto-sold items |
+
+### What Resets
+
+| Attribute | Reset | Notes |
+|-----------|-------|-------|
+| Skills | ✓ | Fresh build each run (except Power Strike) |
+| Mastery Points | ✓ | Start with Ascension bonus MP only |
+| Level | ✓ | Back to 1 |
+| Gold | ✓ | Start at 0 (plus auto-sold bonus) |
+| Zone progress | ✓ | Back to Whisperwood |
 
 ### Equipment Vault
 
-When you ascend, equipment is stored:
+The vault stores items you want to keep across ascensions.
+
+**Vault Rules:**
+- **Limited to 8 slots** (not expandable)
+- Must **choose** which items to keep before ascending
+- Equipped items automatically selected (3 slots: weapon, armor, accessory)
+- Remaining 5 slots can be filled from inventory
+- Items NOT selected are **auto-sold** for gold (bonus starting gold next run)
+- Can **withdraw** items when you meet level requirement
+- Withdrawal costs **gold** (25% of item's buy price)
+- Can **sell** vault items for gold at any level (25% of buy price)
+- Vault is accessible from Shop screen
+
+### Vault Selection Screen (Before Ascending)
 
 ```
 ┌─────────────────────────────────────────┐
-│            📦 EQUIPMENT VAULT            │
+│          📦 SELECT VAULT ITEMS          │
 │                                         │
-│  Your pre-ascension equipment is here.  │
+│  Choose up to 8 items to keep:          │
+│  (Others will be sold automatically)    │
+│                                         │
+│  EQUIPPED (auto-selected):              │
+│  ┌─────────────────────────────────┐    │
+│  │ ✓ 🗡️ Void Reaver (weapon)       │    │
+│  │ ✓ 🛡️ Abyssal Plate (armor)      │    │
+│  │ ✓ 💍 Glacial Band (accessory)   │    │
+│  └─────────────────────────────────┘    │
+│                                         │
+│  INVENTORY (select up to 5 more):       │
+│  ┌─────────────────────────────────┐    │
+│  │ ☐ ⚔️ Frostbite Blade            │    │
+│  │ ☐ 🛡️ Ironhold Shield            │    │
+│  │ ☐ 💍 Gold Digger's Ring         │    │
+│  │ ☐ ⚔️ Ember Sword                │    │
+│  │ ☐ 💍 Lucky Charm                │    │
+│  └─────────────────────────────────┘    │
+│                                         │
+│  Items not selected: AUTO-SOLD          │
+│  Est. gold from sold items: 12,450g     │
+│  (Applied as bonus gold next run)       │
+│                                         │
+│  Slots: 3/8 used                        │
+│                                         │
+│         [CONFIRM & ASCEND]              │
+└─────────────────────────────────────────┘
+```
+
+### Vault Screen (During Run)
+
+```
+┌─────────────────────────────────────────┐
+│            📦 EQUIPMENT VAULT           │
+│                                         │
+│  Your stored items from past runs.      │
+│  Gold: 15,230                           │
 │                                         │
 │  ┌─────────────────────────────────┐    │
 │  │ 🗡️ Void Reaver (Lv 80 req)      │    │
 │  │ +450 Attack, +15% Crit          │    │
-│  │ [WITHDRAW] [SELL 5,000g]        │    │
+│  │ [WITHDRAW 6,250g] [SELL 6,250g] │    │
+│  │ ⚠️ Requires Level 80            │    │
 │  └─────────────────────────────────┘    │
 │                                         │
 │  ┌─────────────────────────────────┐    │
 │  │ 💍 Glacial Band (Lv 65 req)     │    │
 │  │ +20% Gold Find, +100 HP         │    │
-│  │ [WITHDRAW] [SELL 2,500g]        │    │
+│  │ [WITHDRAW 2,500g] [SELL 2,500g] │    │
+│  │ ⚠️ Requires Level 65            │    │
 │  └─────────────────────────────────┘    │
 │                                         │
-│  Note: Items require level to equip     │
+│  ┌─────────────────────────────────┐    │
+│  │ 🛡️ Ironhold Shield (Lv 35 req)  │    │
+│  │ +15% Damage Reduction           │    │
+│  │ [WITHDRAW 1,500g] [SELL 1,500g] │    │
+│  │ ✓ Level requirement met!        │    │
+│  └─────────────────────────────────┘    │
+│                                         │
+│  Vault: 3/8 slots used                  │
 └─────────────────────────────────────────┘
 ```
 
-**Vault Rules:**
-- Unlimited vault space
-- Can withdraw when you meet level requirement
-- Can sell for gold at any level
-- Vault is accessible from Shop screen
+### Vault Economics
+
+| Action | Cost/Reward |
+|--------|-------------|
+| Store item (during ascension) | Free (limited to 8 slots) |
+| Withdraw item | 25% of buy price (gold) |
+| Sell vault item | 25% of buy price (gold) |
+| Auto-sell on ascension | 25% of buy price (added to next run) |
+
+**Why Withdrawal Costs Gold:**
+- Creates a meaningful decision (spend gold now vs. save for shop)
+- Prevents vault from trivializing early-game
+- Gold sink for the economy
+- Items are still valuable, just require investment
 
 ---
 
@@ -465,6 +550,9 @@ const ASCENSION_CONSTANTS = {
   XP_BONUS_PER_ASCENSION: 0.05,        // 5%
   HP_BONUS_PER_ASCENSION: 50,          // flat
 
+  // Mastery Points bonus per ascension
+  MASTERY_PER_ASCENSION: 3,            // +3 MP starting bonus per ascension
+
   // Skill level caps
   SKILL_LEVEL_CAPS: {
     0: 5,
@@ -474,6 +562,11 @@ const ASCENSION_CONSTANTS = {
     5: 9,
     10: 10
   },
+
+  // Vault
+  VAULT_MAX_SLOTS: 8,                  // Maximum items in vault
+  VAULT_WITHDRAW_COST: 0.25,           // 25% of buy price to withdraw
+  VAULT_SELL_RATIO: 0.25,              // 25% of buy price when selling
 
   // Ascended mode (requires Ascension 3+)
   ASCENDED_MODE_UNLOCK: 3,
