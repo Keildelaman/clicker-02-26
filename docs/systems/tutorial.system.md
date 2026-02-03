@@ -291,7 +291,7 @@ Trigger: Player clicks "FIGHT BOSS" first time
 | First kill | +10 gold |
 | First level up | Full HP heal |
 | First skill use | +25 Energy |
-| First item bought | Free Health Potion |
+| First item bought | +25 gold back |
 | First boss killed | +50% gold and XP |
 | First zone travel | Full HP and Energy |
 | First death | Mercy: no gold loss |

@@ -78,7 +78,6 @@ const ENERGY_REGEN_PER_SECOND = 2;
 | Energy Flow Lv 3 | +30% Energy gain |
 | Energy Flow Lv 4 | +40% Energy gain |
 | Energy Flow Lv 5 | +50% Energy gain |
-| Energy Potion | Instant +50 Energy |
 | Accessory (rare) | +5-15% Energy gain |
 
 ---
@@ -183,28 +182,6 @@ const MAX_ENERGY = 100;
 
 ---
 
-## Energy Potion
-
-### Consumable Item
-
-```javascript
-const ENERGY_POTION = {
-  name: "Energy Potion",
-  effect: "Instantly restore 50 Energy",
-  cost: 150,           // gold to buy
-  cooldown: 60,        // seconds between uses
-  maxStack: 10         // max inventory
-};
-```
-
-### Usage
-- Bought from Shop (consumables tab)
-- Used via dedicated potion button or inventory
-- Does not take skill slot
-- Cooldown shared between all Energy potions
-
----
-
 ## No Energy State
 
 When Energy = 0:
@@ -283,13 +260,7 @@ const ENERGY_CONSTANTS = {
   ENERGY_GAIN_COOLDOWN: 0.2,    // seconds
   ENERGY_ON_KILL: 15,
   ENERGY_ON_BOSS_KILL: 50,
-  ENERGY_REGEN_PER_SECOND: 2,
-
-  // Potion
-  ENERGY_POTION_RESTORE: 50,
-  ENERGY_POTION_COOLDOWN: 60,
-  ENERGY_POTION_COST: 150,
-  ENERGY_POTION_MAX_STACK: 10
+  ENERGY_REGEN_PER_SECOND: 2
 };
 ```
 

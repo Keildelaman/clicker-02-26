@@ -364,7 +364,8 @@ const ACHIEVEMENTS = {
 ```
 
 ### Gold Boosters (v2.0)
-- Temporary gold find buffs from consumables
+- Temporary gold find buffs from skills (Gold Rush)
+- Accessories with gold find bonuses
 - Not purchasable with real money (no P2W)
 
 ---

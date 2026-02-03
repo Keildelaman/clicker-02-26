@@ -72,7 +72,7 @@ MIN_DAMAGE = 1                  # Minimum damage per click
 ```
 BASE_PLAYER_HP = 100            # Starting max HP
 HP_PER_LEVEL = 10               # +10 max HP per level
-BASE_HP_REGEN = 0.005           # 0.5% HP regen per second
+BASE_HP_REGEN = 0.015           # 1.5% HP regen per second (~66s to full heal)
 HP_CAUTION_THRESHOLD = 0.5      # Yellow bar below 50%
 HP_CRITICAL_THRESHOLD = 0.25    # Red bar below 25%
 ```
@@ -253,7 +253,7 @@ SAVE_VERSION = 2
 
 **Version History:**
 - v1: Initial release
-- v2: Added HP, Energy, skills, ascension, consumables, tutorial state
+- v2: Added HP, Energy, skills, ascension, tutorial state
 
 Save structure defined in `schemas/player.schema.md`.
 
@@ -277,7 +277,6 @@ MVP (Version 1.0) must include:
 12. [ ] Tutorial system
 
 Post-MVP (v1.1):
-- Consumable items (potions) in shop
 - Equipment drops from monsters
 - Sound effects
 - Advanced monster AI patterns

@@ -1,6 +1,6 @@
 # Item Data
 
-> Complete definitions for all weapons and accessories.
+> Complete definitions for all weapons, armor, and accessories.
 > Schema: `schemas/item.schema.md`
 > Health System: `systems/health.system.md`
 > Energy System: `systems/energy.system.md`
@@ -9,6 +9,8 @@
 
 ## Stat Reference
 
+### Core Stats
+
 | Stat ID | Display Name | Item Types | Description |
 |---------|--------------|------------|-------------|
 | `attack` | Attack | Weapons | Damage per click |
@@ -16,11 +18,22 @@
 | `critDamage` | Crit Damage | All | Multiplier on critical hits |
 | `goldFind` | Gold Find | Accessories | % bonus gold from kills |
 | `xpBonus` | XP Bonus | Accessories | % bonus XP from kills |
-| `maxHP` | Max HP | Accessories | Bonus to maximum HP |
-| `hpRegen` | HP Regen | Accessories | % HP regeneration per second |
-| `damageReduction` | Damage Reduction | Accessories | % damage reduction from monsters |
+| `maxHP` | Max HP | Armor, Accessories | Bonus to maximum HP |
+| `hpRegen` | HP Regen | Armor, Accessories | % HP regeneration per second |
+| `damageReduction` | Damage Reduction | Armor | % damage reduction from monsters |
 | `energyGain` | Energy Gain | Accessories | % bonus Energy from clicks |
 | `armorPen` | Armor Penetration | Weapons | Ignores X armor on armored monsters |
+
+### Skill-Enhancing Stats (NEW)
+
+| Stat ID | Display Name | Description |
+|---------|--------------|-------------|
+| `skillBoost_power_strike` | Power Strike+ | % bonus to Power Strike damage |
+| `skillBoost_heal` | Heal+ | % bonus to Heal amount |
+| `skillBoost_execute` | Execute+ | Increases Execute threshold |
+| `skillBoost_berserk` | Berserk+ | % bonus to Berserk damage |
+| `skillCooldown` | Cooldown Reduction | % reduction to all skill cooldowns |
+| `skillEnergyCost` | Energy Efficiency | % reduction to skill energy costs |
 
 ---
 
@@ -170,6 +183,76 @@
   shopAvailable: true,
   dropOnly: false,
   emoji: "🐾"
+}
+```
+
+### Armor
+
+#### Leather Vest (Common)
+```javascript
+{
+  id: "armor_whisperwood_common_01",
+  name: "Leather Vest",
+  description: "A simple leather vest that offers basic protection against claws and fangs.",
+  type: "armor",
+  rarity: "common",
+  zone: "whisperwood",
+  requiredLevel: 2,
+  stats: {
+    damageReduction: 0.05,
+    maxHP: 10
+  },
+  buyPrice: 75,
+  sellPrice: 18,
+  shopAvailable: true,
+  dropOnly: false,
+  emoji: "🦺"
+}
+```
+
+#### Forest Scout Armor (Uncommon)
+```javascript
+{
+  id: "armor_whisperwood_uncommon_01",
+  name: "Forest Scout Armor",
+  description: "Light armor worn by Whisperwood scouts. Flexible enough for quick movement.",
+  type: "armor",
+  rarity: "uncommon",
+  zone: "whisperwood",
+  requiredLevel: 5,
+  stats: {
+    damageReduction: 0.08,
+    maxHP: 25,
+    hpRegen: 0.005
+  },
+  buyPrice: 150,
+  sellPrice: 37,
+  shopAvailable: true,
+  dropOnly: false,
+  emoji: "🥋"
+}
+```
+
+#### Mossback's Shell (Rare) - Boss Drop
+```javascript
+{
+  id: "armor_whisperwood_rare_01",
+  name: "Mossback's Shell",
+  description: "A piece of bark from Old Mossback himself. Remarkably tough and slightly alive.",
+  type: "armor",
+  rarity: "rare",
+  zone: "whisperwood",
+  requiredLevel: 8,
+  stats: {
+    damageReduction: 0.12,
+    maxHP: 50,
+    hpRegen: 0.01
+  },
+  buyPrice: 400,
+  sellPrice: 100,
+  shopAvailable: false,
+  dropOnly: true,
+  emoji: "🪵"
 }
 ```
 
@@ -1219,6 +1302,250 @@
   emoji: "👑"
 }
 ```
+
+---
+
+## Special Items: Skill Enhancers
+
+These unique items boost specific skills, encouraging different "builds" each run.
+
+### Power Strike Build
+
+#### Striker's Gauntlet (Rare)
+```javascript
+{
+  id: "accessory_skillboost_power_strike_01",
+  name: "Striker's Gauntlet",
+  description: "An ancient gauntlet that channels raw power into your strikes.",
+  type: "accessory",
+  rarity: "rare",
+  zone: "ironhold",
+  requiredLevel: 35,
+  stats: {
+    attack: 25,
+    skillBoost_power_strike: 0.25  // +25% Power Strike damage
+  },
+  buyPrice: 12000,
+  sellPrice: 3000,
+  shopAvailable: true,
+  dropOnly: false,
+  emoji: "🧤"
+}
+```
+
+#### Devastator's Ring (Epic)
+```javascript
+{
+  id: "accessory_skillboost_power_strike_02",
+  name: "Devastator's Ring",
+  description: "Each Power Strike echoes with the force of a thousand warriors.",
+  type: "accessory",
+  rarity: "epic",
+  zone: "emberfell",
+  requiredLevel: 50,
+  stats: {
+    critDamage: 0.3,
+    skillBoost_power_strike: 0.50,  // +50% Power Strike damage
+    skillCooldown: 0.10             // -10% cooldown on all skills
+  },
+  buyPrice: 75000,
+  sellPrice: 18750,
+  shopAvailable: false,
+  dropOnly: true,
+  emoji: "💍"
+}
+```
+
+### Heal Build
+
+#### Healer's Pendant (Rare)
+```javascript
+{
+  id: "accessory_skillboost_heal_01",
+  name: "Healer's Pendant",
+  description: "A crystal pendant that amplifies restorative magic.",
+  type: "accessory",
+  rarity: "rare",
+  zone: "shadowmire",
+  requiredLevel: 25,
+  stats: {
+    maxHP: 75,
+    skillBoost_heal: 0.30  // +30% Heal amount
+  },
+  buyPrice: 4000,
+  sellPrice: 1000,
+  shopAvailable: true,
+  dropOnly: false,
+  emoji: "📿"
+}
+```
+
+#### Life Guardian's Amulet (Epic)
+```javascript
+{
+  id: "accessory_skillboost_heal_02",
+  name: "Life Guardian's Amulet",
+  description: "The healing energies flow through you like a river of life.",
+  type: "accessory",
+  rarity: "epic",
+  zone: "frostpeak",
+  requiredLevel: 65,
+  stats: {
+    maxHP: 200,
+    hpRegen: 0.02,
+    skillBoost_heal: 0.50,      // +50% Heal amount
+    skillEnergyCost: 0.15       // -15% energy cost
+  },
+  buyPrice: 180000,
+  sellPrice: 45000,
+  shopAvailable: false,
+  dropOnly: true,
+  emoji: "🔮"
+}
+```
+
+### Execute Build
+
+#### Executioner's Hood (Rare)
+```javascript
+{
+  id: "accessory_skillboost_execute_01",
+  name: "Executioner's Hood",
+  description: "Worn by those who deliver final judgments. Execution threshold increased.",
+  type: "accessory",
+  rarity: "rare",
+  zone: "ironhold",
+  requiredLevel: 40,
+  stats: {
+    critChance: 0.05,
+    skillBoost_execute: 0.05  // Execute works at 20% instead of 15%
+  },
+  buyPrice: 15000,
+  sellPrice: 3750,
+  shopAvailable: true,
+  dropOnly: false,
+  emoji: "🎭"
+}
+```
+
+#### Death's Judgment (Legendary)
+```javascript
+{
+  id: "accessory_skillboost_execute_02",
+  name: "Death's Judgment",
+  description: "When you wear this, every monster knows their time is short.",
+  type: "accessory",
+  rarity: "legendary",
+  zone: "voidrift",
+  requiredLevel: 85,
+  stats: {
+    attack: 150,
+    critChance: 0.08,
+    skillBoost_execute: 0.15,  // Execute works at 30% instead of 15%!
+    skillCooldown: 0.20        // -20% cooldown
+  },
+  buyPrice: 500000,
+  sellPrice: 125000,
+  shopAvailable: false,
+  dropOnly: true,
+  emoji: "💀"
+}
+```
+
+### Berserk Build
+
+#### Berserker's Torc (Rare)
+```javascript
+{
+  id: "accessory_skillboost_berserk_01",
+  name: "Berserker's Torc",
+  description: "A neck ring worn by ancient berserker warriors. Your rage burns hotter.",
+  type: "accessory",
+  rarity: "rare",
+  zone: "dustwind",
+  requiredLevel: 18,
+  stats: {
+    attack: 15,
+    skillBoost_berserk: 0.20  // +20% Berserk damage bonus
+  },
+  buyPrice: 1800,
+  sellPrice: 450,
+  shopAvailable: true,
+  dropOnly: false,
+  emoji: "⭕"
+}
+```
+
+#### Fury Incarnate (Legendary)
+```javascript
+{
+  id: "accessory_skillboost_berserk_02",
+  name: "Fury Incarnate",
+  description: "Pure rage condensed into physical form. Handle with extreme caution.",
+  type: "accessory",
+  rarity: "legendary",
+  zone: "emberfell",
+  requiredLevel: 55,
+  stats: {
+    attack: 100,
+    critChance: 0.10,
+    critDamage: 0.50,
+    skillBoost_berserk: 0.50,  // +50% Berserk damage
+    damageReduction: -0.10     // Take 10% MORE damage (risk!)
+  },
+  buyPrice: 250000,
+  sellPrice: 62500,
+  shopAvailable: false,
+  dropOnly: true,
+  emoji: "🔥"
+}
+```
+
+### General Skill Enhancement
+
+#### Sage's Focus Crystal (Epic)
+```javascript
+{
+  id: "accessory_skillboost_general_01",
+  name: "Sage's Focus Crystal",
+  description: "A crystal that helps channel your mental focus. All skills become more efficient.",
+  type: "accessory",
+  rarity: "epic",
+  zone: "frostpeak",
+  requiredLevel: 60,
+  stats: {
+    energyGain: 0.15,
+    skillCooldown: 0.15,      // -15% cooldown on all skills
+    skillEnergyCost: 0.10     // -10% energy cost on all skills
+  },
+  buyPrice: 100000,
+  sellPrice: 25000,
+  shopAvailable: true,
+  dropOnly: false,
+  emoji: "💎"
+}
+```
+
+---
+
+### Build Diversity Philosophy
+
+**Why Skill-Enhancing Items Matter:**
+
+1. **Run Variety**: Finding a Striker's Gauntlet early might make you focus on Power Strike
+2. **Meaningful Loot**: Drops that change how you play, not just bigger numbers
+3. **Trade-offs**: Some items have downsides (Fury Incarnate = more damage taken)
+4. **Endgame Goals**: Chase specific legendaries to complete your "build"
+
+**Example Builds:**
+
+| Build | Key Items | Playstyle |
+|-------|-----------|-----------|
+| Striker | Striker's Gauntlet, Devastator's Ring | Huge burst damage with Power Strike |
+| Tank | Healer's Pendant, Heavy Armor | Sustain through any fight |
+| Executioner | Executioner's Hood, Death's Judgment | One-shot low-HP monsters |
+| Berserker | Berserker's Torc, Fury Incarnate | High risk, massive damage |
+| Generalist | Sage's Focus Crystal | Flexible, all skills improved |
 
 ---
 

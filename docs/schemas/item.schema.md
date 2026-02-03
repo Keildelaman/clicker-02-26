@@ -27,12 +27,29 @@ interface Item {
 
   // === Stats ===
   stats: {
+    // Combat stats
     attack?: number;            // Flat attack bonus
     critChance?: number;        // Crit chance bonus (0.0 to 1.0)
     critDamage?: number;        // Crit damage bonus
+    armorPen?: number;          // Armor penetration vs armored monsters
+
+    // Defensive stats (armor)
+    damageReduction?: number;   // % damage reduction (0.0 to 1.0)
+    maxHP?: number;             // Bonus to maximum HP
+    hpRegen?: number;           // % HP regen per second
+
+    // Utility stats (accessories)
     goldFind?: number;          // Gold find bonus (0.0 to 1.0)
     xpBonus?: number;           // XP bonus (0.0 to 1.0)
-    autoAttack?: number;        // Auto attack speed bonus
+    energyGain?: number;        // % bonus Energy from clicks
+
+    // Skill-enhancing stats (special items)
+    skillBoost_power_strike?: number;  // % bonus to Power Strike
+    skillBoost_heal?: number;          // % bonus to Heal
+    skillBoost_execute?: number;       // Threshold bonus for Execute
+    skillBoost_berserk?: number;       // % bonus to Berserk damage
+    skillCooldown?: number;            // % cooldown reduction
+    skillEnergyCost?: number;          // % energy cost reduction
   };
 
   // === Economy ===
@@ -76,9 +93,9 @@ type Rarity = "common" | "uncommon" | "rare" | "epic" | "legendary";
 
 | Type | Slot | Primary Stats | Notes |
 |------|------|---------------|-------|
-| `weapon` | Weapon | attack, critChance, critDamage | Main damage source |
-| `armor` | Armor | defense, maxHealth | Future implementation |
-| `accessory` | Accessory | goldFind, xpBonus, misc | Utility bonuses |
+| `weapon` | Weapon | attack, critChance, critDamage, armorPen | Main damage source |
+| `armor` | Armor | damageReduction, maxHP, hpRegen | Defensive survivability |
+| `accessory` | Accessory | goldFind, xpBonus, skillBoosts | Utility and special effects |
 
 ### Rarity Details
 

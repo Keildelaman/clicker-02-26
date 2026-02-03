@@ -256,18 +256,16 @@ Skills are unlocked through **level milestones** and **gold purchases**. See `sk
 
 ### Level-Gated Skill Unlocks
 
+See `skill.system.md` for the complete unlock schedule. Key milestones:
+
 | Level | Unlock Type | Skills Available |
 |-------|-------------|------------------|
-| 1 | Auto-unlock | Sharp Blades (passive) |
-| 2 | Choice | Power Strike OR Heal |
-| 3 | Choice | Deep Pockets OR Fast Learner |
-| 5 | Choice | Lucky Strikes OR Gold Rush |
-| 10 | Choice | Execute OR Shield Wall |
-| 15 | Choice | Berserk OR Iron Skin |
-| 20 | Choice | Life Steal OR Energy Surge |
-| 30 | Choice | Armor Break OR Weaken |
-| 50 | Choice | Perfect Strike OR Second Wind |
-| 75 | Choice | Void Strike OR Ascended Defense |
+| 1 | Auto-unlock | Power Strike (active, free) |
+| 3 | Choice | Sharp Blades OR Killer Instinct |
+| 5 | Choice | Heal OR Iron Skin |
+| 8 | Choice | Gold Rush OR XP Boost |
+| 10 | Choice | Execute OR Berserk Rage |
+| 15+ | Choice | More skills at 15, 20, 25, 30, 40, 50, 60, 75, 90 |
 
 ### Level Check Function
 

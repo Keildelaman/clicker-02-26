@@ -90,23 +90,8 @@ interface Player {
     history: AscensionRecord[]; // Past ascension records
   };
 
-  // === Vault (NEW - for ascension) ===
+  // === Vault (for ascension) ===
   vault: string[];              // Item IDs stored in vault
-
-  // === Consumables (POST-MVP) ===
-  // Note: Consumable acquisition not yet defined.
-  // For MVP, players can use Heal skill and HP regen for recovery.
-  // Future: Consumables purchasable in shop or dropped from monsters.
-  consumables: {
-    healthPotion: number;       // Count owned (starts at 0)
-    energyPotion: number;       // Count owned (starts at 0)
-    shieldPotion: number;       // Count owned (starts at 0)
-  };
-  consumableCooldowns: {
-    healthPotion: number | null;  // Timestamp when usable
-    energyPotion: number | null;
-    shieldPotion: number | null;
-  };
 
   // === Statistics ===
   statistics: {
@@ -262,12 +247,12 @@ const DEFAULT_PLAYER = {
   inventory: [],
 
   skills: {
-    // Sharp Blades (passive) is auto-unlocked at level 1
-    "skill_sharp_blades": { unlocked: true, level: 1, lastUsed: null }
+    // Power Strike (active) is auto-unlocked at level 1
+    "skill_power_strike": { unlocked: true, level: 1, lastUsed: null }
   },
 
-  equippedActiveSkills: [null, null, null, null],
-  equippedPassiveSkills: ["skill_sharp_blades", null, null],
+  equippedActiveSkills: ["skill_power_strike", null, null, null],
+  equippedPassiveSkills: [null, null, null],
 
   currentZone: "whisperwood",
   unlockedZones: ["whisperwood"],
@@ -285,17 +270,6 @@ const DEFAULT_PLAYER = {
   },
 
   vault: [],
-
-  consumables: {
-    healthPotion: 0,
-    energyPotion: 0,
-    shieldPotion: 0
-  },
-  consumableCooldowns: {
-    healthPotion: null,
-    energyPotion: null,
-    shieldPotion: null
-  },
 
   statistics: {
     totalClicks: 0,
@@ -497,8 +471,6 @@ function migrate(oldSave) {
       equippedPassiveSkills: [null, null, null],
       ascension: { level: 0, totalAscensions: 0, damageBonus: 0, goldBonus: 0, xpBonus: 0, flatHP: 0, fastestRun: null, history: [] },
       vault: [],
-      consumables: { healthPotion: 0, energyPotion: 0, shieldPotion: 0 },
-      consumableCooldowns: { healthPotion: null, energyPotion: null, shieldPotion: null },
       tutorial: { completed: {}, tipsShown: 0, lastTipTime: null, tutorialEnabled: true }
     };
   }

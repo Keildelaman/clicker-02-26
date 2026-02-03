@@ -508,16 +508,6 @@ On skill use: Bar depletes with animation
 On kill: "+15" floats up (gold color)
 ```
 
-### Consumables Tray
-
-```
-┌─────────────────────────────────────────┐
-│  [❤️ x5 | Ready] [⚡ x3 | 45s] [🔷 x2]  │
-└─────────────────────────────────────────┘
-
-Tap to use. Shows cooldown countdown.
-```
-
 ---
 
 ## Combat Feedback

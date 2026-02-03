@@ -82,7 +82,6 @@ Once available, shows in:
 │  │ ✓ All skill unlocks             │    │
 │  │ ✓ Equipment (moved to Vault)    │    │
 │  │ ✓ Statistics                    │    │
-│  │ ✓ Consumables                   │    │
 │  └─────────────────────────────────┘    │
 │                                         │
 │      [ASCEND NOW]      [NOT YET]        │
@@ -205,7 +204,6 @@ function resetSkillsOnAscension(player) {
 | Ascension bonuses | ✓ | Cumulative forever |
 | Skill unlocks | ✓ | Don't need to unlock again |
 | Equipment | ✓ | Moved to Vault |
-| Consumables | ✓ | Potions carry over |
 | Statistics | ✓ | All-time stats preserved |
 | Settings | ✓ | Preferences unchanged |
 | Tutorial completion | ✓ | No re-tutorial |

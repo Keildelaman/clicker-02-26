@@ -10,7 +10,7 @@ The health system adds stakes to combat:
 - Player has an HP bar (not just monsters)
 - Certain monster attacks deal damage to player
 - At 0 HP, player "retreats" with penalties
-- Healing comes from skills, potions, and passive regen
+- Healing comes from skills and passive regen
 
 ---
 
@@ -133,10 +133,9 @@ Visual:
 
 | Source | Amount | Trigger |
 |--------|--------|---------|
-| Passive Regen | 0.5% HP/sec base | Always |
+| Passive Regen | 1.5% HP/sec base | Always |
 | Regeneration passive | +0.5-3% HP/sec | Skill equipped |
 | Heal skill | 25-50% max HP | Active skill use |
-| Health Potion | 50% max HP | Consumable |
 | Level Up | 100% (full heal) | On level up |
 | Zone Travel | 25% max HP | Changing zones |
 | Death Recovery | 100% (full heal) | After retreat |
@@ -145,7 +144,7 @@ Visual:
 
 ```javascript
 // Base regen rate
-const BASE_HP_REGEN = 0.005; // 0.5% per second
+const BASE_HP_REGEN = 0.015; // 1.5% per second (~66 seconds to full heal)
 
 // With Regeneration skill
 function calculateRegenRate(player) {
@@ -183,18 +182,6 @@ function useHealSkill(player, skillLevel) {
   showHealAnimation(healAmount);
   showFloatingNumber(`+${healAmount}`, 'green');
 }
-```
-
-### Health Potion
-
-```javascript
-const HEALTH_POTION = {
-  name: "Health Potion",
-  effect: "Instantly restore 50% max HP",
-  cost: 100,           // gold to buy
-  cooldown: 60,        // seconds between uses
-  maxStack: 10         // max inventory
-};
 ```
 
 ---
@@ -314,7 +301,7 @@ function calculateTotalReduction(player) {
 
 ---
 
-## Shield Mechanic (Future)
+## Shield Mechanic
 
 ### Shield Bar
 
@@ -330,40 +317,8 @@ HP:     ❤️████████████████████  1,09
 
 - Absorbs damage before HP
 - Does not regenerate naturally
-- Granted by Shield Potion or skills
+- Granted by Shield Wall skill (or items)
 - Maximum shield = 30% of max HP (default)
-
-### Shield Potion
-
-```javascript
-const SHIELD_POTION = {
-  name: "Shield Potion",
-  effect: "Gain shield equal to 30% max HP",
-  cost: 200,           // gold to buy
-  cooldown: 120,       // seconds between uses
-  maxStack: 5          // max inventory
-};
-```
-
----
-
-## Consumables Summary
-
-| Item | Effect | Cost | Cooldown | Max Stack |
-|------|--------|------|----------|-----------|
-| Health Potion | +50% max HP | 100g | 60s | 10 |
-| Energy Potion | +50 Energy | 150g | 60s | 10 |
-| Shield Potion | +30% max HP shield | 200g | 120s | 5 |
-
-### Consumable UI
-
-```
-┌─────────────────────────────────────────┐
-│  Potions:  [❤️ 5] [⚡ 8] [🔷 2]          │
-└─────────────────────────────────────────┘
-
-Tap to use (shows cooldown if on cooldown)
-```
 
 ---
 
@@ -397,9 +352,9 @@ Tap to use (shows cooldown if on cooldown)
 ```
 Strategy:
 - Keep HP above 50%
-- Use Heal preemptively
+- Use Heal skill preemptively
 - Use Iron Skin before boss attacks
-- Carry Health Potions
+- Travel to lower zone if HP is low
 
 Result:
 - Slow but steady progress

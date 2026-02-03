@@ -294,16 +294,16 @@ function activeUpgradeCost(baseCost, level) {
 
 ### Recommended Skill Priorities
 
-Skills are unlocked at level milestones (choice-based). Recommended unlock choices:
+Level 1: Power Strike (auto-unlocked, free). Then choose at milestones:
 
 | Level | Choice | Recommendation | Reasoning |
 |-------|--------|----------------|-----------|
-| 2 | Power Strike vs Heal | Power Strike | Faster kills early |
-| 3 | Deep Pockets vs Fast Learner | Deep Pockets | More gold for upgrades |
-| 5 | Lucky Strikes vs Gold Rush | Lucky Strikes | Passive DPS boost |
-| 10 | Execute vs Shield Wall | Execute | Boss killing power |
-| 15 | Berserk vs Iron Skin | Berserk | Big damage windows |
-| 20 | Life Steal vs Energy Surge | Life Steal | Sustain for harder zones |
+| 3 | Sharp Blades vs Killer Instinct | Sharp Blades | Passive DPS boost |
+| 5 | Heal vs Iron Skin | Heal | Active healing for survival |
+| 8 | Gold Rush vs XP Boost | Gold Rush | More gold for upgrades |
+| 10 | Execute vs Berserk Rage | Execute | Boss killing power |
+| 15 | Crit Surge vs Perfect Strike | Crit Surge | More crits = more damage |
+| 20 | Reflect vs Time Warp | Time Warp | Utility and burst potential |
 
 *Note: Unchosen skills can always be purchased later with gold*
 
