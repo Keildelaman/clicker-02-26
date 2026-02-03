@@ -60,101 +60,126 @@ function calculateMonsterGold(monster, level, player) {
 
 ### 1. Equipment (Shop)
 
+#### Philosophy: Monsters Are The Main Source
+
+**Items come primarily from monster drops.** The shop is supplementary:
+- A place to find that missing piece
+- Occasional lucky find of higher rarity
+- Not meant to fully equip the player
+
 #### Shop Rotation System
 
-The shop offers a **rotating selection** of items, not all items at once:
+The shop shows only **3 random items** at a time:
 
 ```javascript
 const SHOP_CONFIG = {
-  // How many items shown per category
-  slotsPerCategory: {
-    weapon: 3,      // 3 weapons available at a time
-    armor: 2,       // 2 armor pieces available
-    accessory: 3    // 3 accessories available
-  },
+  // Only 3 items total in shop at once
+  totalSlots: 3,
+
+  // Can be any type (weapon, armor, accessory)
+  // Randomly selected from zone's available items
 
   // Refresh timing
   refreshInterval: 600000,  // 10 minutes real-time
   refreshOnZoneChange: true,
 
-  // Rarity weights (what appears in shop)
+  // Rarity weights (what CAN appear)
   rarityWeights: {
-    common: 40,
+    common: 50,
     uncommon: 35,
-    rare: 20,
-    epic: 5,
-    legendary: 0    // Legendaries are drop-only!
+    rare: 12,
+    epic: 3,
+    legendary: 0    // NEVER in shop - drop only!
+  },
+
+  // Manual refresh escalation
+  refreshEscalation: {
+    baseMultiplier: 1.0,
+    increasePerRefresh: 0.5,  // +50% each time
+    maxMultiplier: 5.0,       // Caps at 5x base cost
+    resetOnAutoRefresh: true  // Resets when timer expires
   }
 };
 ```
 
-#### Shop Refresh
+#### Shop UI
 
 ```
 ┌─────────────────────────────────────────┐
 │ ← Back        SHOP           💰 1,234   │
 ├─────────────────────────────────────────┤
-│  [⚔️ Weapons]  [🛡️ Armor]  [💍 Access]  │
-├─────────────────────────────────────────┤
 │                                         │
-│  Today's Selection:        ⏱️ 8:42      │ ← Timer until refresh
+│   Today's Finds:          ⏱️ 8:42      │
 │                                         │
-│  🗡️ Hunter's Blade (Uncommon)    125g   │
-│  🪓 Iron Axe (Common)            50g    │
-│  ⚔️ Duelist's Rapier (Rare)     300g    │
+│  ┌─────────────────────────────────┐    │
+│  │ 🗡️ Hunter's Blade (Uncommon)   │    │
+│  │    +8 Attack, +2% Crit         │    │
+│  │    [BUY 125g]                  │    │
+│  └─────────────────────────────────┘    │
+│                                         │
+│  ┌─────────────────────────────────┐    │
+│  │ 🛡️ Leather Vest (Common)       │    │
+│  │    +5% DR, +10 HP              │    │
+│  │    [BUY 75g]                   │    │
+│  └─────────────────────────────────┘    │
+│                                         │
+│  ┌─────────────────────────────────┐    │
+│  │ 💍 Lucky Pebble (Common)       │    │
+│  │    +5% Gold Find               │    │
+│  │    [BUY 50g]                   │    │
+│  └─────────────────────────────────┘    │
 │                                         │
 │  ─────────────────────────────────────  │
+│  [🔄 REFRESH - 25g] (resets in 8:42)   │
 │                                         │
-│        [🔄 REFRESH NOW - 50g]           │ ← Pay to reroll shop
+│  💡 "Better loot drops from monsters!" │
 │                                         │
 └─────────────────────────────────────────┘
 ```
 
-#### Shop Mechanics
+#### Manual Refresh Escalation
 
-| Feature | Behavior |
-|---------|----------|
-| Auto-refresh | Every 10 minutes |
-| Zone refresh | New items when entering new zone |
-| Manual refresh | Pay gold (zone base price) to reroll |
-| Rarity limits | Epic rare, Legendary never in shop |
-| Level filter | Only shows items ≤ player level + 5 |
-
-#### Shop Item Selection
+Each manual refresh costs MORE until the timer resets:
 
 ```javascript
-function generateShopItems(zone, playerLevel) {
-  const zoneItems = getAllItems().filter(i =>
-    i.zone === zone.id &&
-    i.shopAvailable === true &&
-    i.requiredLevel <= playerLevel + 5
+function getRefreshCost(zone, refreshCount) {
+  const baseCost = ZONE_REFRESH_BASE[zone.id];
+  const multiplier = Math.min(
+    1.0 + (refreshCount * 0.5),  // +50% each time
+    5.0                          // Max 5x cost
   );
-
-  const selected = [];
-
-  for (const type of ['weapon', 'armor', 'accessory']) {
-    const typeItems = zoneItems.filter(i => i.type === type);
-    const count = SHOP_CONFIG.slotsPerCategory[type];
-
-    // Weighted random selection by rarity
-    for (let i = 0; i < count && typeItems.length > 0; i++) {
-      const item = weightedRandomSelect(typeItems, SHOP_CONFIG.rarityWeights);
-      selected.push(item);
-      typeItems.splice(typeItems.indexOf(item), 1); // No duplicates
-    }
-  }
-
-  return selected;
+  return Math.floor(baseCost * multiplier);
 }
+
+// Example in Whisperwood (base 25g):
+// 1st refresh: 25g
+// 2nd refresh: 37g (1.5x)
+// 3rd refresh: 50g (2x)
+// 4th refresh: 62g (2.5x)
+// ...
+// Max: 125g (5x)
+// After 10min auto-refresh: resets to 25g
 ```
 
-#### Manual Refresh Cost
+| Zone | Base Refresh | Max Refresh (5x) |
+|------|--------------|------------------|
+| Whisperwood | 25g | 125g |
+| Dustwind | 100g | 500g |
+| Shadowmire | 250g | 1,250g |
+| Ironhold | 750g | 3,750g |
+| Emberfell | 2,000g | 10,000g |
+| Frostpeak | 5,000g | 25,000g |
+| Voidrift | 12,500g | 62,500g |
 
-| Zone | Refresh Cost |
-|------|--------------|
-| Whisperwood | 25g |
-| Dustwind | 100g |
-| Shadowmire | 250g |
+#### Item Acquisition Philosophy
+
+| Source | Purpose | Rarity Available |
+|--------|---------|------------------|
+| **Monster Drops** | Primary equipment source | All (including Legendary) |
+| **Boss Drops** | Guaranteed good items | Rare+ guaranteed, Legendary possible |
+| **Shop** | Fill gaps, lucky finds | Common to Epic (NO Legendary) |
+
+**Pricing Formula:**
 | Ironhold | 750g |
 | Emberfell | 2,000g |
 | Frostpeak | 5,000g |
