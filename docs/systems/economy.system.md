@@ -101,22 +101,28 @@ function calculateItemPrice(zone, rarity) {
 
 **Skill Unlock Costs:**
 
-| Skill | Unlock Cost | Upgrade Costs (1→10) |
-|-------|-------------|----------------------|
-| Sharp Blades | Free | 50→12,000 |
-| Lucky Strikes | 100 | 150→16,000 |
-| Deep Pockets | 75 | 100→10,000 |
-| Fast Learner | 75 | 100→10,000 |
-| Auto Clicker | 500 | 750→200,000 |
-| Power Strike | 50 | 200→3,000 |
-| Gold Rush | 300 | 600→5,000 |
-| Critical Frenzy | 800 | 1,500→12,000 |
-| Monster Slayer | 2,000 | N/A (max level 1) |
+Skills are unlocked at level milestones via choice (pick 1 of 2). Unchosen skills can be bought later:
 
-**Total Skill Costs (all maxed):**
-- Passive skills (5 skills × ~10 levels): ~300,000 gold
-- Active skills (4 skills × ~3-5 levels): ~30,000 gold
-- **Grand Total: ~330,000 gold**
+| Skill | Unlock Cost (if not chosen) | Upgrade Costs (1→5) |
+|-------|----------------------------|---------------------|
+| Sharp Blades | Free (auto-unlock) | 50→800 |
+| Power Strike | 50 | 200→1,500 |
+| Heal | 50 | 200→1,500 |
+| Deep Pockets | 75 | 100→600 |
+| Fast Learner | 75 | 100→600 |
+| Lucky Strikes | 100 | 150→900 |
+| Gold Rush | 300 | 600→2,500 |
+| Execute | 200 | 400→2,000 |
+| Shield Wall | 200 | 400→2,000 |
+| Berserk | 500 | 800→4,000 |
+| Iron Skin | 400 | 600→3,000 |
+
+**Total Skill Costs (all maxed, all purchased):**
+- Passive skills (11 skills × 5 levels): ~150,000 gold
+- Active skills (11 skills × 5 levels): ~150,000 gold
+- **Grand Total: ~300,000 gold**
+
+See `skills.data.md` for complete pricing.
 
 ### 3. Selling Items
 

@@ -809,6 +809,31 @@ function killMonster() {
 
 ## Boss Combat
 
+### How to Access Boss Fights
+
+Boss fights are accessed via the Zone Selection screen:
+
+```javascript
+function canFightBoss(player, zone) {
+  // Player must be in the zone
+  if (player.currentZone !== zone.id) return false;
+
+  // Player must have unlocked the zone
+  if (!player.unlockedZones.includes(zone.id)) return false;
+
+  // Boss must not already be defeated (for zone unlock purposes)
+  // BUT can be re-fought for loot (reduced rewards)
+  return true;
+}
+```
+
+**Boss Fight Access:**
+- Boss is always accessible once you're in the zone
+- No minimum level requirement (but under-leveled = difficult)
+- No kill count requirement
+- "FIGHT BOSS" button in Zone Selection modal
+- Can re-fight bosses after defeating (for loot, no zone unlock)
+
 ### Boss Differences
 
 Bosses are always Aggressive type PLUS may have additional type:

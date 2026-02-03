@@ -238,35 +238,37 @@ function critDPSMultiplier(critChance, critDamage) {
 
 ---
 
-## Auto-Attack Scaling
+## Energy & Skill Usage
 
-### Clicks Per Second (CPS)
+### Energy Flow
 
-| Source | CPS | DPS Multiplier |
-|--------|-----|----------------|
-| Manual (avg human) | 3-5 | 1.0x |
-| Auto-Clicker Lv 1 | +1 | ~1.2x |
-| Auto-Clicker Lv 5 | +5 | ~2.0x |
-| Auto-Clicker Lv 10 | +10 | ~3.0x |
-| Manual + Auto Lv 10 | 13-15 | ~4.0x |
+| Source | Energy Gained |
+|--------|---------------|
+| Click on monster | +5 (max every 200ms) |
+| Kill regular monster | +15 |
+| Kill boss | +50 |
+| Passive regen | +2/second |
 
-### Auto-Clicker ROI
+### Energy Economy
 
 ```javascript
-// Time to pay back Auto-Clicker investment
+// Average energy per monster kill:
+// ~10 clicks = 50 energy + 15 kill bonus = 65 energy
 
-// Level 1 (500g cost):
-// Extra gold/min at Whisperwood: ~15g
-// Payback: 500/15 = 33 minutes
+// Power Strike costs 15 energy
+// Can use ~4x per monster kill cycle
 
-// Level 5 (11,750g total cost):
-// Extra gold/min at Ironhold: ~150g
-// Payback: 11750/150 = 78 minutes
-
-// Level 10 (391,750g total cost):
-// Extra gold/min at Voidrift: ~3000g
-// Payback: 391750/3000 = 131 minutes (~2 hours)
+// Heal costs 20 energy
+// Can use ~3x per monster kill cycle
 ```
+
+### Skill DPS Impact
+
+| Skill | Energy Cost | Damage Boost | Net DPS Gain |
+|-------|-------------|--------------|--------------|
+| Power Strike | 15 | 3x one hit | ~+15% sustained |
+| Berserk | 30 | +50% for 10s | ~+40% during buff |
+| Execute | 25 | Instant kill <15% | Variable |
 
 ---
 
@@ -290,15 +292,20 @@ function activeUpgradeCost(baseCost, level) {
 }
 ```
 
-### Skill Point Distribution (Recommended)
+### Recommended Skill Priorities
 
-| Player Level | Skill Points Available | Recommended Distribution |
-|--------------|----------------------|--------------------------|
-| 10 | 9 | Sharp 3, Deep 2, Fast 2, Power 1, Auto 1 |
-| 25 | 24 | Sharp 5, Lucky 3, Deep 3, Fast 3, Power 3, Auto 3 |
-| 50 | 49 | Sharp 8, Lucky 6, Devas 4, Deep 5, Fast 5, Auto 5 |
-| 75 | 74 | All passives ~7, actives maxed, Auto 7 |
-| 100 | 99 | All skills maxed |
+Skills are unlocked at level milestones (choice-based). Recommended unlock choices:
+
+| Level | Choice | Recommendation | Reasoning |
+|-------|--------|----------------|-----------|
+| 2 | Power Strike vs Heal | Power Strike | Faster kills early |
+| 3 | Deep Pockets vs Fast Learner | Deep Pockets | More gold for upgrades |
+| 5 | Lucky Strikes vs Gold Rush | Lucky Strikes | Passive DPS boost |
+| 10 | Execute vs Shield Wall | Execute | Boss killing power |
+| 15 | Berserk vs Iron Skin | Berserk | Big damage windows |
+| 20 | Life Steal vs Energy Surge | Life Steal | Sustain for harder zones |
+
+*Note: Unchosen skills can always be purchased later with gold*
 
 ---
 

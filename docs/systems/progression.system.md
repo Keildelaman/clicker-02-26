@@ -7,7 +7,7 @@
 Progression is the backbone of player engagement:
 1. **XP & Leveling** - Core power growth
 2. **Zone Unlocks** - Content gates via boss kills
-3. **Skill Points** - Build customization
+3. **Skill Unlocks** - Build customization via level milestones
 4. **Equipment Tiers** - Gear progression
 
 ---
@@ -88,8 +88,8 @@ function levelUp(player) {
   // Award stat increases
   applyLevelUpStats(player);
 
-  // Award skill point
-  player.skillPoints++;
+  // Check for skill unlock milestones
+  checkSkillUnlockMilestone(player);
 
   // Check for unlocks
   checkLevelUnlocks(player);
@@ -244,46 +244,30 @@ function checkZoneUnlock(player, defeatedBossId) {
 
 ---
 
-## Skill Point System
+## Skill Unlock System
 
-### Earning Skill Points
+Skills are unlocked through **level milestones** and **gold purchases**. See `skill.system.md` for full details.
 
-| Source | Points |
-|--------|--------|
-| Level up | +1 per level |
-| Boss kill (first time) | +1 bonus (future) |
-| Achievements (future) | Varies |
+### Skill Unlock Flow
 
-### Spending Skill Points
+1. At certain level milestones, player CHOOSES one of two skills
+2. The unchosen skill can be purchased later with gold
+3. Skills are upgraded by spending gold
 
-Skill points are NOT spent directly. Instead:
-- Skills cost **gold** to unlock/upgrade
-- Skill points gate what you can access
+### Level-Gated Skill Unlocks
 
-Actually, let me revise - in the skill schema we defined gold costs. Let's keep it simple:
-
-**Skills use GOLD only, not skill points.**
-
-Skill points were planned but removed for simplicity. Skills are gold-gated.
-
-*(This is a design simplification - one currency is easier)*
-
----
-
-## Content Unlocks by Level
-
-### Level-Gated Content
-
-| Level | Unlock |
-|-------|--------|
-| 1 | Starting skills: Sharp Blades |
-| 2 | Power Strike skill |
-| 3 | Deep Pockets, Fast Learner skills |
-| 5 | Lucky Strikes skill |
-| 8 | Gold Rush skill |
-| 10 | Auto Clicker skill |
-| 15 | Critical Frenzy skill |
-| 20 | Monster Slayer skill |
+| Level | Unlock Type | Skills Available |
+|-------|-------------|------------------|
+| 1 | Auto-unlock | Sharp Blades (passive) |
+| 2 | Choice | Power Strike OR Heal |
+| 3 | Choice | Deep Pockets OR Fast Learner |
+| 5 | Choice | Lucky Strikes OR Gold Rush |
+| 10 | Choice | Execute OR Shield Wall |
+| 15 | Choice | Berserk OR Iron Skin |
+| 20 | Choice | Life Steal OR Energy Surge |
+| 30 | Choice | Armor Break OR Weaken |
+| 50 | Choice | Perfect Strike OR Second Wind |
+| 75 | Choice | Void Strike OR Ascended Defense |
 
 ### Level Check Function
 
@@ -291,16 +275,14 @@ Skill points were planned but removed for simplicity. Skills are gold-gated.
 function checkLevelUnlocks(player) {
   const level = player.level;
 
-  // Check each skill
-  for (const skill of getAllSkills()) {
-    if (skill.unlockLevel === level) {
-      showSkillUnlockNotification(skill);
-    }
+  // Check for skill unlock milestones
+  const skillMilestones = SKILL_UNLOCK_MILESTONES[level];
+  if (skillMilestones && !player.hasChosenSkillAt[level]) {
+    showSkillChoiceModal(skillMilestones);
   }
 
   // Check for milestone messages
   const milestones = {
-    10: "You can now unlock Auto Clicker!",
     25: "Halfway to level 50!",
     50: "You've reached the halfway point!",
     75: "The Void Rift awaits...",
@@ -333,7 +315,7 @@ function checkLevelUnlocks(player) {
 
 No hard restrictions, but:
 - Monsters take many more clicks
-- Death risk (future HP system)
+- Death risk from aggressive/swift monsters
 - Slower XP/gold per time invested
 
 ### Over-leveled Benefits

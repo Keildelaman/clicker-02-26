@@ -93,11 +93,14 @@ interface Player {
   // === Vault (NEW - for ascension) ===
   vault: string[];              // Item IDs stored in vault
 
-  // === Consumables (NEW) ===
+  // === Consumables (POST-MVP) ===
+  // Note: Consumable acquisition not yet defined.
+  // For MVP, players can use Heal skill and HP regen for recovery.
+  // Future: Consumables purchasable in shop or dropped from monsters.
   consumables: {
-    healthPotion: number;       // Count owned
-    energyPotion: number;       // Count owned
-    shieldPotion: number;       // Count owned
+    healthPotion: number;       // Count owned (starts at 0)
+    energyPotion: number;       // Count owned (starts at 0)
+    shieldPotion: number;       // Count owned (starts at 0)
   };
   consumableCooldowns: {
     healthPotion: number | null;  // Timestamp when usable
@@ -259,12 +262,12 @@ const DEFAULT_PLAYER = {
   inventory: [],
 
   skills: {
-    // Power Strike is auto-unlocked at level 1
-    "skill_power_strike": { unlocked: true, level: 1, lastUsed: null }
+    // Sharp Blades (passive) is auto-unlocked at level 1
+    "skill_sharp_blades": { unlocked: true, level: 1, lastUsed: null }
   },
 
-  equippedActiveSkills: ["skill_power_strike", null, null, null],
-  equippedPassiveSkills: [null, null, null],
+  equippedActiveSkills: [null, null, null, null],
+  equippedPassiveSkills: ["skill_sharp_blades", null, null],
 
   currentZone: "whisperwood",
   unlockedZones: ["whisperwood"],

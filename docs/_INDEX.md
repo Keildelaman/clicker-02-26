@@ -271,18 +271,19 @@ MVP (Version 1.0) must include:
 6. [ ] Player HP and Energy system
 7. [ ] Skill system (active + passive)
 8. [ ] All 7 zones with bosses
-9. [ ] Shop with weapons, accessories, consumables
+9. [ ] Shop with weapons and accessories
 10. [ ] Save/Load system
 11. [ ] Mobile-responsive UI
 12. [ ] Tutorial system
 
 Post-MVP (v1.1):
+- Consumable items (potions) in shop
 - Equipment drops from monsters
 - Sound effects
 - Advanced monster AI patterns
 
 Future (v2.0):
-- Ascension/Prestige system
+- Ascension/Prestige system (specs complete, implementation later)
 - Achievements
 - Offline progress
 - PWA support
