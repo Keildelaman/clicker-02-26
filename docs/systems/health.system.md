@@ -227,9 +227,9 @@ function handlePlayerDeath(player) {
   // 3. Current monster escapes (no loot)
   player.currentMonster = null;
 
-  // 4. Full heal on respawn
+  // 4. Full heal on respawn, but no free Energy
   player.hp = player.maxHP;
-  player.energy = player.maxEnergy;
+  player.energy = 0;  // Energy resets to 0 on death
 
   // 5. Stay in same zone
   // (player can choose to go back if zone is too hard)
@@ -400,7 +400,7 @@ const HEALTH_CONSTANTS = {
   PERFECT_STRIKE_MISS_DAMAGE: 0.03, // 3%
 
   // Regeneration
-  BASE_HP_REGEN_PERCENT: 0.005,     // 0.5% per second
+  BASE_HP_REGEN_PERCENT: 0.015,     // 1.5% per second (~66s to full heal)
 
   // Healing
   LEVEL_UP_HEAL: 1.0,               // 100% (full heal)

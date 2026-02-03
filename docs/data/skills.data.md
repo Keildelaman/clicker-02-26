@@ -10,45 +10,39 @@
 
 - **Active Skills**: 4 slots, use Energy, have cooldowns
 - **Passive Skills**: 3 slots, always-on bonuses
-- **Discovery System**: At milestones, offered 3 random skills - pick 1, others LOST
-- **Mastery Points**: Limited resource (20 total) to upgrade skills
-- **Synergies**: Skill combos unlock bonus effects
+- **Mastery Points (MP)**: Limited resource (~54 base) to unlock and upgrade skills
+- **All Skills Visible**: Buy any skill directly with MP (costs vary by tier)
 - **Level Cap**: 5 base, up to 10 with Ascension
+- **Full Reset on Ascension**: Each run is a fresh build
+
+**Total Skills: 25** (16 active + 9 passive)
 
 ---
 
-## Skill Discovery Pools
+## Skill Tiers & Costs
 
-### Pool Structure
+Skills are organized by power tier. Higher tier = higher MP cost to unlock.
 
-| Pool | Unlock Levels | Skills | Type Mix |
-|------|---------------|--------|----------|
-| **Starter** | 1 | 1 skill | 1 Active (guaranteed) |
-| **Basic** | 3, 5 | 4 skills | 2 Active, 2 Passive |
-| **Utility** | 8 | 4 skills | 4 Active |
-| **Combat** | 10, 15 | 4 skills | 4 Active |
-| **Advanced** | 20, 30 | 4 skills | 4 Passive |
-| **Elite** | 40, 50 | 4 skills | 3 Active, 1 Passive |
-| **Master** | 60, 75 | 3 skills | 1 Active, 2 Passive |
+| Tier | Unlock Cost | Skills |
+|------|-------------|--------|
+| **Starter** | FREE | Power Strike |
+| **Basic** | 3 MP | Heal, Iron Skin, Sharp Blades, Killer Instinct |
+| **Utility** | 4 MP | Gold Rush, XP Boost, Reflect, Time Warp |
+| **Combat** | 5 MP | Execute, Berserk Rage, Crit Surge, Perfect Strike |
+| **Advanced** | 6 MP | Deep Pockets, Fast Learner, Thick Skin, Regeneration |
+| **Elite** | 8 MP | Undying, Soul Rend, Shield Breaker, Energy Flow, Shield Wall |
+| **Master** | 10 MP | Transcendence, Void Touch, Quick Reflexes |
 
-### Discovery Schedule
+### Upgrade Costs (All Skills)
 
-| Level | Pool | Offered | Notes |
-|-------|------|---------|-------|
-| 1 | Starter | 1 (guaranteed) | Power Strike - everyone gets this |
-| 3 | Basic | 3 of 4 | First real choice |
-| 5 | Basic | 3 of remaining | Complete Basic pool |
-| 8 | Utility | 3 of 4 | Utility focus |
-| 10 | Combat | 3 of 4 | Combat power spike |
-| 15 | Combat | 3 of remaining | Complete Combat pool |
-| 20 | Advanced | 3 of 4 | Passive bonuses |
-| 30 | Advanced | 3 of remaining | Complete Advanced pool |
-| 40 | Elite | 3 of 4 | Late-game power |
-| 50 | Elite | 3 of remaining | Complete Elite pool |
-| 60 | Master | 3 of 3 | Choose 1 of 3 |
-| 75 | Master | 2 of 2 | Final discovery |
+| Level | MP Cost | Cumulative |
+|-------|---------|------------|
+| 2 | 1 MP | 1 MP |
+| 3 | 2 MP | 3 MP |
+| 4 | 3 MP | 6 MP |
+| 5 | 4 MP | 10 MP |
 
-**Total Skills Discovered per Run:** 12 (out of 24 available)
+**Total to max any skill: Unlock Cost + 10 MP**
 
 ---
 
@@ -61,10 +55,9 @@
   name: "Power Strike",
   type: "active",
   category: "offense",
+  tier: "starter",
 
-  unlockLevel: 1,
-  unlockCost: 0,
-  unlockChoice: null,
+  unlockCost: 0,  // FREE - everyone starts with this
 
   energyCost: 15,
   cooldown: 8000,
@@ -77,7 +70,6 @@
     4: { multiplier: 4.5 },
     5: { multiplier: 5.0 }
   },
-  upgradeCosts: [0, 100, 250, 500, 1000],
 
   icon: "⚔️",
   description: "Next attack deals {multiplier}x damage"
@@ -91,11 +83,9 @@
   name: "Execute",
   type: "active",
   category: "offense",
+  tier: "combat",
 
-  unlockLevel: 10,
-  unlockCost: 0,
-  unlockChoice: "skill_berserk_rage",
-  altUnlockCost: 500,
+  unlockCost: 5,
 
   energyCost: 25,
   cooldown: 12000,
@@ -109,7 +99,6 @@
     4: { multiplier: 6.5, threshold: 0.36 },
     5: { multiplier: 7.0, threshold: 0.40 }
   },
-  upgradeCosts: [0, 200, 500, 1000, 2500],
 
   icon: "💀",
   description: "Deal {multiplier}x damage to monsters below {threshold}% HP"
@@ -123,11 +112,9 @@
   name: "Berserk Rage",
   type: "active",
   category: "offense",
+  tier: "combat",
 
-  unlockLevel: 10,
-  unlockCost: 0,
-  unlockChoice: "skill_execute",
-  altUnlockCost: 500,
+  unlockCost: 5,
 
   energyCost: 30,
   cooldown: 45000,
@@ -140,7 +127,6 @@
     4: { damageMultiplier: 2.6, damageTakenMultiplier: 1.4, duration: 15000 },
     5: { damageMultiplier: 3.0, damageTakenMultiplier: 1.0, duration: 15000 }
   },
-  upgradeCosts: [0, 300, 750, 1500, 3500],
 
   icon: "🔥",
   description: "Deal {damageMultiplier}x damage, take {damageTakenMultiplier}x damage for {duration}s"
@@ -154,11 +140,9 @@
   name: "Crit Surge",
   type: "active",
   category: "offense",
+  tier: "combat",
 
-  unlockLevel: 15,
-  unlockCost: 0,
-  unlockChoice: "skill_perfect_strike",
-  altUnlockCost: 750,
+  unlockCost: 5,
 
   energyCost: 25,
   cooldown: 30000,
@@ -171,10 +155,37 @@
     4: { critBonus: 0.65, duration: 13000 },
     5: { critBonus: 0.75, duration: 15000 }
   },
-  upgradeCosts: [0, 300, 750, 1500, 3500],
 
   icon: "⭐",
   description: "+{critBonus}% crit chance for {duration}s"
+}
+```
+
+### Soul Rend (Elite)
+```javascript
+{
+  id: "skill_soul_rend",
+  name: "Soul Rend",
+  type: "active",
+  category: "offense",
+  tier: "elite",
+
+  unlockCost: 8,
+
+  energyCost: 35,
+  cooldown: 20000,
+
+  effectType: "percentDamage",
+  levels: {
+    1: { percent: 0.10, minMultiplier: 1, maxMultiplier: 10 },
+    2: { percent: 0.11, minMultiplier: 1, maxMultiplier: 10 },
+    3: { percent: 0.12, minMultiplier: 1, maxMultiplier: 10 },
+    4: { percent: 0.13, minMultiplier: 1, maxMultiplier: 10 },
+    5: { percent: 0.15, minMultiplier: 1, maxMultiplier: 10 }
+  },
+
+  icon: "👻",
+  description: "Deal {percent}% of monster's max HP as damage"
 }
 ```
 
@@ -189,11 +200,9 @@
   name: "Heal",
   type: "active",
   category: "defense",
+  tier: "basic",
 
-  unlockLevel: 5,
-  unlockCost: 0,
-  unlockChoice: "skill_iron_skin",
-  altUnlockCost: 150,
+  unlockCost: 3,
 
   energyCost: 20,
   cooldown: 15000,
@@ -206,7 +215,6 @@
     4: { healPercent: 0.40 },
     5: { healPercent: 0.50 }
   },
-  upgradeCosts: [0, 150, 400, 800, 2000],
 
   icon: "💚",
   description: "Restore {healPercent}% of max HP"
@@ -220,11 +228,9 @@
   name: "Iron Skin",
   type: "active",
   category: "defense",
+  tier: "basic",
 
-  unlockLevel: 5,
-  unlockCost: 0,
-  unlockChoice: "skill_heal",
-  altUnlockCost: 150,
+  unlockCost: 3,
 
   energyCost: 25,
   cooldown: 30000,
@@ -237,7 +243,6 @@
     4: { damageReduction: 0.65, duration: 13000 },
     5: { damageReduction: 0.75, duration: 15000 }
   },
-  upgradeCosts: [0, 200, 500, 1000, 2500],
 
   icon: "🛡️",
   description: "Reduce damage taken by {damageReduction}% for {duration}s"
@@ -251,11 +256,9 @@
   name: "Reflect",
   type: "active",
   category: "defense",
+  tier: "utility",
 
-  unlockLevel: 20,
-  unlockCost: 0,
-  unlockChoice: "skill_time_warp",
-  altUnlockCost: 1000,
+  unlockCost: 4,
 
   energyCost: 30,
   cooldown: 25000,
@@ -268,24 +271,22 @@
     4: { reflectMultiplier: 1.75, duration: 30000 },
     5: { reflectMultiplier: 2.00, duration: 30000 }
   },
-  upgradeCosts: [0, 500, 1000, 2500, 5000],
 
   icon: "🔄",
   description: "Reflect next attack at {reflectMultiplier}x damage"
 }
 ```
 
-### Undying
+### Undying (Elite)
 ```javascript
 {
   id: "skill_undying",
   name: "Undying",
   type: "active",
   category: "defense",
+  tier: "elite",
 
-  unlockLevel: 40,
-  unlockCost: 5000,
-  unlockChoice: null,
+  unlockCost: 8,
 
   energyCost: 50,
   cooldown: 180000,
@@ -298,10 +299,37 @@
     4: { survivePercent: 0.15, duration: 30000 },
     5: { survivePercent: 0.25, duration: 30000 }
   },
-  upgradeCosts: [5000, 2000, 5000, 10000, 25000],
 
   icon: "💫",
   description: "Survive fatal blow with {survivePercent}% HP"
+}
+```
+
+### Shield Wall (Elite)
+```javascript
+{
+  id: "skill_shield_wall",
+  name: "Shield Wall",
+  type: "active",
+  category: "defense",
+  tier: "elite",
+
+  unlockCost: 8,
+
+  energyCost: 40,
+  cooldown: 60000,
+
+  effectType: "grantShield",
+  levels: {
+    1: { shieldPercent: 0.20, duration: 20000 },
+    2: { shieldPercent: 0.22, duration: 22000 },
+    3: { shieldPercent: 0.25, duration: 25000 },
+    4: { shieldPercent: 0.28, duration: 28000 },
+    5: { shieldPercent: 0.30, duration: 30000 }
+  },
+
+  icon: "🔷",
+  description: "Gain a shield equal to {shieldPercent}% of max HP for {duration}s"
 }
 ```
 
@@ -316,11 +344,9 @@
   name: "Gold Rush",
   type: "active",
   category: "utility",
+  tier: "utility",
 
-  unlockLevel: 8,
-  unlockCost: 0,
-  unlockChoice: "skill_xp_boost",
-  altUnlockCost: 200,
+  unlockCost: 4,
 
   energyCost: 20,
   cooldown: 60000,
@@ -333,7 +359,6 @@
     4: { goldBonus: 1.60, duration: 36000 },
     5: { goldBonus: 2.00, duration: 45000 }
   },
-  upgradeCosts: [0, 250, 600, 1200, 3000],
 
   icon: "🪙",
   description: "+{goldBonus}% gold for {duration}s"
@@ -347,11 +372,9 @@
   name: "XP Boost",
   type: "active",
   category: "utility",
+  tier: "utility",
 
-  unlockLevel: 8,
-  unlockCost: 0,
-  unlockChoice: "skill_gold_rush",
-  altUnlockCost: 200,
+  unlockCost: 4,
 
   energyCost: 20,
   cooldown: 60000,
@@ -364,7 +387,6 @@
     4: { xpBonus: 1.60, duration: 36000 },
     5: { xpBonus: 2.00, duration: 45000 }
   },
-  upgradeCosts: [0, 250, 600, 1200, 3000],
 
   icon: "📈",
   description: "+{xpBonus}% XP for {duration}s"
@@ -378,11 +400,9 @@
   name: "Perfect Strike",
   type: "active",
   category: "utility",
+  tier: "combat",
 
-  unlockLevel: 15,
-  unlockCost: 0,
-  unlockChoice: "skill_crit_surge",
-  altUnlockCost: 750,
+  unlockCost: 5,
 
   energyCost: 30,
   cooldown: 30000,
@@ -395,7 +415,6 @@
     4: { duration: 8000, goodMultiplier: 2.6, perfectMultiplier: 5.2, missMultiplier: 0.5, missDamage: 0.03 },
     5: { duration: 10000, goodMultiplier: 3.0, perfectMultiplier: 6.0, missMultiplier: 0.5, missDamage: 0.03 }
   },
-  upgradeCosts: [0, 400, 1000, 2000, 5000],
 
   icon: "🎯",
   description: "Enter timing mode: Good={goodMultiplier}x, Perfect={perfectMultiplier}x for {duration}s"
@@ -409,11 +428,9 @@
   name: "Time Warp",
   type: "active",
   category: "utility",
+  tier: "utility",
 
-  unlockLevel: 20,
-  unlockCost: 0,
-  unlockChoice: "skill_reflect",
-  altUnlockCost: 1000,
+  unlockCost: 4,
 
   energyCost: 40,
   cooldown: 90000,
@@ -426,16 +443,71 @@
     4: { duration: 8000 },
     5: { duration: 10000 }
   },
-  upgradeCosts: [0, 500, 1200, 2500, 6000],
 
   icon: "⏳",
   description: "Freeze monster for {duration}s"
 }
 ```
 
+### Shield Breaker (Elite)
+```javascript
+{
+  id: "skill_shield_breaker",
+  name: "Shield Breaker",
+  type: "active",
+  category: "utility",
+  tier: "elite",
+
+  unlockCost: 8,
+
+  energyCost: 25,
+  cooldown: 15000,
+
+  effectType: "shieldBreak",
+  levels: {
+    1: { bonusDamage: 0.50, duration: 10000 },
+    2: { bonusDamage: 0.55, duration: 11000 },
+    3: { bonusDamage: 0.60, duration: 12000 },
+    4: { bonusDamage: 0.65, duration: 13000 },
+    5: { bonusDamage: 0.75, duration: 15000 }
+  },
+
+  icon: "💥",
+  description: "Break shields, +{bonusDamage}% vs shielded for {duration}s"
+}
+```
+
+### Transcendence (Master)
+```javascript
+{
+  id: "skill_transcendence",
+  name: "Transcendence",
+  type: "active",
+  category: "utility",
+  tier: "master",
+
+  unlockCost: 10,
+
+  energyCost: 100,
+  cooldown: 300000,
+
+  effectType: "buff",
+  levels: {
+    1: { invulnerable: true, damageBonus: 1.0, goldBonus: 1.0, xpBonus: 1.0, duration: 30000 },
+    2: { invulnerable: true, damageBonus: 1.1, goldBonus: 1.1, xpBonus: 1.1, duration: 32000 },
+    3: { invulnerable: true, damageBonus: 1.2, goldBonus: 1.2, xpBonus: 1.2, duration: 34000 },
+    4: { invulnerable: true, damageBonus: 1.3, goldBonus: 1.3, xpBonus: 1.3, duration: 36000 },
+    5: { invulnerable: true, damageBonus: 1.5, goldBonus: 1.5, xpBonus: 1.5, duration: 45000 }
+  },
+
+  icon: "✨",
+  description: "Invulnerable, +{damageBonus}% damage/gold/XP for {duration}s"
+}
+```
+
 ---
 
-## Passive Skills
+## Passive Skills - Offense
 
 ### Sharp Blades
 ```javascript
@@ -444,11 +516,9 @@
   name: "Sharp Blades",
   type: "passive",
   category: "offense",
+  tier: "basic",
 
-  unlockLevel: 3,
-  unlockCost: 0,
-  unlockChoice: "skill_killer_instinct",
-  altUnlockCost: 100,
+  unlockCost: 3,
 
   stat: "damage",
   levels: {
@@ -458,7 +528,6 @@
     4: { bonus: 0.20 },
     5: { bonus: 0.25 }
   },
-  upgradeCosts: [0, 100, 250, 500, 1000],
 
   icon: "🗡️",
   description: "+{bonus}% damage"
@@ -472,11 +541,9 @@
   name: "Killer Instinct",
   type: "passive",
   category: "offense",
+  tier: "basic",
 
-  unlockLevel: 3,
-  unlockCost: 0,
-  unlockChoice: "skill_sharp_blades",
-  altUnlockCost: 100,
+  unlockCost: 3,
 
   stat: "critChance",
   levels: {
@@ -486,12 +553,40 @@
     4: { bonus: 0.12 },
     5: { bonus: 0.15 }
   },
-  upgradeCosts: [0, 100, 250, 500, 1000],
 
   icon: "🎲",
   description: "+{bonus}% crit chance"
 }
 ```
+
+### Void Touch (Master)
+```javascript
+{
+  id: "skill_void_touch",
+  name: "Void Touch",
+  type: "passive",
+  category: "offense",
+  tier: "master",
+
+  unlockCost: 10,
+
+  stat: "armorPen",
+  levels: {
+    1: { bonus: 10 },
+    2: { bonus: 20 },
+    3: { bonus: 30 },
+    4: { bonus: 40 },
+    5: { bonus: 50 }
+  },
+
+  icon: "🌀",
+  description: "Ignore {bonus} points of monster armor"
+}
+```
+
+---
+
+## Passive Skills - Defense
 
 ### Thick Skin
 ```javascript
@@ -500,11 +595,9 @@
   name: "Thick Skin",
   type: "passive",
   category: "defense",
+  tier: "advanced",
 
-  unlockLevel: 30,
-  unlockCost: 0,
-  unlockChoice: "skill_regeneration",
-  altUnlockCost: 2000,
+  unlockCost: 6,
 
   stat: "maxHP",
   levels: {
@@ -514,7 +607,6 @@
     4: { bonus: 0.40 },
     5: { bonus: 0.50 }
   },
-  upgradeCosts: [0, 500, 1000, 2000, 4000],
 
   icon: "💪",
   description: "+{bonus}% max HP"
@@ -528,11 +620,9 @@
   name: "Regeneration",
   type: "passive",
   category: "defense",
+  tier: "advanced",
 
-  unlockLevel: 30,
-  unlockCost: 0,
-  unlockChoice: "skill_thick_skin",
-  altUnlockCost: 2000,
+  unlockCost: 6,
 
   stat: "hpRegen",
   levels: {
@@ -542,12 +632,40 @@
     4: { bonus: 0.020 },
     5: { bonus: 0.030 }
   },
-  upgradeCosts: [0, 500, 1000, 2000, 4000],
 
   icon: "💚",
   description: "+{bonus}% HP per second"
 }
 ```
+
+### Quick Reflexes (Master)
+```javascript
+{
+  id: "skill_quick_reflexes",
+  name: "Quick Reflexes",
+  type: "passive",
+  category: "defense",
+  tier: "master",
+
+  unlockCost: 10,
+
+  stat: "warningTime",
+  levels: {
+    1: { bonus: 200 },
+    2: { bonus: 400 },
+    3: { bonus: 600 },
+    4: { bonus: 800 },
+    5: { bonus: 1000 }
+  },
+
+  icon: "👁️",
+  description: "+{bonus}ms attack warning time"
+}
+```
+
+---
+
+## Passive Skills - Utility
 
 ### Deep Pockets
 ```javascript
@@ -556,11 +674,9 @@
   name: "Deep Pockets",
   type: "passive",
   category: "utility",
+  tier: "advanced",
 
-  unlockLevel: 25,
-  unlockCost: 0,
-  unlockChoice: "skill_fast_learner",
-  altUnlockCost: 1500,
+  unlockCost: 6,
 
   stat: "goldFind",
   levels: {
@@ -570,7 +686,6 @@
     4: { bonus: 0.20 },
     5: { bonus: 0.25 }
   },
-  upgradeCosts: [0, 400, 800, 1600, 3200],
 
   icon: "💰",
   description: "+{bonus}% gold"
@@ -584,11 +699,9 @@
   name: "Fast Learner",
   type: "passive",
   category: "utility",
+  tier: "advanced",
 
-  unlockLevel: 25,
-  unlockCost: 0,
-  unlockChoice: "skill_deep_pockets",
-  altUnlockCost: 1500,
+  unlockCost: 6,
 
   stat: "xpBonus",
   levels: {
@@ -598,24 +711,22 @@
     4: { bonus: 0.20 },
     5: { bonus: 0.25 }
   },
-  upgradeCosts: [0, 400, 800, 1600, 3200],
 
   icon: "📚",
   description: "+{bonus}% XP"
 }
 ```
 
-### Energy Flow
+### Energy Flow (Elite)
 ```javascript
 {
   id: "skill_energy_flow",
   name: "Energy Flow",
   type: "passive",
   category: "utility",
+  tier: "elite",
 
-  unlockLevel: 50,
-  unlockCost: 10000,
-  unlockChoice: null,
+  unlockCost: 8,
 
   stat: "energyGain",
   levels: {
@@ -625,404 +736,178 @@
     4: { bonus: 0.40 },
     5: { bonus: 0.50 }
   },
-  upgradeCosts: [10000, 2000, 4000, 8000, 16000],
 
   icon: "⚡",
   description: "+{bonus}% Energy gain"
 }
 ```
 
-### Quick Reflexes
-```javascript
-{
-  id: "skill_quick_reflexes",
-  name: "Quick Reflexes",
-  type: "passive",
-  category: "defense",
+---
 
-  unlockLevel: 60,
-  unlockCost: 15000,
-  unlockChoice: null,
+## Skill Summary Tables
 
-  stat: "warningTime",
-  levels: {
-    1: { bonus: 200 },
-    2: { bonus: 400 },
-    3: { bonus: 600 },
-    4: { bonus: 800 },
-    5: { bonus: 1000 }
-  },
-  upgradeCosts: [15000, 3000, 6000, 12000, 24000],
+### Active Skills (16 Total)
 
-  icon: "👁️",
-  description: "+{bonus}ms attack warning time"
-}
-```
+| Skill | Tier | Category | Energy | Cooldown | Key Effect |
+|-------|------|----------|--------|----------|------------|
+| Power Strike | Starter | Offense | 15 | 8s | 3x-5x next attack |
+| Execute | Combat | Offense | 25 | 12s | 5x-7x if <30-40% HP |
+| Berserk Rage | Combat | Offense | 30 | 45s | 2x-3x damage (risky) |
+| Crit Surge | Combat | Offense | 25 | 30s | +50-75% crit for 10-15s |
+| Soul Rend | Elite | Offense | 35 | 20s | 10-15% monster max HP |
+| Heal | Basic | Defense | 20 | 15s | 25-50% HP restore |
+| Iron Skin | Basic | Defense | 25 | 30s | 50-75% DR for 10-15s |
+| Reflect | Utility | Defense | 30 | 25s | Reflect at 100-200% |
+| Undying | Elite | Defense | 50 | 180s | Survive at 1-25% HP |
+| Shield Wall | Elite | Defense | 40 | 60s | 20-30% HP as shield |
+| Gold Rush | Utility | Utility | 20 | 60s | +100-200% gold 30-45s |
+| XP Boost | Utility | Utility | 20 | 60s | +100-200% XP 30-45s |
+| Perfect Strike | Combat | Utility | 30 | 30s | Timing mode 2-6x |
+| Time Warp | Utility | Utility | 40 | 90s | Freeze 5-10s |
+| Shield Breaker | Elite | Utility | 25 | 15s | Break shields +50-75% |
+| Transcendence | Master | Utility | 100 | 300s | Invuln +100-150% all |
+
+### Passive Skills (9 Total)
+
+| Skill | Tier | Category | Per Level | Max Bonus |
+|-------|------|----------|-----------|-----------|
+| Sharp Blades | Basic | Offense | +5% damage | +25% |
+| Killer Instinct | Basic | Offense | +3% crit | +15% |
+| Void Touch | Master | Offense | +10 armor pen | +50 |
+| Thick Skin | Advanced | Defense | +10% max HP | +50% |
+| Regeneration | Advanced | Defense | +0.5% HP/sec | +3% |
+| Quick Reflexes | Master | Defense | +200ms warning | +1000ms |
+| Deep Pockets | Advanced | Utility | +5% gold | +25% |
+| Fast Learner | Advanced | Utility | +5% XP | +25% |
+| Energy Flow | Elite | Utility | +10% Energy | +50% |
 
 ---
 
-## Late-Game Skills
+## Mastery Points Budget
 
-### Soul Rend (Level 50)
-```javascript
-{
-  id: "skill_soul_rend",
-  name: "Soul Rend",
-  type: "active",
-  category: "offense",
+### Earning MP (~54 Base)
 
-  unlockLevel: 50,
-  unlockCost: 10000,
+| Source | MP |
+|--------|-----|
+| Level 5 | 3 |
+| Level 10 | 3 |
+| Level 15 | 3 |
+| Level 20 | 3 |
+| Level 30 | 4 |
+| Level 40 | 4 |
+| Level 50 | 5 |
+| Level 60 | 5 |
+| Level 75 | 5 |
+| Level 90 | 5 |
+| 7 Bosses (2 each) | 14 |
+| **Total** | **54** |
 
-  energyCost: 35,
-  cooldown: 20000,
+### Ascension Bonus
 
-  effectType: "percentDamage",
-  levels: {
-    1: { percent: 0.10, minMultiplier: 1, maxMultiplier: 10 },
-    2: { percent: 0.11, minMultiplier: 1, maxMultiplier: 10 },
-    3: { percent: 0.12, minMultiplier: 1, maxMultiplier: 10 },
-    4: { percent: 0.13, minMultiplier: 1, maxMultiplier: 10 },
-    5: { percent: 0.15, minMultiplier: 1, maxMultiplier: 10 }
-  },
-  upgradeCosts: [10000, 5000, 12000, 25000, 50000],
-
-  icon: "👻",
-  description: "Deal {percent}% of monster's max HP as damage"
-}
-```
-
-### Shield Breaker (Level 60)
-```javascript
-{
-  id: "skill_shield_breaker",
-  name: "Shield Breaker",
-  type: "active",
-  category: "offense",
-
-  unlockLevel: 60,
-  unlockCost: 15000,
-
-  energyCost: 25,
-  cooldown: 15000,
-
-  effectType: "shieldBreak",
-  levels: {
-    1: { bonusDamage: 0.50, duration: 10000 },
-    2: { bonusDamage: 0.55, duration: 11000 },
-    3: { bonusDamage: 0.60, duration: 12000 },
-    4: { bonusDamage: 0.65, duration: 13000 },
-    5: { bonusDamage: 0.75, duration: 15000 }
-  },
-  upgradeCosts: [15000, 7500, 15000, 30000, 75000],
-
-  icon: "💥",
-  description: "Break shields, +{bonusDamage}% vs shielded for {duration}s"
-}
-```
-
-### Void Touch (Level 75)
-```javascript
-{
-  id: "skill_void_touch",
-  name: "Void Touch",
-  type: "passive",
-  category: "offense",
-
-  unlockLevel: 75,
-  unlockCost: 25000,
-
-  stat: "armorPen",
-  levels: {
-    1: { bonus: 0.05 },
-    2: { bonus: 0.10 },
-    3: { bonus: 0.15 },
-    4: { bonus: 0.20 },
-    5: { bonus: 0.25 }
-  },
-  upgradeCosts: [25000, 12500, 25000, 50000, 100000],
-
-  icon: "🌀",
-  description: "Ignore {bonus}% of monster armor"
-}
-```
-
-### Transcendence (Level 90)
-```javascript
-{
-  id: "skill_transcendence",
-  name: "Transcendence",
-  type: "active",
-  category: "utility",
-
-  unlockLevel: 90,
-  unlockCost: 50000,
-
-  energyCost: 100,
-  cooldown: 300000,
-
-  effectType: "buff",
-  levels: {
-    1: { invulnerable: true, damageBonus: 1.0, goldBonus: 1.0, xpBonus: 1.0, duration: 30000 },
-    2: { invulnerable: true, damageBonus: 1.1, goldBonus: 1.1, xpBonus: 1.1, duration: 32000 },
-    3: { invulnerable: true, damageBonus: 1.2, goldBonus: 1.2, xpBonus: 1.2, duration: 34000 },
-    4: { invulnerable: true, damageBonus: 1.3, goldBonus: 1.3, xpBonus: 1.3, duration: 36000 },
-    5: { invulnerable: true, damageBonus: 1.5, goldBonus: 1.5, xpBonus: 1.5, duration: 45000 }
-  },
-  upgradeCosts: [50000, 25000, 50000, 100000, 250000],
-
-  icon: "✨",
-  description: "Invulnerable, +{damageBonus}% damage/gold/XP for {duration}s"
-}
-```
++3 MP starting bonus per Ascension level.
 
 ---
 
----
+## Example Builds
 
-## Skill Synergies
+### "Glass Cannon" (54 MP)
 
-Synergies unlock automatically when you discover both required skills.
+| Skill | Unlock | Upgrades | Total |
+|-------|--------|----------|-------|
+| Power Strike | 0 | Lv5 (10) | 10 |
+| Execute | 5 | Lv5 (10) | 15 |
+| Berserk Rage | 5 | Lv3 (3) | 8 |
+| Sharp Blades | 3 | Lv5 (10) | 13 |
+| Killer Instinct | 3 | Lv2 (1) | 4 |
+| **Total** | | | **50** |
 
-### Offense Synergies
+*4 MP remaining for flexibility*
 
-```javascript
-{
-  id: "synergy_berserkers_fury",
-  name: "Berserker's Fury",
-  requiredSkills: ["skill_power_strike", "skill_berserk_rage"],
-  effect: {
-    type: "skillBoost",
-    target: "power_strike",
-    condition: "during_berserk",
-    bonus: 0.50  // +50% Power Strike damage while Berserk
-  },
-  icon: "🔥",
-  description: "Power Strike deals +50% damage while Berserk Rage is active"
-}
-```
+### "Immortal Tank" (54 MP)
 
-```javascript
-{
-  id: "synergy_executioner",
-  name: "Executioner",
-  requiredSkills: ["skill_execute", "skill_killer_instinct"],
-  effect: {
-    type: "thresholdBonus",
-    target: "execute",
-    bonus: 0.10  // Execute threshold +10%
-  },
-  icon: "💀",
-  description: "Execute works on monsters with 10% more HP"
-}
-```
+| Skill | Unlock | Upgrades | Total |
+|-------|--------|----------|-------|
+| Power Strike | 0 | Lv2 (1) | 1 |
+| Heal | 3 | Lv5 (10) | 13 |
+| Iron Skin | 3 | Lv4 (6) | 9 |
+| Shield Wall | 8 | Lv2 (1) | 9 |
+| Thick Skin | 6 | Lv5 (10) | 16 |
+| Regeneration | 6 | Lv1 (0) | 6 |
+| **Total** | | | **54** |
 
-```javascript
-{
-  id: "synergy_critical_mass",
-  name: "Critical Mass",
-  requiredSkills: ["skill_crit_surge", "skill_killer_instinct"],
-  effect: {
-    type: "energyRefund",
-    condition: "on_crit",
-    chance: 0.10  // 10% chance to refund Energy
-  },
-  icon: "⚡",
-  description: "Critical hits have 10% chance to refund Energy"
-}
-```
+### "Gold Farmer" (54 MP)
 
-### Defense Synergies
-
-```javascript
-{
-  id: "synergy_life_siphon",
-  name: "Life Siphon",
-  requiredSkills: ["skill_heal", "skill_soul_rend"],
-  effect: {
-    type: "buff",
-    trigger: "after_heal",
-    lifesteal: 0.10,
-    duration: 5000
-  },
-  icon: "💚",
-  description: "Using Heal grants 10% lifesteal for 5 seconds"
-}
-```
-
-```javascript
-{
-  id: "synergy_iron_fortress",
-  name: "Iron Fortress",
-  requiredSkills: ["skill_iron_skin", "skill_thick_skin"],
-  effect: {
-    type: "permanentBonus",
-    stat: "damageReduction",
-    bonus: 0.05  // +5% permanent DR
-  },
-  icon: "🏰",
-  description: "+5% permanent damage reduction"
-}
-```
-
-```javascript
-{
-  id: "synergy_regenerator",
-  name: "Regenerator",
-  requiredSkills: ["skill_heal", "skill_regeneration"],
-  effect: {
-    type: "regenMultiplier",
-    condition: "out_of_combat",
-    multiplier: 2.0
-  },
-  icon: "🌿",
-  description: "HP regeneration doubled when out of combat"
-}
-```
-
-### Utility Synergies
-
-```javascript
-{
-  id: "synergy_gold_digger",
-  name: "Gold Digger",
-  requiredSkills: ["skill_gold_rush", "skill_deep_pockets"],
-  effect: {
-    type: "permanentBonus",
-    stat: "goldFind",
-    bonus: 0.10  // +10% permanent gold
-  },
-  icon: "💰",
-  description: "+10% permanent gold find"
-}
-```
-
-```javascript
-{
-  id: "synergy_scholar",
-  name: "Scholar",
-  requiredSkills: ["skill_xp_boost", "skill_fast_learner"],
-  effect: {
-    type: "permanentBonus",
-    stat: "xpBonus",
-    bonus: 0.10  // +10% permanent XP
-  },
-  icon: "📚",
-  description: "+10% permanent XP gain"
-}
-```
-
-```javascript
-{
-  id: "synergy_time_lord",
-  name: "Time Lord",
-  requiredSkills: ["skill_time_warp", "skill_perfect_strike"],
-  effect: {
-    type: "cooldownReduction",
-    condition: "during_time_warp",
-    reduction: 0.50  // Cooldowns tick 50% faster
-  },
-  icon: "⏳",
-  description: "Your cooldowns tick 50% faster during Time Warp"
-}
-```
-
-### Master Synergies
-
-```javascript
-{
-  id: "synergy_void_walker",
-  name: "Void Walker",
-  requiredSkills: ["skill_void_touch", "skill_soul_rend"],
-  effect: {
-    type: "armorPen",
-    target: "soul_rend",
-    bonus: 1.0  // Soul Rend ignores ALL armor
-  },
-  icon: "🌀",
-  description: "Soul Rend ignores all monster armor"
-}
-```
-
-```javascript
-{
-  id: "synergy_transcendent",
-  name: "Transcendent",
-  requiredSkills: ["skill_transcendence"],
-  requiredCount: 3,  // Need 3+ Master skills
-  pool: "master",
-  effect: {
-    type: "durationBonus",
-    target: "transcendence",
-    bonus: 15000  // +15 seconds duration
-  },
-  icon: "✨",
-  description: "Transcendence duration +15 seconds"
-}
-```
-
-### Synergy Summary Table
-
-| Synergy | Skills Required | Bonus |
-|---------|-----------------|-------|
-| Berserker's Fury | Power Strike + Berserk Rage | +50% PS during Berserk |
-| Executioner | Execute + Killer Instinct | +10% Execute threshold |
-| Critical Mass | Crit Surge + Killer Instinct | 10% crit → Energy refund |
-| Life Siphon | Heal + Soul Rend | 10% lifesteal after Heal |
-| Iron Fortress | Iron Skin + Thick Skin | +5% permanent DR |
-| Regenerator | Heal + Regeneration | 2x regen out of combat |
-| Gold Digger | Gold Rush + Deep Pockets | +10% permanent gold |
-| Scholar | XP Boost + Fast Learner | +10% permanent XP |
-| Time Lord | Time Warp + Perfect Strike | 50% faster cooldowns |
-| Void Walker | Void Touch + Soul Rend | Soul Rend ignores armor |
-| Transcendent | Transcendence + 3 Master skills | +15s duration |
+| Skill | Unlock | Upgrades | Total |
+|-------|--------|----------|-------|
+| Power Strike | 0 | Lv3 (3) | 3 |
+| Gold Rush | 4 | Lv5 (10) | 14 |
+| Deep Pockets | 6 | Lv5 (10) | 16 |
+| Heal | 3 | Lv3 (3) | 6 |
+| Sharp Blades | 3 | Lv3 (3) | 6 |
+| Fast Learner | 6 | Lv2 (1) | 7 |
+| **Total** | | | **52** |
 
 ---
 
 ## Export
 
 ```javascript
-export const SKILLS = { /* all skills from above */ };
+export const SKILLS = {
+  // Active - Offense
+  skill_power_strike: { /* ... */ },
+  skill_execute: { /* ... */ },
+  skill_berserk_rage: { /* ... */ },
+  skill_crit_surge: { /* ... */ },
+  skill_soul_rend: { /* ... */ },
 
-export const SKILL_POOLS = {
-  starter: ['skill_power_strike'],
-  basic: ['skill_sharp_blades', 'skill_killer_instinct', 'skill_heal', 'skill_iron_skin'],
-  utility: ['skill_gold_rush', 'skill_xp_boost', 'skill_time_warp', 'skill_reflect'],
-  combat: ['skill_execute', 'skill_berserk_rage', 'skill_crit_surge', 'skill_perfect_strike'],
-  advanced: ['skill_deep_pockets', 'skill_fast_learner', 'skill_thick_skin', 'skill_regeneration'],
-  elite: ['skill_undying', 'skill_soul_rend', 'skill_shield_breaker', 'skill_energy_flow'],
-  master: ['skill_quick_reflexes', 'skill_void_touch', 'skill_transcendence']
+  // Active - Defense
+  skill_heal: { /* ... */ },
+  skill_iron_skin: { /* ... */ },
+  skill_reflect: { /* ... */ },
+  skill_undying: { /* ... */ },
+  skill_shield_wall: { /* ... */ },
+
+  // Active - Utility
+  skill_gold_rush: { /* ... */ },
+  skill_xp_boost: { /* ... */ },
+  skill_perfect_strike: { /* ... */ },
+  skill_time_warp: { /* ... */ },
+  skill_shield_breaker: { /* ... */ },
+  skill_transcendence: { /* ... */ },
+
+  // Passive - Offense
+  skill_sharp_blades: { /* ... */ },
+  skill_killer_instinct: { /* ... */ },
+  skill_void_touch: { /* ... */ },
+
+  // Passive - Defense
+  skill_thick_skin: { /* ... */ },
+  skill_regeneration: { /* ... */ },
+  skill_quick_reflexes: { /* ... */ },
+
+  // Passive - Utility
+  skill_deep_pockets: { /* ... */ },
+  skill_fast_learner: { /* ... */ },
+  skill_energy_flow: { /* ... */ }
 };
 
-export const SKILL_DISCOVERY_SCHEDULE = [
-  { level: 1, pool: 'starter', guaranteed: true },
-  { level: 3, pool: 'basic' },
-  { level: 5, pool: 'basic' },
-  { level: 8, pool: 'utility' },
-  { level: 10, pool: 'combat' },
-  { level: 15, pool: 'combat' },
-  { level: 20, pool: 'advanced' },
-  { level: 30, pool: 'advanced' },
-  { level: 40, pool: 'elite' },
-  { level: 50, pool: 'elite' },
-  { level: 60, pool: 'master' },
-  { level: 75, pool: 'master' }
-];
-
-export const MASTERY_POINTS_SCHEDULE = {
-  3: 1, 5: 1, 8: 1, 10: 2,
-  15: 2, 20: 2, 30: 2, 40: 3,
-  50: 3, 60: 3
-  // Total: 20 Mastery Points
+export const SKILL_TIERS = {
+  starter: { cost: 0, skills: ['skill_power_strike'] },
+  basic: { cost: 3, skills: ['skill_heal', 'skill_iron_skin', 'skill_sharp_blades', 'skill_killer_instinct'] },
+  utility: { cost: 4, skills: ['skill_gold_rush', 'skill_xp_boost', 'skill_reflect', 'skill_time_warp'] },
+  combat: { cost: 5, skills: ['skill_execute', 'skill_berserk_rage', 'skill_crit_surge', 'skill_perfect_strike'] },
+  advanced: { cost: 6, skills: ['skill_deep_pockets', 'skill_fast_learner', 'skill_thick_skin', 'skill_regeneration'] },
+  elite: { cost: 8, skills: ['skill_undying', 'skill_soul_rend', 'skill_shield_breaker', 'skill_energy_flow', 'skill_shield_wall'] },
+  master: { cost: 10, skills: ['skill_transcendence', 'skill_void_touch', 'skill_quick_reflexes'] }
 };
 
-export const SYNERGIES = { /* all synergies from above */ };
+export const UPGRADE_COSTS = [1, 2, 3, 4];  // Cost to reach levels 2, 3, 4, 5
 
 export const ACTIVE_SKILL_SLOTS = 4;
 export const PASSIVE_SKILL_SLOTS = 3;
-export const BASE_MASTERY_POINTS = 20;
+export const TOTAL_SKILLS = 25;
 ```
 
 ---
 
-*Note: Skills are discovered through roguelike random offerings. Each run creates a unique build!*
+*Skills are purchased with Mastery Points. Every run is a fresh build. Choose wisely!*

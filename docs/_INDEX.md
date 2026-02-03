@@ -117,7 +117,7 @@ ACTIVE_SKILL_SLOTS = 4          # Max equipped active skills
 PASSIVE_SKILL_SLOTS = 3         # Max equipped passive skills
 BASE_SKILL_MAX_LEVEL = 5        # Max skill level (before ascension)
 ASCENDED_SKILL_MAX_LEVEL = 10   # Max skill level (with ascension)
-TOTAL_SKILLS = 24               # Total skills in the game
+TOTAL_SKILLS = 25               # Total skills in the game (16 active + 9 passive)
 ```
 
 ### Mastery Points System
@@ -194,7 +194,7 @@ All stats used in the game. Referenced by: Player, Items, Skills, Monsters
 | `goldFind` | Gold Find | % bonus gold from kills | 0 (0%) | Additive |
 | `xpBonus` | XP Bonus | % bonus XP from kills | 0 (0%) | Additive |
 | `maxHP` | Max HP | Flat bonus to max HP | 0 | Additive |
-| `hpRegen` | HP Regen | % HP regeneration per second | 0.005 (0.5%) | Additive |
+| `hpRegen` | HP Regen | % HP regeneration per second | 0.015 (1.5%) | Additive |
 | `damageReduction` | Damage Reduction | % damage reduced from monsters | 0 (0%) | Multiplicative |
 | `energyGain` | Energy Gain | % bonus Energy from clicks/kills | 0 (0%) | Additive |
 | `armorPen` | Armor Penetration | Flat armor ignored on armored monsters | 0 | Additive |

@@ -109,13 +109,21 @@ const ARMORED_MONSTER = {
   attacksPlayer: false
 };
 
-function calculateDamageVsArmor(baseDamage, monster) {
-  const armor = monster.mechanics.armor +
+function calculateDamageVsArmor(baseDamage, monster, player) {
+  const baseArmor = monster.mechanics.armor +
     (monster.mechanics.armorScaling * (monster.level - monster.levelMin));
 
+  // Apply player's armor penetration (from Void Touch skill or items)
+  const armorPen = player.stats.armorPen || 0;
+  const effectiveArmor = Math.max(baseArmor - armorPen, 0);
+
   // Armor reduces damage by flat amount (minimum 1 damage)
-  return Math.max(baseDamage - armor, 1);
+  return Math.max(baseDamage - effectiveArmor, 1);
 }
+
+// Armor Penetration Sources:
+// - Void Touch passive skill: +10/20/30/40/50 armor pen at levels 1-5
+// - Weapons with armorPen stat: varies by zone/rarity
 ```
 
 **Behavior:**
@@ -365,6 +373,100 @@ function onPlayerClick() {
 **Counter:** Watch for warning, stop clicking during attack, Quick Reflexes passive
 
 **Examples:** Timber Wolf, Bandit, all Bosses
+
+---
+
+## Multi-Type Monsters
+
+Some monsters (especially bosses) have multiple types combined. The format is `type1+type2` or `type1+type2+type3`.
+
+### How Multi-Type Works
+
+Each type's mechanics are applied **simultaneously**:
+
+```javascript
+function initializeMultiTypeMonster(monster) {
+  const types = monster.type.split('+');
+
+  for (const type of types) {
+    switch (type) {
+      case 'aggressive':
+        monster.attackTimer = 0;
+        monster.attackPhase = AttackPhase.SAFE;
+        monster.attacksPlayer = true;
+        break;
+      case 'armored':
+        // Uses monster.mechanics.armor (already defined)
+        break;
+      case 'shielded':
+        monster.shield = Math.floor(monster.maxHealth * monster.mechanics.shieldPercent);
+        monster.maxShield = monster.shield;
+        break;
+      case 'regenerating':
+        // Uses monster.mechanics.regenRate (already defined)
+        break;
+      case 'swift':
+        monster.escapeTimer = monster.mechanics.escapeTime;
+        break;
+    }
+  }
+}
+
+function updateMultiTypeMonster(monster, deltaTime) {
+  const types = monster.type.split('+');
+
+  for (const type of types) {
+    switch (type) {
+      case 'aggressive':
+        updateAggressiveMonster(monster, deltaTime);
+        break;
+      case 'regenerating':
+        updateRegeneration(monster, deltaTime);
+        break;
+      case 'swift':
+        updateSwiftTimer(monster, deltaTime);
+        break;
+      // Armored and Shielded don't need tick updates
+    }
+  }
+}
+```
+
+### Multi-Type Examples
+
+| Monster | Types | Behavior |
+|---------|-------|----------|
+| Mire Mother | `aggressive+regenerating` | Attacks AND heals over time |
+| Grimstone | `aggressive+armored` | Attacks AND reduces damage |
+| Pyrax | `aggressive+shielded` | Attacks AND has shield |
+| Glacielle | `aggressive+regenerating` | Attacks AND heals |
+| Eldritch Horror | `armored+regenerating` | Reduces damage AND heals |
+| Xal'theron | `aggressive+shielded+regenerating` | All three: attacks, shield, heals |
+
+### Priority Rules
+
+When mechanics conflict:
+1. **Damage reduction** stacks multiplicatively (shield reduction × armor reduction)
+2. **Attack phases** from aggressive always apply (must stop clicking during attack)
+3. **Regeneration** heals HP but NOT shield
+4. **Swift timer** continues even during aggressive attack phases
+
+### Final Boss: Xal'theron
+
+The final boss combines three types, making him the ultimate challenge:
+
+```javascript
+// Xal'theron has:
+// - Aggressive: 1.8s safe, 0.4s warning, 0.8s attack, 10% damage
+// - Shielded: 20% HP shield, 50% damage reduction while shielded
+// - Regenerating: 1% HP/sec (1,500 HP/sec at 150,000 HP!)
+
+// Strategy:
+// 1. Break shield first (Shield Breaker skill helps)
+// 2. Deal enough DPS to outpace 1% regen (1,500 HP/sec)
+// 3. Watch attack phases - don't click during red phase
+// 4. Use Time Warp to freeze and burst damage
+```
 
 ---
 
@@ -811,7 +913,44 @@ function killMonster() {
 
 ### How to Access Boss Fights
 
-Boss fights are accessed via the Zone Selection screen:
+Boss fights are accessed via the **Zone Panel** on the main combat screen.
+
+#### Boss Access UI
+
+```
+┌─────────────────────────────────────────┐
+│  WHISPERWOOD GLEN          Lv 1-10      │
+│  ─────────────────────────────────────  │
+│                                         │
+│  Current Monster:  Forest Sprite  🧚    │
+│  ███████████████░░░░░░  45/60 HP       │
+│                                         │
+│  ─────────────────────────────────────  │
+│                                         │
+│  ┌─────────────────────────────────┐   │
+│  │  🌲 BOSS: Old Mossback          │   │
+│  │  Level 10 | HP: 500             │   │
+│  │                                 │   │
+│  │  [ CHALLENGE BOSS ]             │   │
+│  │                                 │   │
+│  │  Status: AVAILABLE              │   │
+│  │  (Can be fought anytime)        │   │
+│  └─────────────────────────────────┘   │
+│                                         │
+│  [ CHANGE ZONE ]                        │
+└─────────────────────────────────────────┘
+```
+
+#### Boss Button States
+
+| State | Condition | Button Text | Color |
+|-------|-----------|-------------|-------|
+| **Available** | In zone, not defeated | "CHALLENGE BOSS" | Orange |
+| **Defeated** | Boss killed (first time) | "FIGHT AGAIN" | Gray |
+| **Locked** | Zone not unlocked | "LOCKED" | Dark Gray |
+| **In Progress** | Currently fighting boss | "FIGHTING..." | Red |
+
+#### Boss Access Rules
 
 ```javascript
 function canFightBoss(player, zone) {
@@ -821,18 +960,83 @@ function canFightBoss(player, zone) {
   // Player must have unlocked the zone
   if (!player.unlockedZones.includes(zone.id)) return false;
 
-  // Boss must not already be defeated (for zone unlock purposes)
-  // BUT can be re-fought for loot (reduced rewards)
+  // Boss is always available - no level or kill requirements
   return true;
+}
+
+function getBossButtonState(player, zone) {
+  if (!player.unlockedZones.includes(zone.id)) {
+    return { text: "LOCKED", enabled: false, color: "gray" };
+  }
+
+  if (player.currentZone !== zone.id) {
+    return { text: "TRAVEL FIRST", enabled: false, color: "gray" };
+  }
+
+  if (combatState === CombatState.BOSS_FIGHT) {
+    return { text: "FIGHTING...", enabled: false, color: "red" };
+  }
+
+  const isDefeated = player.bossesDefeated.includes(zone.bossId);
+  if (isDefeated) {
+    return { text: "FIGHT AGAIN", enabled: true, color: "gray" };
+  }
+
+  return { text: "CHALLENGE BOSS", enabled: true, color: "orange" };
 }
 ```
 
-**Boss Fight Access:**
-- Boss is always accessible once you're in the zone
-- No minimum level requirement (but under-leveled = difficult)
-- No kill count requirement
-- "FIGHT BOSS" button in Zone Selection modal
-- Can re-fight bosses after defeating (for loot, no zone unlock)
+#### Starting a Boss Fight
+
+When player clicks "CHALLENGE BOSS":
+
+```javascript
+function startBossFight(zone) {
+  // 1. Clear current monster (if any)
+  if (currentMonster) {
+    currentMonster = null;
+  }
+
+  // 2. Show boss intro modal
+  showBossIntroModal(zone.boss);
+
+  // 3. After modal dismissed, spawn boss
+  currentMonster = createBossInstance(zone.boss);
+  combatState = CombatState.ACTIVE;
+
+  // 4. Update UI to show boss health bar (larger)
+  showBossHealthBar(currentMonster);
+}
+```
+
+#### Boss Intro Modal
+
+```
+┌─────────────────────────────────────────┐
+│                                         │
+│           🌲 OLD MOSSBACK 🌲            │
+│                                         │
+│   "An ancient treant who has guarded    │
+│    Whisperwood for centuries..."        │
+│                                         │
+│   Type: AGGRESSIVE                      │
+│   Level: 10                             │
+│   HP: 500                               │
+│                                         │
+│   ⚠️ WARNING: Boss attacks!             │
+│   Watch for the red flash!              │
+│                                         │
+│           [ BEGIN BATTLE ]              │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+**Key Points:**
+- Boss button is **always visible** in the zone panel
+- No prerequisites (kills, items) to challenge boss
+- Can re-fight defeated bosses for loot (reduced rewards)
+- Boss fight replaces current monster combat
+- Leaving zone or dying cancels boss fight
 
 ### Boss Differences
 
