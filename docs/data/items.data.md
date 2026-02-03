@@ -417,6 +417,77 @@
 }
 ```
 
+### Armor
+
+#### Dustrunner's Garb (Common)
+```javascript
+{
+  id: "armor_dustwind_common_01",
+  name: "Dustrunner's Garb",
+  description: "Light armor worn by plains scouts. Protects against dust storms and claws.",
+  type: "armor",
+  rarity: "common",
+  zone: "dustwind",
+  requiredLevel: 10,
+  stats: {
+    damageReduction: 0.08,
+    maxHP: 30
+  },
+  buyPrice: 250,
+  sellPrice: 62,
+  shopAvailable: true,
+  dropOnly: false,
+  emoji: "🥋"
+}
+```
+
+#### Bandit's Chainmail (Uncommon)
+```javascript
+{
+  id: "armor_dustwind_uncommon_01",
+  name: "Bandit's Chainmail",
+  description: "Stolen from a fallen soldier. The bandits maintain it surprisingly well.",
+  type: "armor",
+  rarity: "uncommon",
+  zone: "dustwind",
+  requiredLevel: 14,
+  stats: {
+    damageReduction: 0.12,
+    maxHP: 60,
+    hpRegen: 0.008
+  },
+  buyPrice: 600,
+  sellPrice: 150,
+  shopAvailable: true,
+  dropOnly: false,
+  emoji: "⛓️"
+}
+```
+
+#### Redfang's Hide (Rare) - Boss Drop
+```javascript
+{
+  id: "armor_dustwind_rare_01",
+  name: "Redfang's Hide",
+  description: "Armor made from Redfang's own pelt. His ferocity seems to linger.",
+  type: "armor",
+  rarity: "rare",
+  zone: "dustwind",
+  requiredLevel: 18,
+  stats: {
+    damageReduction: 0.15,
+    maxHP: 100,
+    hpRegen: 0.01,
+    critChance: 0.03
+  },
+  buyPrice: 1500,
+  sellPrice: 375,
+  shopAvailable: false,
+  dropOnly: true,
+  emoji: "🦊"
+}
+```
+
 ---
 
 ## Zone 3: Shadowmire Swamp
@@ -575,6 +646,76 @@
   shopAvailable: false,
   dropOnly: true,
   emoji: "💧"
+}
+```
+
+### Armor
+
+#### Swamp Stalker's Coat (Common)
+```javascript
+{
+  id: "armor_shadowmire_common_01",
+  name: "Swamp Stalker's Coat",
+  description: "Treated leather that resists the swamp's corrosive waters.",
+  type: "armor",
+  rarity: "common",
+  zone: "shadowmire",
+  requiredLevel: 20,
+  stats: {
+    damageReduction: 0.10,
+    maxHP: 60
+  },
+  buyPrice: 600,
+  sellPrice: 150,
+  shopAvailable: true,
+  dropOnly: false,
+  emoji: "🧥"
+}
+```
+
+#### Scaled Hauberk (Uncommon)
+```javascript
+{
+  id: "armor_shadowmire_uncommon_01",
+  name: "Scaled Hauberk",
+  description: "Made from swamp serpent scales. Surprisingly light and very tough.",
+  type: "armor",
+  rarity: "uncommon",
+  zone: "shadowmire",
+  requiredLevel: 25,
+  stats: {
+    damageReduction: 0.14,
+    maxHP: 100,
+    hpRegen: 0.01
+  },
+  buyPrice: 1500,
+  sellPrice: 375,
+  shopAvailable: true,
+  dropOnly: false,
+  emoji: "🐍"
+}
+```
+
+#### Mire Mother's Carapace (Rare) - Boss Drop
+```javascript
+{
+  id: "armor_shadowmire_rare_01",
+  name: "Mire Mother's Carapace",
+  description: "Hardened shell from the ancient swamp guardian. Seems to regenerate on its own.",
+  type: "armor",
+  rarity: "rare",
+  zone: "shadowmire",
+  requiredLevel: 28,
+  stats: {
+    damageReduction: 0.18,
+    maxHP: 150,
+    hpRegen: 0.015
+  },
+  buyPrice: 4000,
+  sellPrice: 1000,
+  shopAvailable: false,
+  dropOnly: true,
+  emoji: "🐚"
 }
 ```
 
@@ -741,6 +882,76 @@
 }
 ```
 
+### Armor
+
+#### Mountain Guard Plate (Common)
+```javascript
+{
+  id: "armor_ironhold_common_01",
+  name: "Mountain Guard Plate",
+  description: "Standard issue for Ironhold's mountain defenders. Heavy but reliable.",
+  type: "armor",
+  rarity: "common",
+  zone: "ironhold",
+  requiredLevel: 30,
+  stats: {
+    damageReduction: 0.12,
+    maxHP: 100
+  },
+  buyPrice: 1800,
+  sellPrice: 450,
+  shopAvailable: true,
+  dropOnly: false,
+  emoji: "🛡️"
+}
+```
+
+#### Dwarven Forgemail (Uncommon)
+```javascript
+{
+  id: "armor_ironhold_uncommon_01",
+  name: "Dwarven Forgemail",
+  description: "Crafted in the ancient forges. Each ring is individually tempered.",
+  type: "armor",
+  rarity: "uncommon",
+  zone: "ironhold",
+  requiredLevel: 38,
+  stats: {
+    damageReduction: 0.16,
+    maxHP: 180,
+    hpRegen: 0.012
+  },
+  buyPrice: 4500,
+  sellPrice: 1125,
+  shopAvailable: true,
+  dropOnly: false,
+  emoji: "⚙️"
+}
+```
+
+#### Grimstone's Chassis (Rare) - Boss Drop
+```javascript
+{
+  id: "armor_ironhold_rare_01",
+  name: "Grimstone's Chassis",
+  description: "The outer shell of the mountain golem. Nearly indestructible stone-metal alloy.",
+  type: "armor",
+  rarity: "rare",
+  zone: "ironhold",
+  requiredLevel: 42,
+  stats: {
+    damageReduction: 0.22,
+    maxHP: 280,
+    hpRegen: 0.015
+  },
+  buyPrice: 12000,
+  sellPrice: 3000,
+  shopAvailable: false,
+  dropOnly: true,
+  emoji: "🗿"
+}
+```
+
 ---
 
 ## Zone 5: Emberfell Wastes
@@ -898,6 +1109,77 @@
   },
   buyPrice: 24000,
   sellPrice: 6000,
+  shopAvailable: false,
+  dropOnly: true,
+  emoji: "🔥"
+}
+```
+
+### Armor
+
+#### Ashweave Robes (Common)
+```javascript
+{
+  id: "armor_emberfell_common_01",
+  name: "Ashweave Robes",
+  description: "Woven from volcanic fibers. Provides surprising protection from heat and claws.",
+  type: "armor",
+  rarity: "common",
+  zone: "emberfell",
+  requiredLevel: 45,
+  stats: {
+    damageReduction: 0.14,
+    maxHP: 150
+  },
+  buyPrice: 5000,
+  sellPrice: 1250,
+  shopAvailable: true,
+  dropOnly: false,
+  emoji: "👘"
+}
+```
+
+#### Magma Forged Plate (Uncommon)
+```javascript
+{
+  id: "armor_emberfell_uncommon_01",
+  name: "Magma Forged Plate",
+  description: "Armor tempered in liquid rock. The heat never fully leaves the metal.",
+  type: "armor",
+  rarity: "uncommon",
+  zone: "emberfell",
+  requiredLevel: 52,
+  stats: {
+    damageReduction: 0.18,
+    maxHP: 250,
+    hpRegen: 0.015
+  },
+  buyPrice: 12000,
+  sellPrice: 3000,
+  shopAvailable: true,
+  dropOnly: false,
+  emoji: "🌋"
+}
+```
+
+#### Pyrax's Mantle (Rare) - Boss Drop
+```javascript
+{
+  id: "armor_emberfell_rare_01",
+  name: "Pyrax's Mantle",
+  description: "The Flamelord's own hide, still smoldering with eternal fire.",
+  type: "armor",
+  rarity: "rare",
+  zone: "emberfell",
+  requiredLevel: 57,
+  stats: {
+    damageReduction: 0.24,
+    maxHP: 380,
+    hpRegen: 0.018,
+    critChance: 0.05
+  },
+  buyPrice: 30000,
+  sellPrice: 7500,
   shopAvailable: false,
   dropOnly: true,
   emoji: "🔥"
@@ -1064,6 +1346,77 @@
   shopAvailable: false,
   dropOnly: true,
   emoji: "💙"
+}
+```
+
+### Armor
+
+#### Frostweave Cloak (Common)
+```javascript
+{
+  id: "armor_frostpeak_common_01",
+  name: "Frostweave Cloak",
+  description: "Woven from enchanted snowflakes. Keeps you warm while chilling your enemies.",
+  type: "armor",
+  rarity: "common",
+  zone: "frostpeak",
+  requiredLevel: 60,
+  stats: {
+    damageReduction: 0.16,
+    maxHP: 220
+  },
+  buyPrice: 12000,
+  sellPrice: 3000,
+  shopAvailable: true,
+  dropOnly: false,
+  emoji: "❄️"
+}
+```
+
+#### Avalanche Armor (Uncommon)
+```javascript
+{
+  id: "armor_frostpeak_uncommon_01",
+  name: "Avalanche Armor",
+  description: "Forged from glacial metal. Heavy as a mountain, cold as death.",
+  type: "armor",
+  rarity: "uncommon",
+  zone: "frostpeak",
+  requiredLevel: 68,
+  stats: {
+    damageReduction: 0.20,
+    maxHP: 350,
+    hpRegen: 0.018
+  },
+  buyPrice: 30000,
+  sellPrice: 7500,
+  shopAvailable: true,
+  dropOnly: false,
+  emoji: "🏔️"
+}
+```
+
+#### Glacielle's Embrace (Rare) - Boss Drop
+```javascript
+{
+  id: "armor_frostpeak_rare_01",
+  name: "Glacielle's Embrace",
+  description: "The Winter Queen's own armor. Those who wear it feel neither pain nor fear.",
+  type: "armor",
+  rarity: "rare",
+  zone: "frostpeak",
+  requiredLevel: 72,
+  stats: {
+    damageReduction: 0.26,
+    maxHP: 500,
+    hpRegen: 0.020,
+    skillCooldown: 0.10
+  },
+  buyPrice: 75000,
+  sellPrice: 18750,
+  shopAvailable: false,
+  dropOnly: true,
+  emoji: "👑"
 }
 ```
 
@@ -1297,6 +1650,102 @@
   },
   buyPrice: 1250000,
   sellPrice: 312500,
+  shopAvailable: false,
+  dropOnly: true,
+  emoji: "👑"
+}
+```
+
+### Armor
+
+#### Voidtouched Vestments (Common)
+```javascript
+{
+  id: "armor_voidrift_common_01",
+  name: "Voidtouched Vestments",
+  description: "Robes woven from void threads. Reality seems uncertain around you.",
+  type: "armor",
+  rarity: "common",
+  zone: "voidrift",
+  requiredLevel: 75,
+  stats: {
+    damageReduction: 0.18,
+    maxHP: 320
+  },
+  buyPrice: 30000,
+  sellPrice: 7500,
+  shopAvailable: true,
+  dropOnly: false,
+  emoji: "🌑"
+}
+```
+
+#### Entropy Plate (Uncommon)
+```javascript
+{
+  id: "armor_voidrift_uncommon_01",
+  name: "Entropy Plate",
+  description: "Armor that exists in multiple states simultaneously. Attacks sometimes pass right through.",
+  type: "armor",
+  rarity: "uncommon",
+  zone: "voidrift",
+  requiredLevel: 85,
+  stats: {
+    damageReduction: 0.22,
+    maxHP: 480,
+    hpRegen: 0.020
+  },
+  buyPrice: 75000,
+  sellPrice: 18750,
+  shopAvailable: true,
+  dropOnly: false,
+  emoji: "🔮"
+}
+```
+
+#### Abyssal Guardian (Rare)
+```javascript
+{
+  id: "armor_voidrift_rare_01",
+  name: "Abyssal Guardian",
+  description: "Forged from pure void essence. The darkness protects its own.",
+  type: "armor",
+  rarity: "rare",
+  zone: "voidrift",
+  requiredLevel: 92,
+  stats: {
+    damageReduction: 0.28,
+    maxHP: 650,
+    hpRegen: 0.022,
+    skillCooldown: 0.12
+  },
+  buyPrice: 180000,
+  sellPrice: 45000,
+  shopAvailable: false,
+  dropOnly: true,
+  emoji: "🛡️"
+}
+```
+
+#### Xal'theron's Mantle (Legendary) - Final Boss Drop
+```javascript
+{
+  id: "armor_voidrift_legendary_01",
+  name: "Xal'theron's Mantle",
+  description: "The physical form of the Void King's power. You are now the master of nothingness.",
+  type: "armor",
+  rarity: "legendary",
+  zone: "voidrift",
+  requiredLevel: 100,
+  stats: {
+    damageReduction: 0.35,
+    maxHP: 1000,
+    hpRegen: 0.025,
+    skillCooldown: 0.20,
+    skillEnergyCost: 0.15
+  },
+  buyPrice: 1500000,
+  sellPrice: 375000,
   shopAvailable: false,
   dropOnly: true,
   emoji: "👑"

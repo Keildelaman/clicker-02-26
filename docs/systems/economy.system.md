@@ -60,6 +60,106 @@ function calculateMonsterGold(monster, level, player) {
 
 ### 1. Equipment (Shop)
 
+#### Shop Rotation System
+
+The shop offers a **rotating selection** of items, not all items at once:
+
+```javascript
+const SHOP_CONFIG = {
+  // How many items shown per category
+  slotsPerCategory: {
+    weapon: 3,      // 3 weapons available at a time
+    armor: 2,       // 2 armor pieces available
+    accessory: 3    // 3 accessories available
+  },
+
+  // Refresh timing
+  refreshInterval: 600000,  // 10 minutes real-time
+  refreshOnZoneChange: true,
+
+  // Rarity weights (what appears in shop)
+  rarityWeights: {
+    common: 40,
+    uncommon: 35,
+    rare: 20,
+    epic: 5,
+    legendary: 0    // Legendaries are drop-only!
+  }
+};
+```
+
+#### Shop Refresh
+
+```
+┌─────────────────────────────────────────┐
+│ ← Back        SHOP           💰 1,234   │
+├─────────────────────────────────────────┤
+│  [⚔️ Weapons]  [🛡️ Armor]  [💍 Access]  │
+├─────────────────────────────────────────┤
+│                                         │
+│  Today's Selection:        ⏱️ 8:42      │ ← Timer until refresh
+│                                         │
+│  🗡️ Hunter's Blade (Uncommon)    125g   │
+│  🪓 Iron Axe (Common)            50g    │
+│  ⚔️ Duelist's Rapier (Rare)     300g    │
+│                                         │
+│  ─────────────────────────────────────  │
+│                                         │
+│        [🔄 REFRESH NOW - 50g]           │ ← Pay to reroll shop
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+#### Shop Mechanics
+
+| Feature | Behavior |
+|---------|----------|
+| Auto-refresh | Every 10 minutes |
+| Zone refresh | New items when entering new zone |
+| Manual refresh | Pay gold (zone base price) to reroll |
+| Rarity limits | Epic rare, Legendary never in shop |
+| Level filter | Only shows items ≤ player level + 5 |
+
+#### Shop Item Selection
+
+```javascript
+function generateShopItems(zone, playerLevel) {
+  const zoneItems = getAllItems().filter(i =>
+    i.zone === zone.id &&
+    i.shopAvailable === true &&
+    i.requiredLevel <= playerLevel + 5
+  );
+
+  const selected = [];
+
+  for (const type of ['weapon', 'armor', 'accessory']) {
+    const typeItems = zoneItems.filter(i => i.type === type);
+    const count = SHOP_CONFIG.slotsPerCategory[type];
+
+    // Weighted random selection by rarity
+    for (let i = 0; i < count && typeItems.length > 0; i++) {
+      const item = weightedRandomSelect(typeItems, SHOP_CONFIG.rarityWeights);
+      selected.push(item);
+      typeItems.splice(typeItems.indexOf(item), 1); // No duplicates
+    }
+  }
+
+  return selected;
+}
+```
+
+#### Manual Refresh Cost
+
+| Zone | Refresh Cost |
+|------|--------------|
+| Whisperwood | 25g |
+| Dustwind | 100g |
+| Shadowmire | 250g |
+| Ironhold | 750g |
+| Emberfell | 2,000g |
+| Frostpeak | 5,000g |
+| Voidrift | 12,500g |
+
 **Pricing Formula:**
 ```javascript
 function calculateItemPrice(zone, rarity) {

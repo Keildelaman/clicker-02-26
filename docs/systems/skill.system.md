@@ -99,12 +99,127 @@ At milestone levels, players CHOOSE which skill to unlock:
 | 75 | Void Touch | 25,000g |
 | 90 | Transcendence | 50,000g |
 
-### Buying Skipped Skills
+### Buying Unchosen Skills
 
-Skills not chosen at milestone can be purchased later:
-- Available in Skills screen under "Locked Skills"
-- Cost increases based on how long you wait
-- All skills eventually accessible, but choices matter early
+When you reach a milestone and pick one skill, the other becomes "unchosen":
+
+```
+┌─────────────────────────────────────────┐
+│          SKILLS - LOCKED               │
+├─────────────────────────────────────────┤
+│                                         │
+│  These skills can be purchased:         │
+│                                         │
+│  ┌─────────────────────────────────┐    │
+│  │ 🔥 Berserk Rage      🔒 LOCKED  │    │
+│  │ You chose Execute at Lv 10     │    │
+│  │ ─────────────────────────────── │    │
+│  │ [BUY FOR 500g]                  │    │
+│  └─────────────────────────────────┘    │
+│                                         │
+│  ┌─────────────────────────────────┐    │
+│  │ 🛡️ Iron Skin         🔒 LOCKED  │    │
+│  │ You chose Heal at Lv 5          │    │
+│  │ ─────────────────────────────── │    │
+│  │ [BUY FOR 150g]                  │    │
+│  └─────────────────────────────────┘    │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+**Key Points:**
+- Available in Skills screen under "Locked Skills" tab
+- Cost is fixed (shown in unlock schedule table)
+- No time penalty - same price whenever you buy
+- Once bought, skill is unlocked permanently
+
+---
+
+## Skill Management
+
+### Swapping Equipped Skills
+
+Players can swap skills **anytime outside of active combat**:
+
+```javascript
+const SKILL_SWAP_RULES = {
+  // When can you swap?
+  allowedDuring: ['idle', 'waiting', 'shop', 'skills_screen'],
+  blockedDuring: ['combat', 'monster_attacking', 'boss_fight'],
+
+  // Cost to swap
+  swapCost: 0,  // Free to swap
+
+  // Cooldown after swap
+  swapCooldown: 0  // No cooldown
+};
+```
+
+**How to Swap:**
+1. Open Skills screen
+2. Tap an equipped skill slot
+3. Choose from your unlocked skills
+4. Skill is immediately equipped
+
+### Skill Choice Reroll (Optional Feature)
+
+At milestone level-ups, you can **reroll** your skill choices once:
+
+```
+┌─────────────────────────────────────────┐
+│         ⭐ LEVEL 10 REACHED! ⭐          │
+│                                         │
+│      Choose your new skill:             │
+│                                         │
+│  ┌─────────────────────────────────┐    │
+│  │ ⚔️ EXECUTE                       │    │
+│  │              [CHOOSE]           │    │
+│  └─────────────────────────────────┘    │
+│                                         │
+│  ┌─────────────────────────────────┐    │
+│  │ 🔥 BERSERK RAGE                  │    │
+│  │              [CHOOSE]           │    │
+│  └─────────────────────────────────┘    │
+│                                         │
+│  ─────────────────────────────────────  │
+│  [🔄 REROLL - 100g] (1 reroll left)    │
+│                                         │
+│  Note: Unchosen skill costs 500g later  │
+└─────────────────────────────────────────┘
+```
+
+**Reroll Rules:**
+- 1 free reroll per milestone (optional)
+- Additional rerolls cost gold (milestone level × 10)
+- Reroll gives 2 NEW random skills from the same tier
+- All skills are balanced, so reroll is for preference not power
+
+### What If All Skills Unlocked?
+
+Once you've unlocked all skills (through choices + purchases):
+- No more choice modals appear at milestones
+- Level up just grants stats (HP, attack)
+- Focus shifts to upgrading existing skills
+- Endgame: All skills at max level
+
+```javascript
+function checkSkillMilestone(player, level) {
+  const milestone = SKILL_MILESTONES[level];
+  if (!milestone) return; // No milestone at this level
+
+  // Check if both skills already unlocked
+  const skill1Unlocked = player.skills[milestone.choice1]?.unlocked;
+  const skill2Unlocked = player.skills[milestone.choice2]?.unlocked;
+
+  if (skill1Unlocked && skill2Unlocked) {
+    // Both already unlocked - skip choice modal
+    showToast("All skills at this milestone already unlocked!");
+    return;
+  }
+
+  showSkillChoiceModal(milestone);
+}
+```
 
 ---
 
