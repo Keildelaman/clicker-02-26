@@ -95,8 +95,7 @@ window.DEBUG = {
     emit('gold:earned', { amount: n, total: state.player.gold });
   },
   giveXP: (n) => {
-    // Simulate a monster kill with the given XP to trigger proper level-up logic
-    emit('combat:monsterKilled', { goldReward: 0, xpReward: n });
+    progression.grantXP(n);
   },
   setHP: (n) => {
     state.player.hp = Math.max(0, Math.min(n, state.player.maxHP));

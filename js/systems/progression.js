@@ -25,8 +25,9 @@ const MILESTONES = {
 
 /**
  * Grant XP and handle level-ups with overflow.
+ * Exported for DEBUG use — normal flow goes through combat:monsterKilled event.
  */
-function grantXP(xpReward) {
+export function grantXP(xpReward) {
   const p = getPlayer();
 
   if (p.level >= MAX_PLAYER_LEVEL) return;
