@@ -173,55 +173,88 @@
 .toast--warning { background: var(--toast-warning); color: #333; }
 .toast--error   { background: var(--toast-error); color: white; }
 
-/* === Level-Up Banner (non-blocking, top of screen) === */
-.level-banner {
+/* === Level-Up Modal (non-blocking, floating card) === */
+.level-modal-container {
   position: fixed;
-  top: 0;
+  top: 80px;
   left: 0;
   right: 0;
   z-index: 100;
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-sm) var(--spacing-md);
-  background: linear-gradient(135deg, #1a1400 0%, #332800 100%);
-  border-bottom: 2px solid var(--gold-color);
-  box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
   pointer-events: none;
-  transform: translateY(-100%);
   opacity: 0;
-  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+  transform: scale(0.8) translateY(-20px);
+  transition: opacity 0.4s ease-out, transform 0.4s ease-out;
 }
 
-.level-banner--visible {
-  transform: translateY(0);
+.level-modal-container--visible {
   opacity: 1;
+  transform: scale(1) translateY(0);
 }
 
-.level-banner--exit {
-  transform: translateY(-100%);
+.level-modal-container--exit {
   opacity: 0;
+  transform: scale(0.9) translateY(-10px);
+  transition: opacity 0.5s ease-in, transform 0.5s ease-in;
 }
 
-.level-banner__title {
+.level-modal {
+  background: linear-gradient(135deg, #1a1400 0%, #2a2000 50%, #1a1400 100%);
+  border: 2px solid var(--gold-color);
+  border-radius: 12px;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  max-width: 280px;
+  width: 90%;
+  text-align: center;
+  box-shadow:
+    0 0 30px rgba(255, 215, 0, 0.25),
+    0 8px 32px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 215, 0, 0.15);
+}
+
+.level-modal__title {
   font-size: var(--font-size-lg);
   font-weight: 800;
   color: var(--gold-color);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: var(--spacing-xs);
   animation: bounce-in 0.4s ease-out both;
+  animation-delay: 100ms;
 }
 
-.level-banner__level {
-  font-size: var(--font-size-xl);
+.level-modal__level {
+  font-size: 32px;
   font-weight: 800;
   color: var(--color-text);
+  margin-bottom: var(--spacing-md);
   animation: bounce-in 0.4s ease-out both;
-  animation-delay: 150ms;
+  animation-delay: 300ms;
 }
 
-.level-banner__stats {
-  font-size: var(--font-size-xs);
+.level-modal__stats {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.level-modal__stat {
+  font-size: var(--font-size-sm);
   color: var(--color-text-dim);
   animation: fade-in-up 0.3s ease-out both;
-  animation-delay: 300ms;
+  animation-delay: 500ms;
+}
+
+.level-modal__stat:nth-child(2) {
+  animation-delay: 600ms;
+}
+
+.level-modal__stat:nth-child(3) {
+  animation-delay: 700ms;
+}
+
+.level-modal__stat--highlight {
+  color: var(--hp-healthy);
+  font-weight: 600;
 }

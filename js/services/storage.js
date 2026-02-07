@@ -12,11 +12,26 @@ import { getPlayer } from '../core/game-state.js';
 import { emit } from '../core/event-bus.js';
 
 let autoSaveTimer = null;
+let savingDisabled = false;
+
+/**
+ * Clear saved game data and disable further saves.
+ * Prevents beforeunload from re-saving during reload.
+ */
+export function clearSave() {
+  savingDisabled = true;
+  if (autoSaveTimer) {
+    clearInterval(autoSaveTimer);
+    autoSaveTimer = null;
+  }
+  localStorage.removeItem(SAVE_KEY);
+}
 
 /**
  * Save current player state to localStorage.
  */
 export function saveGame() {
+  if (savingDisabled) return;
   try {
     const player = getPlayer();
     if (!player) return;

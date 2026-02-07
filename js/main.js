@@ -10,7 +10,7 @@
 import { state } from './core/game-state.js';
 import { on, emit } from './core/event-bus.js';
 import { registerTickSystem, startLoop } from './core/game-loop.js';
-import { loadGame, saveGame, setupAutoSave } from './services/storage.js';
+import { loadGame, saveGame, setupAutoSave, clearSave } from './services/storage.js';
 
 // Systems
 import * as player from './systems/player.js';
@@ -110,5 +110,9 @@ window.DEBUG = {
       state.currentMonster.currentHealth = 0;
       combat.handleClick();
     }
+  },
+  reset: () => {
+    clearSave();
+    location.reload();
   }
 };
