@@ -42,7 +42,7 @@ if (savedData) {
 // 2. Initialize systems (inject cross-system dependencies)
 player.init();
 monster.init();
-combat.init({ getComputedStats: player.getComputedStats });
+combat.init({ getComputedStats: player.getComputedStats, damagePlayer: health.damagePlayer });
 health.init();
 energy.init();
 progression.init();
@@ -136,6 +136,12 @@ window.DEBUG = {
   setEnergy: (n) => {
     state.player.energy = Math.max(0, Math.min(n, state.player.maxEnergy));
     emit('energy:changed', { energy: state.player.energy, maxEnergy: state.player.maxEnergy });
+  },
+  damagePlayer: (n) => {
+    health.damagePlayer(n, 'debug');
+  },
+  killPlayer: () => {
+    health.damagePlayer(state.player.maxHP * 2, 'debug');
   },
   killMonster: () => {
     if (state.currentMonster) {

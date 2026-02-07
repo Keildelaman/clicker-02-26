@@ -2,7 +2,7 @@
  * monsters.data.js - Monster Definitions
  *
  * Static data for all monsters.
- * Phase 0+1: Whisperwood monsters only (4 normal + boss definition).
+ * Whisperwood monsters: 1 normal, 1 swift, 1 armored, 1 regenerating, 1 shielded, 1 aggressive + boss.
  *
  * @see docs/data/monsters.data.md
  */
@@ -37,14 +37,15 @@ export const MONSTERS = {
   whisperwood_boar: {
     id: 'whisperwood_boar',
     name: 'Wild Boar',
-    description: 'A territorial beast with sharp tusks.',
+    description: 'A territorial beast with sharp tusks. Its wounds close unnaturally fast.',
     zone: 'whisperwood',
-    type: 'normal',
+    type: 'regenerating',
     isBoss: false,
     levelMin: 2,
     levelMax: 6,
     baseHealth: 35,
     healthPerLevel: 8,
+    regenRate: 0.02,
     goldMin: 3,
     goldMax: 6,
     goldPerLevel: 1,
@@ -63,14 +64,16 @@ export const MONSTERS = {
   whisperwood_wolf: {
     id: 'whisperwood_wolf',
     name: 'Timber Wolf',
-    description: 'A cunning predator of the forest.',
+    description: 'A cunning predator of the forest. Quick to flee if not slain fast.',
     zone: 'whisperwood',
-    type: 'normal',
+    type: 'swift',
     isBoss: false,
     levelMin: 4,
     levelMax: 8,
     baseHealth: 45,
     healthPerLevel: 10,
+    escapeTimer: 8000,
+    escapeDamage: 0.05,
     goldMin: 4,
     goldMax: 8,
     goldPerLevel: 2,
@@ -90,14 +93,15 @@ export const MONSTERS = {
   whisperwood_treant: {
     id: 'whisperwood_treant',
     name: 'Grumpy Treant',
-    description: 'An awakened tree spirit, cranky from centuries of standing in one place.',
+    description: 'An awakened tree spirit with bark like iron. Weak hits barely scratch it.',
     zone: 'whisperwood',
-    type: 'normal',
+    type: 'armored',
     isBoss: false,
     levelMin: 6,
     levelMax: 10,
     baseHealth: 70,
     healthPerLevel: 15,
+    armorValue: 3,
     goldMin: 5,
     goldMax: 10,
     goldPerLevel: 2,
@@ -111,6 +115,66 @@ export const MONSTERS = {
     emoji: '\u{1F333}',
     deathEmoji: '\u{1FAB5}',
     spawnWeight: 20
+  },
+
+  whisperwood_wisp: {
+    id: 'whisperwood_wisp',
+    name: 'Glimmering Wisp',
+    description: 'A shimmering ball of forest magic, cloaked in a protective barrier.',
+    zone: 'whisperwood',
+    type: 'shielded',
+    isBoss: false,
+    levelMin: 3,
+    levelMax: 7,
+    baseHealth: 30,
+    healthPerLevel: 6,
+    shieldPercent: 0.30,
+    shieldDamageReduction: 0.50,
+    goldMin: 4,
+    goldMax: 7,
+    goldPerLevel: 1,
+    xpMin: 11,
+    xpMax: 16,
+    xpPerLevel: 3,
+    lootTable: [
+      { itemId: 'accessory_whisperwood_common_01', chance: 0.10 },
+      { itemId: 'accessory_whisperwood_uncommon_01', chance: 0.04 }
+    ],
+    emoji: '\u{1F4AB}',
+    deathEmoji: '\u2728',
+    spawnWeight: 20
+  },
+
+  whisperwood_bear: {
+    id: 'whisperwood_bear',
+    name: 'Thornback Bear',
+    description: 'A ferocious bear that swipes at anyone who gets too close. Watch for its attacks!',
+    zone: 'whisperwood',
+    type: 'aggressive',
+    isBoss: false,
+    levelMin: 5,
+    levelMax: 9,
+    baseHealth: 55,
+    healthPerLevel: 12,
+    mechanics: {
+      attackCycle: 5000,
+      warningDuration: 1000,
+      attackDuration: 800,
+      damagePercent: 0.08
+    },
+    goldMin: 5,
+    goldMax: 9,
+    goldPerLevel: 2,
+    xpMin: 14,
+    xpMax: 20,
+    xpPerLevel: 3,
+    lootTable: [
+      { itemId: 'weapon_whisperwood_uncommon_01', chance: 0.08 },
+      { itemId: 'weapon_whisperwood_rare_01', chance: 0.01 }
+    ],
+    emoji: '\u{1F43B}',
+    deathEmoji: '\u{1F480}',
+    spawnWeight: 15
   },
 
   boss_mossback: {

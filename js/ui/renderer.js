@@ -45,6 +45,13 @@ export function init() {
   on('item:unequipped', markDirty);
   on('shop:refreshed', markDirty);
   on('loot:itemDropped', markDirty);
+  on('player:damaged', markDirty);
+  on('player:died', markDirty);
+  on('player:respawned', markDirty);
+  on('combat:shieldBroken', markDirty);
+  on('combat:phaseChange', markDirty);
+  on('combat:monsterEscaped', markDirty);
+  on('combat:monsterRegenerated', markDirty);
 
   // Initial render
   statsUI.renderInitial();

@@ -44,6 +44,16 @@ export const ENERGY_REGEN_PER_SECOND = 2;
 // Death Penalties
 export const DEATH_GOLD_LOSS = 0.5;
 export const DEATH_LEVEL_MILESTONE = 10;
+export const DEATH_RESPAWN_DELAY = 1500; // ms before respawn after death
+
+// Monster Type Defaults
+export const ESCAPE_DAMAGE_DEFAULT = 0.05;   // 5% of player maxHP
+export const ESCAPE_TIMER_DEFAULT = 8000;     // ms
+export const SHIELD_PERCENT_DEFAULT = 0.30;   // 30% of monster HP
+export const SHIELD_DR_DEFAULT = 0.50;        // 50% damage reduction while shielded
+export const REGEN_RATE_DEFAULT = 0.03;       // 3% maxHP per second
+export const ARMOR_VALUE_DEFAULT = 15;
+export const AGGRESSIVE_DAMAGE_DEFAULT = 0.10; // 10% of player maxHP
 
 // Economy Defaults
 export const STARTING_GOLD = 0;

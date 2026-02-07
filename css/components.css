@@ -125,6 +125,126 @@
   animation: death-fade 0.3s ease-out forwards;
 }
 
+/* === Monster Type Badge === */
+.monster-type-badge {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  z-index: 5;
+}
+
+.monster-type-badge--swift {
+  background: rgba(255, 167, 38, 0.2);
+  color: var(--swift-color);
+  border: 1px solid var(--swift-color);
+}
+
+.monster-type-badge--aggressive {
+  background: rgba(239, 83, 80, 0.2);
+  color: var(--aggressive-color);
+  border: 1px solid var(--aggressive-color);
+}
+
+.monster-type-badge--armored {
+  background: rgba(158, 158, 158, 0.2);
+  color: var(--armor-color);
+  border: 1px solid var(--armor-color);
+}
+
+.monster-type-badge--shielded {
+  background: rgba(66, 165, 245, 0.2);
+  color: var(--shield-color);
+  border: 1px solid var(--shield-color);
+}
+
+.monster-type-badge--regenerating {
+  background: rgba(102, 187, 106, 0.2);
+  color: var(--regen-color);
+  border: 1px solid var(--regen-color);
+}
+
+/* === Monster Escape Timer (Swift) === */
+.monster-escape-timer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--swift-color);
+  margin-bottom: var(--spacing-xs);
+}
+
+.monster-escape-timer--urgent {
+  color: var(--hp-critical);
+  animation: pulse-bar 0.5s infinite;
+}
+
+/* === Monster Shield Bar === */
+.monster-shield {
+  width: 100%;
+  max-width: 280px;
+  margin: 0 auto var(--spacing-xs);
+}
+
+.monster-shield__text {
+  text-align: center;
+  font-size: var(--font-size-xs);
+  color: var(--shield-color);
+  margin-top: 2px;
+}
+
+.shield-fill {
+  background: var(--shield-color);
+}
+
+/* === Aggressive Phase Indicators === */
+.monster-area--warning {
+  border: 2px solid var(--aggressive-warning);
+  animation: warning-pulse 0.8s infinite;
+}
+
+.monster-area--attacking {
+  border: 2px solid var(--aggressive-attack);
+  background: rgba(244, 67, 54, 0.08);
+}
+
+.monster-area--attacking::after {
+  content: 'STOP!';
+  position: absolute;
+  bottom: var(--spacing-lg);
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--aggressive-attack);
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  animation: pulse-bar 0.4s infinite;
+  z-index: 5;
+}
+
+/* === Regenerating Pulse === */
+.monster-area--regen-pulse .progress-bar__fill.hp-fill {
+  box-shadow: 0 0 6px var(--regen-color);
+}
+
+/* === Player Damage Flash === */
+.player-bars--damaged {
+  animation: damage-flash 0.3s ease-out;
+}
+
+/* === Death Flash === */
+.game-container--death-flash {
+  animation: death-screen-flash 0.5s ease-out;
+}
+
 /* === Damage Numbers === */
 .damage-number {
   position: absolute;

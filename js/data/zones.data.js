@@ -16,7 +16,7 @@ export const ZONES = {
     levelMin: 1,
     levelMax: 10,
     unlockCondition: { type: 'default' },
-    monsters: ['whisperwood_sprite', 'whisperwood_boar', 'whisperwood_wolf', 'whisperwood_treant'],
+    monsters: ['whisperwood_sprite', 'whisperwood_boar', 'whisperwood_wolf', 'whisperwood_treant', 'whisperwood_wisp', 'whisperwood_bear'],
     bossId: 'boss_mossback',
     theme: {
       primary: '#2d5a27',

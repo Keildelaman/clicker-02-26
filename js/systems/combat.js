@@ -1,11 +1,15 @@
 /**
  * combat.js - Combat System
  *
- * Owns: Click handling, damage calculation, combat state machine.
+ * Owns: Click handling, damage calculation, combat state machine,
+ *       monster type mechanics (armored, shielded, aggressive, swift, regen).
  * Listens to: (click events wired by main.js)
- * Emits: combat:click, combat:monsterKilled, combat:dyingComplete
+ * Emits: combat:click, combat:monsterKilled, combat:dyingComplete,
+ *        combat:shieldBroken, combat:phaseChange, combat:monsterEscaped,
+ *        combat:monsterRegenerated
  *
- * Dependencies injected via init(): getComputedStats from player system.
+ * Dependencies injected via init(): getComputedStats from player system,
+ *   damagePlayer from health system.
  *
  * @see docs/systems/combat.system.md
  */
@@ -15,7 +19,15 @@ import { state, getPlayer } from '../core/game-state.js';
 import { MIN_DAMAGE, DEATH_ANIMATION_DURATION } from '../data/constants.js';
 
 let dyingTimer = 0;
-let computeStats = null; // Injected dependency
+let computeStats = null;    // Injected dependency
+let hurtPlayer = null;      // Injected dependency: damagePlayer(amount, source)
+
+/**
+ * Check if a monster has a given type (supports multi-type "type1+type2").
+ */
+function hasType(monster, typeName) {
+  return monster.type.split('+').includes(typeName);
+}
 
 /**
  * Handle a player click/tap on the monster area.
@@ -28,7 +40,23 @@ export function handleClick() {
   const stats = computeStats();
   const monster = state.currentMonster;
 
-  // Calculate damage
+  // Aggressive check: clicking during attack phase hurts the player
+  if (hasType(monster, 'aggressive') && monster.attackPhase === 'attacking') {
+    const dmgPct = (monster.mechanics && monster.mechanics.damagePercent) || 0.10;
+    const dmg = Math.floor(player.maxHP * dmgPct);
+    hurtPlayer(dmg, 'aggressive');
+
+    emit('combat:click', {
+      damage: 0,
+      isCrit: false,
+      blocked: true,
+      monsterHP: monster.currentHealth,
+      monsterMaxHP: monster.maxHealth
+    });
+    return;
+  }
+
+  // Calculate base damage
   const isCrit = Math.random() < stats.critChance;
   let damage = stats.attack;
   if (isCrit) {
@@ -36,8 +64,28 @@ export function handleClick() {
   }
   damage = Math.max(damage, MIN_DAMAGE);
 
-  // Apply damage to monster
-  monster.currentHealth -= damage;
+  // Armored: flat damage reduction
+  if (hasType(monster, 'armored')) {
+    const effectiveArmor = Math.max(monster.armorValue - stats.armorPen, 0);
+    damage = Math.max(damage - effectiveArmor, MIN_DAMAGE);
+  }
+
+  // Shielded: absorb into shield with DR, overflow to HP
+  if (hasType(monster, 'shielded') && monster.shield > 0) {
+    const reducedDamage = Math.max(Math.floor(damage * (1 - monster.shieldDR)), MIN_DAMAGE);
+
+    if (reducedDamage >= monster.shield) {
+      const overflow = reducedDamage - monster.shield;
+      monster.shield = 0;
+      monster.currentHealth -= overflow;
+      emit('combat:shieldBroken', { monster });
+    } else {
+      monster.shield -= reducedDamage;
+    }
+  } else {
+    // Normal HP damage (including armored after reduction)
+    monster.currentHealth -= damage;
+  }
 
   // Update statistics
   player.statistics.totalClicks++;
@@ -50,8 +98,11 @@ export function handleClick() {
   emit('combat:click', {
     damage,
     isCrit,
+    blocked: false,
     monsterHP: monster.currentHealth,
-    monsterMaxHP: monster.maxHealth
+    monsterMaxHP: monster.maxHealth,
+    shieldHP: monster.shield,
+    shieldMaxHP: monster.maxShield
   });
 
   // Check for kill
@@ -81,19 +132,126 @@ function killMonster() {
 }
 
 /**
+ * Handle monster escape (swift type): no rewards, player takes damage.
+ */
+function handleMonsterEscape(monster) {
+  const player = getPlayer();
+  const dmg = Math.floor(player.maxHP * monster.escapeDamage);
+  hurtPlayer(dmg, 'swift_escape');
+
+  emit('combat:monsterEscaped', { monster });
+
+  // Despawn and schedule next
+  state.currentMonster = null;
+  state.combatState = 'waiting';
+  emit('combat:dyingComplete', {});
+}
+
+/**
+ * Update aggressive monster phase cycling.
+ * Cycle: safe → warning → attacking → safe (repeat)
+ */
+function updateAggressive(monster, dt) {
+  const m = monster.mechanics;
+  if (!m) return;
+
+  const cycle = m.attackCycle || 4000;
+  const warningDur = m.warningDuration || 1500;
+  const attackDur = m.attackDuration || 500;
+  const safeDur = cycle - warningDur - attackDur;
+
+  monster.attackTimer += dt * 1000; // track in ms
+
+  const pos = monster.attackTimer % cycle;
+  let newPhase;
+
+  if (pos < safeDur) {
+    newPhase = 'safe';
+  } else if (pos < safeDur + warningDur) {
+    newPhase = 'warning';
+  } else {
+    newPhase = 'attacking';
+  }
+
+  if (newPhase !== monster.attackPhase) {
+    monster.attackPhase = newPhase;
+    emit('combat:phaseChange', { phase: newPhase, monster });
+  }
+}
+
+/**
+ * Update swift monster escape timer.
+ */
+function updateSwift(monster, dt) {
+  monster.escapeTimer -= dt * 1000; // track in ms
+
+  emit('combat:escapeTimerTick', {
+    remaining: monster.escapeTimer,
+    max: monster.maxEscapeTimer
+  });
+
+  if (monster.escapeTimer <= 0) {
+    handleMonsterEscape(monster);
+  }
+}
+
+/**
+ * Update regenerating monster HP recovery.
+ */
+function updateRegenerating(monster, dt) {
+  if (monster.currentHealth < monster.maxHealth) {
+    const regenAmount = monster.regenRate * monster.maxHealth * dt;
+    monster.currentHealth = Math.min(
+      monster.currentHealth + regenAmount,
+      monster.maxHealth
+    );
+    emit('combat:monsterRegenerated', {
+      monsterHP: monster.currentHealth,
+      monsterMaxHP: monster.maxHealth
+    });
+  }
+}
+
+/**
+ * Run per-tick type updates for the active monster.
+ */
+function updateMonsterTypes(monster, dt) {
+  // Frozen monsters skip type updates
+  if (monster.frozen) return;
+
+  const types = monster.type.split('+');
+
+  for (const t of types) {
+    if (t === 'aggressive') updateAggressive(monster, dt);
+    if (t === 'swift') updateSwift(monster, dt);
+    if (t === 'regenerating') updateRegenerating(monster, dt);
+    // armored and shielded have no tick behavior
+  }
+}
+
+/**
  * @param {Object} deps - Injected dependencies
  * @param {Function} deps.getComputedStats - Returns player computed stats
+ * @param {Function} deps.damagePlayer - Deals damage to the player
  */
 export function init(deps = {}) {
   computeStats = deps.getComputedStats;
+  hurtPlayer = deps.damagePlayer;
 }
 
 export function update(dt) {
+  // Dying animation timer
   if (state.combatState === 'dying') {
     dyingTimer -= dt;
     if (dyingTimer <= 0) {
       state.currentMonster = null;
       emit('combat:dyingComplete', {});
     }
+    return;
+  }
+
+  // Active combat: run monster type updates
+  if (state.combatState === 'active' && state.currentMonster) {
+    updateMonsterTypes(state.currentMonster, dt);
   }
 }

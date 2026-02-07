@@ -87,6 +87,39 @@
   }
 }
 
+@keyframes warning-pulse {
+  0%, 100% {
+    border-color: var(--aggressive-warning);
+    box-shadow: 0 0 0 rgba(255, 152, 0, 0);
+  }
+  50% {
+    border-color: var(--aggressive-attack);
+    box-shadow: 0 0 12px rgba(255, 152, 0, 0.3);
+  }
+}
+
+@keyframes damage-flash {
+  0% { background-color: rgba(244, 67, 54, 0.3); }
+  100% { background-color: transparent; }
+}
+
+@keyframes death-screen-flash {
+  0% { filter: brightness(0.3) saturate(0); }
+  50% { filter: brightness(0.5) saturate(0.3); }
+  100% { filter: none; }
+}
+
+@keyframes shield-break {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.1); }
+  100% { opacity: 0; transform: scale(0.8); }
+}
+
+@keyframes regen-glow {
+  0%, 100% { box-shadow: 0 0 0 rgba(102, 187, 106, 0); }
+  50% { box-shadow: 0 0 8px rgba(102, 187, 106, 0.4); }
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

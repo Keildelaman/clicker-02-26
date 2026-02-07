@@ -22,10 +22,28 @@
 
       <!-- Monster Area (tappable) -->
       <div class="monster-area" id="monster-area" role="button" tabindex="0" aria-label="Attack monster">
+
+        <!-- Type Badge -->
+        <div class="monster-type-badge" id="monster-type-badge" style="display: none;"></div>
+
+        <!-- Escape Timer (swift) -->
+        <div class="monster-escape-timer" id="monster-escape-timer" style="display: none;">
+          <span class="monster-escape-timer__icon">&#x23F1;&#xFE0F;</span>
+          <span class="monster-escape-timer__text" id="escape-timer-text">8.0s</span>
+        </div>
+
         <div class="monster-display">
           <span class="monster-display__emoji" id="monster-emoji">...</span>
           <div class="monster-display__name" id="monster-name">Loading...</div>
           <div class="monster-display__level" id="monster-level"></div>
+        </div>
+
+        <!-- Monster Shield Bar (shielded type) -->
+        <div class="monster-shield" id="monster-shield" style="display: none;">
+          <div class="progress-bar" id="monster-shield-bar">
+            <div class="progress-bar__fill shield-fill" id="monster-shield-fill" style="width: 100%"></div>
+          </div>
+          <div class="monster-shield__text" id="monster-shield-text">0 / 0</div>
         </div>
 
         <!-- Monster HP Bar -->

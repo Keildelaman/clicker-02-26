@@ -38,6 +38,16 @@
   /* Damage Numbers */
   --damage-normal: #ffffff;
   --damage-crit: #ff4444;
+  --damage-player: #ff6666;
+
+  /* Monster Type Colors */
+  --shield-color: #42a5f5;
+  --armor-color: #9e9e9e;
+  --regen-color: #66bb6a;
+  --swift-color: #ffa726;
+  --aggressive-color: #ef5350;
+  --aggressive-warning: #ff9800;
+  --aggressive-attack: #f44336;
 
   /* Toast Colors */
   --toast-success: #4caf50;

@@ -13,7 +13,7 @@ export const state = {
 
   // === TRANSIENT (not saved, reset on load) ===
   currentMonster: null,
-  combatState: 'idle',  // 'idle' | 'spawning' | 'active' | 'dying' | 'waiting'
+  combatState: 'idle',  // 'idle' | 'spawning' | 'active' | 'dying' | 'waiting' | 'dead'
 
   // UI state
   currentScreen: 'combat'
