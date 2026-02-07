@@ -1,0 +1,51 @@
+/**
+ * renderer.js - Master Render Coordinator
+ *
+ * Batches all UI updates into a single rAF pass.
+ * Systems mark dirty when state changes; renderer reads state and writes DOM.
+ *
+ * @see docs/architecture/architecture.md
+ */
+
+import { on } from '../core/event-bus.js';
+import * as combatUI from './combat-ui.js';
+import * as statsUI from './stats-ui.js';
+import * as barsUI from './bars-ui.js';
+import * as toasts from './toasts.js';
+
+let dirty = true;
+
+export function markDirty() {
+  dirty = true;
+}
+
+export function init() {
+  // Initialize all UI modules
+  combatUI.init();
+  statsUI.init();
+  barsUI.init();
+  toasts.init();
+
+  // Mark dirty on state-changing events
+  on('combat:click', markDirty);
+  on('combat:monsterSpawned', markDirty);
+  on('combat:monsterKilled', markDirty);
+  on('gold:earned', markDirty);
+  on('xp:gained', markDirty);
+  on('player:levelUp', markDirty);
+  on('player:hpChanged', markDirty);
+  on('energy:changed', markDirty);
+
+  // Initial render
+  statsUI.renderInitial();
+  barsUI.renderInitial();
+}
+
+export function update(dt) {
+  if (!dirty) return;
+  dirty = false;
+
+  // Batched DOM writes happen via event-driven sub-renderers.
+  // Each UI module subscribes to its own events and updates.
+  // This update() is a safety net for any state that needs periodic refresh.
+}

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#2d5a27">
+  <meta name="description" content="Realms of Clickoria - A mobile-first clicker RPG">
+  <title>Realms of Clickoria</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="game-container">
+
+    <!-- Header -->
+    <header class="game-header">
+      <span class="game-header__zone" id="zone-name">Whisperwood Glen</span>
+      <span class="game-header__level" id="level-display">Lv. 1</span>
+    </header>
+
+    <!-- Combat Screen -->
+    <main class="combat-screen" id="combat-screen">
+
+      <!-- Monster Area (tappable) -->
+      <div class="monster-area" id="monster-area" role="button" tabindex="0" aria-label="Attack monster">
+        <div class="monster-display">
+          <span class="monster-display__emoji" id="monster-emoji">...</span>
+          <div class="monster-display__name" id="monster-name">Loading...</div>
+          <div class="monster-display__level" id="monster-level"></div>
+        </div>
+
+        <!-- Monster HP Bar -->
+        <div class="monster-hp">
+          <div class="progress-bar" id="monster-hp-bar">
+            <div class="progress-bar__fill hp-fill" id="monster-hp-fill" style="width: 100%"></div>
+          </div>
+          <div class="monster-hp__text" id="monster-hp-text">0 / 0</div>
+        </div>
+
+        <!-- Floating Damage Numbers -->
+        <div class="damage-container" id="damage-container"></div>
+      </div>
+
+      <!-- Player Resource Bars -->
+      <div class="player-bars">
+        <div class="player-bar">
+          <span class="player-bar__icon">&#x2764;&#xFE0F;</span>
+          <div class="progress-bar">
+            <div class="progress-bar__fill hp-fill" id="player-hp-fill" style="width: 100%"></div>
+          </div>
+          <span class="player-bar__text" id="player-hp-text">100 / 100</span>
+        </div>
+        <div class="player-bar">
+          <span class="player-bar__icon">&#x26A1;</span>
+          <div class="progress-bar">
+            <div class="progress-bar__fill energy-fill" id="energy-fill" style="width: 0%"></div>
+          </div>
+          <span class="player-bar__text" id="energy-text">0 / 100</span>
+        </div>
+      </div>
+
+      <!-- Bottom Section -->
+      <div class="bottom-section">
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+          <div class="stat-item">
+            <span class="stat-item__icon">&#x2694;&#xFE0F;</span>
+            <span class="stat-item__value" id="attack-display">5</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-item__icon">&#x1F4B0;</span>
+            <span class="stat-item__value stat-item__value--gold" id="gold-display">0</span>
+          </div>
+        </div>
+
+        <!-- XP Bar -->
+        <div class="xp-section">
+          <div class="xp-label">
+            <span>XP</span>
+            <span id="xp-text">0 / 100</span>
+          </div>
+          <div class="progress-bar progress-bar--sm">
+            <div class="progress-bar__fill xp-fill" id="xp-fill" style="width: 0%"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Navigation -->
+      <nav class="game-nav">
+        <button class="nav-btn nav-btn--active" data-screen="combat">
+          <span class="nav-btn__icon">&#x2694;&#xFE0F;</span>
+          <span>Combat</span>
+        </button>
+        <button class="nav-btn" data-screen="shop" disabled>
+          <span class="nav-btn__icon">&#x1F6D2;</span>
+          <span>Shop</span>
+        </button>
+        <button class="nav-btn" data-screen="skills" disabled>
+          <span class="nav-btn__icon">&#x2B50;</span>
+          <span>Skills</span>
+        </button>
+        <button class="nav-btn" data-screen="zones" disabled>
+          <span class="nav-btn__icon">&#x1F5FA;&#xFE0F;</span>
+          <span>Zones</span>
+        </button>
+      </nav>
+
+    </main>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

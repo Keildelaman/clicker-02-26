@@ -67,55 +67,71 @@ docs/
 
 ```
 clicker-02-26/
-├── index.html              # Single entry point
+├── index.html                  # Single entry point
 │
 ├── css/
-│   ├── styles.css          # Main (imports others)
-│   ├── variables.css       # CSS custom properties
-│   ├── components.css      # Reusable styles
-│   ├── animations.css      # @keyframes
-│   └── responsive.css      # Media queries
+│   ├── styles.css              # Main (imports all via @import)
+│   ├── variables.css           # CSS custom properties (colors, spacing, zone themes)
+│   ├── layout.css              # Page structure, screen containers
+│   ├── components.css          # Buttons, bars, cards, badges
+│   ├── animations.css          # All @keyframes definitions
+│   └── responsive.css          # Media queries only
 │
 ├── js/
-│   ├── main.js             # Bootstrap & game loop
+│   ├── main.js                 # Bootstrap: init state, wire events, start loop
 │   │
-│   ├── core/               # Game logic modules
-│   │   ├── game.js         # State & main loop
-│   │   ├── player.js       # Player mutations
-│   │   ├── combat.js       # Combat logic
-│   │   ├── monsters.js     # Monster management
-│   │   ├── items.js        # Equipment logic
-│   │   ├── zones.js        # Zone management
-│   │   ├── skills.js       # Skill system
-│   │   └── shop.js         # Purchase logic
+│   ├── core/                   # Framework-level modules
+│   │   ├── event-bus.js        # Pub/sub event system (system communication)
+│   │   ├── game-state.js       # Central state store + controlled mutation
+│   │   └── game-loop.js        # requestAnimationFrame loop with delta time
 │   │
-│   ├── data/               # Static data (from docs)
-│   │   ├── zones.data.js
-│   │   ├── monsters.data.js
-│   │   ├── items.data.js
-│   │   └── skills.data.js
+│   ├── systems/                # Game logic (one file per system, event-driven)
+│   │   ├── combat.js           # Click handling, damage calc, monster type behavior
+│   │   ├── player.js           # Stat computation, derived stats, equipment
+│   │   ├── monster.js          # Spawning, selection, instance creation, type init
+│   │   ├── skills.js           # Unlock, upgrade, MP, cooldowns, effects, buffs
+│   │   ├── health.js           # HP regen, damage taken, death, shield absorption
+│   │   ├── energy.js           # Energy gain/spend, regen
+│   │   ├── loot.js             # Drop rolls, item granting, boss loot
+│   │   ├── progression.js      # XP, level-up, milestones
+│   │   ├── economy.js          # Gold, shop rotation, buy/sell, pricing
+│   │   ├── zones.js            # Zone travel, unlock, boss access
+│   │   ├── ascension.js        # Prestige, vault, permanent bonuses
+│   │   └── tutorial.js         # Onboarding, tips, first-time bonuses
 │   │
-│   ├── ui/                 # View layer
-│   │   ├── ui.js           # Main UI controller
-│   │   ├── screens.js      # Screen management
-│   │   ├── combat-ui.js    # Combat rendering
-│   │   ├── shop-ui.js      # Shop interface
-│   │   ├── skills-ui.js    # Skills interface
-│   │   ├── modals.js       # Modal dialogs
-│   │   └── notifications.js# Toast system
+│   ├── data/                   # Static game data (pure objects, no imports)
+│   │   ├── constants.js        # All magic numbers from _INDEX.md
+│   │   ├── balance.js          # Scaling formulas (XP curve, damage, HP)
+│   │   ├── zones.data.js       # 7 zone definitions
+│   │   ├── monsters.data.js    # 35 monster definitions
+│   │   ├── items.data.js       # 96 item definitions
+│   │   └── skills.data.js      # 25 skill definitions
 │   │
-│   ├── services/           # Utilities
-│   │   ├── storage.js      # Save/load
-│   │   └── utils.js        # Helpers
+│   ├── ui/                     # View layer (DOM only, reads state, never writes)
+│   │   ├── renderer.js         # Master render coordinator (batched updates)
+│   │   ├── screens.js          # Screen show/hide management
+│   │   ├── combat-ui.js        # Monster display, damage numbers, attack phases
+│   │   ├── bars-ui.js          # HP bar, energy bar, XP bar, shield bar
+│   │   ├── stats-ui.js         # Stats display (attack, gold, crit)
+│   │   ├── skills-ui.js        # Skill bar, cooldown timers, skill screen
+│   │   ├── shop-ui.js          # Shop, inventory, vault screens
+│   │   ├── zones-ui.js         # Zone selection modal
+│   │   ├── modals.js           # Level-up, death, boss intro, ascension modals
+│   │   ├── toasts.js           # Toast notification queue
+│   │   └── animations.js       # JS-driven animations (damage floats, particles)
 │   │
-│   └── config/
-│       └── constants.js    # All magic numbers
+│   └── services/               # Utilities
+│       ├── storage.js          # Save/load/export/import + migration
+│       └── utils.js            # randomInt, formatGold, clamp, etc.
 │
-├── assets/                 # Future: images, sounds
-├── docs/                   # Specifications (READ FIRST!)
-├── CLAUDE.md               # This file
-├── GAME_DESIGN.md          # High-level vision
-└── README.md               # Public readme
+├── assets/
+│   ├── images/                 # Future: sprites, icons
+│   └── sounds/                 # Future: sound effects
+│
+├── docs/                       # Specifications (READ FIRST!)
+├── CLAUDE.md                   # This file
+├── GAME_DESIGN.md              # High-level vision
+└── README.md                   # Public readme
 ```
 
 ---
@@ -166,10 +182,13 @@ export function giveGold(amount) { }
 
 ### Architecture Rules
 
-1. **UI layer never modifies game state** - Only reads and displays
-2. **Game state is the single source of truth** - Player object
-3. **No circular dependencies** - One-way data flow
-4. **DOM is touched only in ui/ folder** - Separation of concerns
+1. **Event-driven communication** - Systems talk via EventBus, never import each other
+2. **UI layer never modifies game state** - Only reads and displays
+3. **Game state is the single source of truth** - Central GameState store
+4. **No circular dependencies** - Systems → EventBus → UI (one-way)
+5. **DOM is touched only in ui/ folder** - Separation of concerns
+6. **Tick-based game loop** - All time-dependent mechanics via single rAF loop
+7. **Systems own their domain** - 12 isolated systems (combat, player, skills, etc.)
 
 ---
 
@@ -201,6 +220,13 @@ export function giveGold(amount) { }
 3. Add to zone's monster list in `js/data/zones.data.js`
 4. Verify balance with `docs/balance/curves.balance.md`
 
+### Add New Monster Type
+1. Add type definition in `js/data/monsters.data.js`
+2. Add `initMonsterType` case in `js/systems/monster.js`
+3. Add tick update case in `js/systems/combat.js`
+4. Add damage handling case in `js/systems/combat.js`
+5. Add visual indicator in `js/ui/combat-ui.js`
+
 ### Add New Item
 1. Define in `docs/data/items.data.md` following schema
 2. Add to `js/data/items.data.js`
@@ -210,14 +236,21 @@ export function giveGold(amount) { }
 ### Add New Skill
 1. Define in `docs/data/skills.data.md` following schema
 2. Add to `js/data/skills.data.js`
-3. Add effect handler in `js/core/skills.js`
-4. Add UI button in `js/ui/skills-ui.js`
+3. Add effect handler in `js/systems/skills.js` EFFECT_HANDLERS map
+4. UI auto-generates from skill data (no manual UI changes needed)
 
 ### Add New Zone
 1. Define in `docs/data/zones.data.md` following schema
-2. Add monsters, items, boss
+2. Add zone + monsters + items in respective data files
 3. Update previous zone's boss unlock condition
 4. Add theme colors to CSS variables
+
+### Add New System
+1. Create `js/systems/new-system.js` following the system contract
+2. Subscribe to relevant events in `init()`
+3. Register for tick updates if time-dependent
+4. Wire up in `js/main.js`
+5. Add UI module if it needs a screen
 
 ---
 

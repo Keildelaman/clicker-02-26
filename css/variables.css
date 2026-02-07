@@ -1,0 +1,65 @@
+/* variables.css - CSS Custom Properties */
+
+:root {
+  /* Zone: Whisperwood (default) */
+  --zone-primary: #2d5a27;
+  --zone-secondary: #1a3518;
+  --zone-accent: #90EE90;
+
+  /* UI Colors */
+  --color-bg: #111318;
+  --color-surface: #1a1d24;
+  --color-surface-raised: #22262e;
+  --color-border: #2a2e36;
+  --color-text: #e8e8e8;
+  --color-text-dim: #8a8f98;
+
+  /* HP Colors */
+  --hp-healthy: #4caf50;
+  --hp-caution: #ff9800;
+  --hp-critical: #f44336;
+
+  /* Energy */
+  --energy-color: #2196f3;
+
+  /* XP */
+  --xp-color: #9c27b0;
+
+  /* Gold */
+  --gold-color: #ffd700;
+
+  /* Damage Numbers */
+  --damage-normal: #ffffff;
+  --damage-crit: #ff4444;
+
+  /* Toast Colors */
+  --toast-success: #4caf50;
+  --toast-info: #2196f3;
+  --toast-warning: #ff9800;
+  --toast-error: #f44336;
+
+  /* Typography */
+  --font-main: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-size-xs: 11px;
+  --font-size-sm: 13px;
+  --font-size-base: 15px;
+  --font-size-lg: 18px;
+  --font-size-xl: 24px;
+  --font-size-xxl: 36px;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+
+  /* Sizing */
+  --touch-target-min: 44px;
+  --bar-height: 20px;
+  --bar-height-sm: 14px;
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+}

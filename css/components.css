@@ -1,0 +1,174 @@
+/* components.css - Reusable Components */
+
+/* === Progress Bars === */
+.progress-bar {
+  width: 100%;
+  height: var(--bar-height);
+  background: var(--color-surface-raised);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar--sm {
+  height: var(--bar-height-sm);
+}
+
+.progress-bar__fill {
+  height: 100%;
+  border-radius: 10px;
+  transition: width var(--transition-normal);
+  position: relative;
+}
+
+/* HP bar fills */
+.hp-fill {
+  background: var(--hp-healthy);
+}
+
+.hp-fill--caution {
+  background: var(--hp-caution);
+}
+
+.hp-fill--critical {
+  background: var(--hp-critical);
+  animation: pulse-bar 1s infinite;
+}
+
+/* XP bar fill */
+.xp-fill {
+  background: var(--xp-color);
+}
+
+/* Energy bar fill */
+.energy-fill {
+  background: var(--energy-color);
+}
+
+/* === Player Resource Bars === */
+.player-bars {
+  flex-shrink: 0;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.player-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.player-bar__icon {
+  font-size: var(--font-size-base);
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+}
+
+.player-bar__text {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-dim);
+  white-space: nowrap;
+  min-width: 70px;
+  text-align: right;
+}
+
+/* === Monster Display === */
+.monster-display {
+  text-align: center;
+}
+
+.monster-display__emoji {
+  font-size: 64px;
+  line-height: 1;
+  display: block;
+  margin-bottom: var(--spacing-sm);
+  transition: transform var(--transition-fast), opacity var(--transition-normal);
+}
+
+.monster-display__name {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.monster-display__level {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-dim);
+  margin-bottom: var(--spacing-md);
+}
+
+/* Monster HP */
+.monster-hp {
+  width: 100%;
+  max-width: 280px;
+  margin: 0 auto;
+}
+
+.monster-hp__text {
+  text-align: center;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-dim);
+  margin-top: var(--spacing-xs);
+}
+
+/* Monster area states */
+.monster-area--spawning .monster-display__emoji {
+  animation: spawn-in 0.2s ease-out;
+}
+
+.monster-area--dead .monster-display__emoji {
+  animation: death-fade 0.3s ease-out forwards;
+}
+
+/* === Damage Numbers === */
+.damage-number {
+  position: absolute;
+  color: var(--damage-normal);
+  font-size: 22px;
+  font-weight: 800;
+  pointer-events: none;
+  animation: float-up 0.8s ease-out forwards;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  top: 40%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+.damage-number--crit {
+  color: var(--damage-crit);
+  font-size: 30px;
+  animation: float-up-crit 0.8s ease-out forwards;
+}
+
+/* === Toasts === */
+.toast {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: 8px;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: auto;
+}
+
+.toast--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast--exiting {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.toast--success { background: var(--toast-success); color: white; }
+.toast--info    { background: var(--toast-info); color: white; }
+.toast--warning { background: var(--toast-warning); color: #333; }
+.toast--error   { background: var(--toast-error); color: white; }

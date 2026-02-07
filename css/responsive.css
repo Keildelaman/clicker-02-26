@@ -1,0 +1,45 @@
+/* responsive.css - Media Queries Only */
+
+/* Tablet */
+@media (min-width: 768px) {
+  .game-container {
+    max-width: 480px;
+    border-left: 1px solid var(--color-border);
+    border-right: 1px solid var(--color-border);
+  }
+
+  .monster-display__emoji {
+    font-size: 80px;
+  }
+
+  .damage-number {
+    font-size: 26px;
+  }
+
+  .damage-number--crit {
+    font-size: 36px;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  body {
+    background: #0a0b0d;
+  }
+
+  .game-container {
+    border-radius: 12px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    height: calc(100dvh - 40px);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+  }
+
+  .monster-area {
+    cursor: pointer;
+  }
+
+  .monster-area:hover {
+    background: rgba(255, 255, 255, 0.02);
+  }
+}
