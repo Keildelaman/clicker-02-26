@@ -19,9 +19,15 @@ import * as combat from './systems/combat.js';
 import * as health from './systems/health.js';
 import * as energy from './systems/energy.js';
 import * as progression from './systems/progression.js';
+import * as economy from './systems/economy.js';
+import * as loot from './systems/loot.js';
+
+// Data
+import { ITEMS } from './data/items.data.js';
 
 // UI
 import * as renderer from './ui/renderer.js';
+import * as shopUI from './ui/shop-ui.js';
 
 // --- Boot ---
 
@@ -40,6 +46,8 @@ combat.init({ getComputedStats: player.getComputedStats });
 health.init();
 energy.init();
 progression.init();
+economy.init();
+loot.init();
 
 // 3. Initialize UI
 renderer.init();
@@ -50,6 +58,7 @@ registerTickSystem(monster.update);
 registerTickSystem(health.update);
 registerTickSystem(energy.update);
 registerTickSystem(progression.update);
+registerTickSystem(economy.update);
 registerTickSystem(renderer.update);
 
 // 5. Wire DOM events
@@ -69,10 +78,14 @@ document.getElementById('monster-area').addEventListener('keydown', (e) => {
 on('combat:monsterKilled', ({ goldReward }) => {
   const p = state.player;
 
+  // Apply goldFind bonus from equipment
+  const stats = player.getComputedStats();
+  const finalGold = Math.floor(goldReward * (1 + stats.goldFind));
+
   // Grant gold
-  p.gold += goldReward;
-  p.totalGoldEarned += goldReward;
-  emit('gold:earned', { amount: goldReward, total: p.gold });
+  p.gold += finalGold;
+  p.totalGoldEarned += finalGold;
+  emit('gold:earned', { amount: finalGold, total: p.gold });
 
   // Auto-save on kill milestones
   if (p.statistics.totalKills % 10 === 0) {
@@ -80,14 +93,33 @@ on('combat:monsterKilled', ({ goldReward }) => {
   }
 });
 
-// 7. Set up auto-save
+// 7. Screen navigation
+function showScreen(name) {
+  document.getElementById('combat-screen').style.display = name === 'combat' ? 'flex' : 'none';
+  document.getElementById('shop-screen').style.display = name === 'shop' ? 'flex' : 'none';
+  document.querySelector('.game-header').style.display = name === 'combat' ? '' : 'none';
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.classList.toggle('nav-btn--active', btn.dataset.screen === name);
+  });
+  state.currentScreen = name;
+  if (name === 'shop') shopUI.onShow();
+}
+
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  if (btn.disabled) return;
+  btn.addEventListener('click', () => {
+    showScreen(btn.dataset.screen);
+  });
+});
+
+// 8. Set up auto-save
 setupAutoSave();
 
-// 8. Start the game
+// 9. Start the game
 startLoop();
 monster.spawnNext();
 
-// 9. Debug tools (dev only)
+// 10. Debug tools (dev only)
 window.DEBUG = {
   state: () => JSON.parse(JSON.stringify(state)),
   giveGold: (n) => {
@@ -110,6 +142,19 @@ window.DEBUG = {
       state.currentMonster.currentHealth = 0;
       combat.handleClick();
     }
+  },
+  giveItem: (id) => {
+    if (!ITEMS[id]) { console.error('Unknown item:', id); return; }
+    state.player.inventory.push(id);
+    emit('loot:itemDropped', { itemId: id, item: ITEMS[id] });
+  },
+  refreshShop: () => {
+    economy.refreshShop(false);
+  },
+  listItems: () => {
+    console.table(Object.values(ITEMS).map(i => ({
+      id: i.id, name: i.name, type: i.type, rarity: i.rarity, zone: i.zone
+    })));
   },
   reset: () => {
     clearSave();

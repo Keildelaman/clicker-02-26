@@ -17,6 +17,7 @@ import {
   MAX_ENERGY, SAVE_VERSION
 } from '../data/constants.js';
 import { maxHPAtLevel, baseAttackAtLevel } from '../data/balance.js';
+import { ITEMS } from '../data/items.data.js';
 
 // --- Stat Cache ---
 let statCache = null;
@@ -24,6 +25,25 @@ let cacheValid = false;
 
 export function invalidateStatCache() {
   cacheValid = false;
+}
+
+/**
+ * Sum a single stat across all equipped items.
+ * @param {Object} player - Player state
+ * @param {string} statName - Stat key to sum
+ * @returns {number} Total bonus from equipment
+ */
+function getEquipmentBonus(player, statName) {
+  let total = 0;
+  for (const slot of ['weapon', 'armor', 'accessory']) {
+    const itemId = player.equipment[slot];
+    if (!itemId) continue;
+    const item = ITEMS[itemId];
+    if (item && item.stats[statName]) {
+      total += item.stats[statName];
+    }
+  }
+  return total;
 }
 
 /**
@@ -40,30 +60,30 @@ export function getComputedStats() {
     critChance: computeTotalCritChance(player),
     critDamage: computeTotalCritDamage(player),
     maxHP: computeMaxHP(player),
-    hpRegen: BASE_HP_REGEN,
-    goldFind: 0,
-    xpBonus: 0,
-    damageReduction: 0,
-    armorPen: 0
+    hpRegen: BASE_HP_REGEN + getEquipmentBonus(player, 'hpRegen'),
+    goldFind: getEquipmentBonus(player, 'goldFind'),
+    xpBonus: getEquipmentBonus(player, 'xpBonus'),
+    damageReduction: getEquipmentBonus(player, 'damageReduction'),
+    armorPen: getEquipmentBonus(player, 'armorPen')
   };
   cacheValid = true;
   return statCache;
 }
 
 function computeTotalAttack(player) {
-  return baseAttackAtLevel(player.level);
+  return baseAttackAtLevel(player.level) + getEquipmentBonus(player, 'attack');
 }
 
 function computeTotalCritChance(player) {
-  return BASE_CRIT_CHANCE;
+  return BASE_CRIT_CHANCE + getEquipmentBonus(player, 'critChance');
 }
 
 function computeTotalCritDamage(player) {
-  return BASE_CRIT_MULTIPLIER;
+  return BASE_CRIT_MULTIPLIER + getEquipmentBonus(player, 'critDamage');
 }
 
 function computeMaxHP(player) {
-  return maxHPAtLevel(player.level);
+  return maxHPAtLevel(player.level) + getEquipmentBonus(player, 'maxHP');
 }
 
 /**
@@ -155,6 +175,8 @@ export function createNewPlayer() {
 
 export function init() {
   on('player:levelUp', invalidateStatCache);
+  on('item:equipped', invalidateStatCache);
+  on('item:unequipped', invalidateStatCache);
 }
 
 export function update(dt) {

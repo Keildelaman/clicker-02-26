@@ -343,11 +343,12 @@ maxHP = 100 + (level - 1) * 10 + bonuses
 
 ## Before You Code
 
-1. **Read the relevant spec** in `docs/`
-2. **Check _INDEX.md** for global constants
-3. **Follow coding-standards.md** for style
-4. **Match architecture.md** for module structure
-5. **Test on mobile** (primary target)
+1. **Check `docs/ROADMAP.md`** for the current phase and what to build next
+2. **Read the relevant spec** in `docs/`
+3. **Check _INDEX.md** for global constants
+4. **Follow coding-standards.md** for style
+5. **Match architecture.md** for module structure
+6. **Test on mobile** (primary target)
 
 ---
 

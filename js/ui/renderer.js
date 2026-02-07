@@ -13,6 +13,7 @@ import * as statsUI from './stats-ui.js';
 import * as barsUI from './bars-ui.js';
 import * as toasts from './toasts.js';
 import * as modals from './modals.js';
+import * as shopUI from './shop-ui.js';
 
 let dirty = true;
 
@@ -27,6 +28,7 @@ export function init() {
   barsUI.init();
   toasts.init();
   modals.init();
+  shopUI.init();
 
   // Mark dirty on state-changing events
   on('combat:click', markDirty);
@@ -37,6 +39,12 @@ export function init() {
   on('player:levelUp', markDirty);
   on('player:hpChanged', markDirty);
   on('energy:changed', markDirty);
+  on('item:purchased', markDirty);
+  on('item:sold', markDirty);
+  on('item:equipped', markDirty);
+  on('item:unequipped', markDirty);
+  on('shop:refreshed', markDirty);
+  on('loot:itemDropped', markDirty);
 
   // Initial render
   statsUI.renderInitial();

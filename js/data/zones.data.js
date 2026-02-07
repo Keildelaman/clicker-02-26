@@ -24,7 +24,17 @@ export const ZONES = {
       accent: '#90EE90'
     },
     emoji: '\u{1F332}',
-    backgroundCSS: 'linear-gradient(180deg, #2d5a27 0%, #1a3518 100%)'
+    backgroundCSS: 'linear-gradient(180deg, #2d5a27 0%, #1a3518 100%)',
+    shopRefreshBase: 25,
+    shopItems: [
+      'weapon_whisperwood_common_01',
+      'weapon_whisperwood_common_02',
+      'weapon_whisperwood_uncommon_01',
+      'accessory_whisperwood_common_01',
+      'accessory_whisperwood_uncommon_01',
+      'armor_whisperwood_common_01',
+      'armor_whisperwood_uncommon_01'
+    ]
   }
 };
 

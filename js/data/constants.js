@@ -77,6 +77,19 @@ export const VAULT_WITHDRAW_COST = 0.25;
 export const SAVE_KEY = 'clickoria_save_v2';
 export const SAVE_VERSION = 2;
 
+// Shop / Economy
+export const SHOP_REFRESH_INTERVAL = 600000; // 10 minutes
+export const SHOP_SLOTS = 3;
+export const SHOP_RARITY_WEIGHTS = {
+  common: 50,
+  uncommon: 35,
+  rare: 12,
+  epic: 3,
+  legendary: 0
+};
+export const SHOP_REFRESH_ESCALATION = 0.5; // +50% per manual refresh
+export const SHOP_REFRESH_MAX_MULT = 5.0;
+
 // Rarity System
 export const RARITIES = {
   common:    { name: 'Common',    color: '#9d9d9d', weight: 70,  statMult: 1.0 },

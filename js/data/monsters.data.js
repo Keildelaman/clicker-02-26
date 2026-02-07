@@ -25,7 +25,10 @@ export const MONSTERS = {
     xpMin: 8,
     xpMax: 12,
     xpPerLevel: 2,
-    lootTable: [],
+    lootTable: [
+      { itemId: 'weapon_whisperwood_common_01', chance: 0.10 },
+      { itemId: 'accessory_whisperwood_common_01', chance: 0.05 }
+    ],
     emoji: '\u{1F9DA}',
     deathEmoji: '\u2728',
     spawnWeight: 30
@@ -48,7 +51,10 @@ export const MONSTERS = {
     xpMin: 10,
     xpMax: 15,
     xpPerLevel: 3,
-    lootTable: [],
+    lootTable: [
+      { itemId: 'weapon_whisperwood_common_01', chance: 0.10 },
+      { itemId: 'weapon_whisperwood_uncommon_01', chance: 0.03 }
+    ],
     emoji: '\u{1F417}',
     deathEmoji: '\u{1F480}',
     spawnWeight: 25
@@ -71,7 +77,11 @@ export const MONSTERS = {
     xpMin: 12,
     xpMax: 18,
     xpPerLevel: 3,
-    lootTable: [],
+    lootTable: [
+      { itemId: 'weapon_whisperwood_common_02', chance: 0.10 },
+      { itemId: 'accessory_whisperwood_uncommon_01', chance: 0.03 },
+      { itemId: 'weapon_whisperwood_rare_01', chance: 0.005 }
+    ],
     emoji: '\u{1F43A}',
     deathEmoji: '\u{1F480}',
     spawnWeight: 25
@@ -94,7 +104,10 @@ export const MONSTERS = {
     xpMin: 15,
     xpMax: 22,
     xpPerLevel: 4,
-    lootTable: [],
+    lootTable: [
+      { itemId: 'accessory_whisperwood_common_01', chance: 0.10 },
+      { itemId: 'weapon_whisperwood_uncommon_01', chance: 0.03 }
+    ],
     emoji: '\u{1F333}',
     deathEmoji: '\u{1FAB5}',
     spawnWeight: 20
@@ -123,7 +136,10 @@ export const MONSTERS = {
       attackDuration: 1200,
       damagePercent: 0.10
     },
-    lootTable: [],
+    lootTable: [
+      { itemId: 'weapon_whisperwood_rare_01', chance: 1.0 },
+      { itemId: 'armor_whisperwood_rare_01', chance: 1.0 }
+    ],
     emoji: '\u{1F332}',
     deathEmoji: '\u{1FAB5}',
     spawnWeight: 0

@@ -11,10 +11,11 @@
 
 import { on, emit } from '../core/event-bus.js';
 import { getPlayer } from '../core/game-state.js';
-import { xpToNextLevel, maxHPAtLevel } from '../data/balance.js';
+import { xpToNextLevel } from '../data/balance.js';
 import { MAX_PLAYER_LEVEL } from '../data/constants.js';
 import { saveGame } from '../services/storage.js';
 import { showToast } from '../ui/toasts.js';
+import { getComputedStats, invalidateStatCache } from './player.js';
 
 const MILESTONES = {
   25: 'Quarter Century! You are a seasoned warrior.',
@@ -53,8 +54,12 @@ function levelUp() {
   // Recalculate XP threshold for next level
   p.xpToNextLevel = xpToNextLevel(p.level);
 
-  // Update max HP and full heal
-  p.maxHP = maxHPAtLevel(p.level);
+  // Invalidate stat cache so computed stats reflect new level
+  invalidateStatCache();
+
+  // Update max HP (includes equipment bonuses) and full heal
+  const stats = getComputedStats();
+  p.maxHP = stats.maxHP;
   p.hp = p.maxHP;
 
   emit('player:levelUp', { newLevel: p.level });

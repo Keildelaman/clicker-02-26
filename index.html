@@ -86,27 +86,51 @@
 
       </div>
 
-      <!-- Navigation -->
-      <nav class="game-nav">
-        <button class="nav-btn nav-btn--active" data-screen="combat">
-          <span class="nav-btn__icon">&#x2694;&#xFE0F;</span>
-          <span>Combat</span>
-        </button>
-        <button class="nav-btn" data-screen="shop" disabled>
-          <span class="nav-btn__icon">&#x1F6D2;</span>
-          <span>Shop</span>
-        </button>
-        <button class="nav-btn" data-screen="skills" disabled>
-          <span class="nav-btn__icon">&#x2B50;</span>
-          <span>Skills</span>
-        </button>
-        <button class="nav-btn" data-screen="zones" disabled>
-          <span class="nav-btn__icon">&#x1F5FA;&#xFE0F;</span>
-          <span>Zones</span>
-        </button>
-      </nav>
-
     </main>
+
+    <!-- Shop Screen -->
+    <section class="shop-screen" id="shop-screen" style="display: none;">
+
+      <!-- Shop Header -->
+      <div class="shop-header">
+        <button class="shop-header__back" id="shop-back-btn">&#x2190;</button>
+        <span class="shop-header__title">Shop</span>
+        <span class="shop-header__gold">&#x1F4B0; <span id="shop-gold-display">0</span></span>
+      </div>
+
+      <!-- Tabs -->
+      <div class="shop-tabs">
+        <button class="shop-tab shop-tab--active" data-tab="shop">Shop</button>
+        <button class="shop-tab" data-tab="inventory">Inventory</button>
+      </div>
+
+      <!-- Shop Content -->
+      <div class="shop-content" id="shop-content"></div>
+
+      <!-- Inventory Content -->
+      <div class="inventory-content" id="inventory-content" style="display: none;"></div>
+
+    </section>
+
+    <!-- Shared Navigation -->
+    <nav class="game-nav">
+      <button class="nav-btn nav-btn--active" data-screen="combat">
+        <span class="nav-btn__icon">&#x2694;&#xFE0F;</span>
+        <span>Combat</span>
+      </button>
+      <button class="nav-btn" data-screen="shop">
+        <span class="nav-btn__icon">&#x1F6D2;</span>
+        <span>Shop</span>
+      </button>
+      <button class="nav-btn" data-screen="skills" disabled>
+        <span class="nav-btn__icon">&#x2B50;</span>
+        <span>Skills</span>
+      </button>
+      <button class="nav-btn" data-screen="zones" disabled>
+        <span class="nav-btn__icon">&#x1F5FA;&#xFE0F;</span>
+        <span>Zones</span>
+      </button>
+    </nav>
 
     <!-- Toast Notifications -->
     <div class="toast-container" id="toast-container" aria-live="polite"></div>

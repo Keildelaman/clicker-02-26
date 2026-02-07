@@ -25,6 +25,9 @@ export function init() {
   on('xp:gained', renderXP);
   on('player:levelUp', renderAll);
   on('combat:monsterSpawned', renderAll);
+  on('player:statsChanged', renderAttack);
+  on('item:equipped', renderAll);
+  on('item:unequipped', renderAll);
 }
 
 function renderAll() {

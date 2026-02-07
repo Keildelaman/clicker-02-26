@@ -28,6 +28,13 @@
   /* Gold */
   --gold-color: #ffd700;
 
+  /* Rarity Colors */
+  --rarity-common: #9d9d9d;
+  --rarity-uncommon: #1eff00;
+  --rarity-rare: #0070dd;
+  --rarity-epic: #a335ee;
+  --rarity-legendary: #ff8000;
+
   /* Damage Numbers */
   --damage-normal: #ffffff;
   --damage-crit: #ff4444;
@@ -55,6 +62,7 @@
   --spacing-xl: 24px;
 
   /* Sizing */
+  --header-height: 44px;
   --touch-target-min: 44px;
   --bar-height: 20px;
   --bar-height-sm: 14px;
