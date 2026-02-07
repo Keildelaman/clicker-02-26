@@ -12,6 +12,7 @@ import * as combatUI from './combat-ui.js';
 import * as statsUI from './stats-ui.js';
 import * as barsUI from './bars-ui.js';
 import * as toasts from './toasts.js';
+import * as modals from './modals.js';
 
 let dirty = true;
 
@@ -25,6 +26,7 @@ export function init() {
   statsUI.init();
   barsUI.init();
   toasts.init();
+  modals.init();
 
   // Mark dirty on state-changing events
   on('combat:click', markDirty);

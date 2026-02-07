@@ -12,10 +12,11 @@
 import { on, emit } from '../core/event-bus.js';
 import { getPlayer } from '../core/game-state.js';
 import {
-  BASE_PLAYER_ATTACK, BASE_CRIT_CHANCE, BASE_CRIT_MULTIPLIER,
-  BASE_PLAYER_HP, HP_PER_LEVEL, BASE_HP_REGEN,
+  BASE_CRIT_CHANCE, BASE_CRIT_MULTIPLIER,
+  BASE_PLAYER_HP, BASE_HP_REGEN,
   MAX_ENERGY, SAVE_VERSION
 } from '../data/constants.js';
+import { maxHPAtLevel, baseAttackAtLevel } from '../data/balance.js';
 
 // --- Stat Cache ---
 let statCache = null;
@@ -50,7 +51,7 @@ export function getComputedStats() {
 }
 
 function computeTotalAttack(player) {
-  return BASE_PLAYER_ATTACK + (player.level - 1);
+  return baseAttackAtLevel(player.level);
 }
 
 function computeTotalCritChance(player) {
@@ -62,7 +63,7 @@ function computeTotalCritDamage(player) {
 }
 
 function computeMaxHP(player) {
-  return BASE_PLAYER_HP + (HP_PER_LEVEL * (player.level - 1));
+  return maxHPAtLevel(player.level);
 }
 
 /**

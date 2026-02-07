@@ -11,7 +11,7 @@
 |-------|------|--------|--------|
 | 0+1 | Skeleton + Click Combat | ✅ Complete | — |
 | 2 | Player Bars & Resources | ✅ Complete | — |
-| 3 | Progression (XP & Leveling) | ⬜ Not Started | — |
+| 3 | Progression (XP & Leveling) | ✅ Complete | — |
 | 4 | Economy & Equipment | ⬜ Not Started | — |
 | 5 | Monster Types (all 6) | ⬜ Not Started | — |
 | 6 | Zones & Bosses | ⬜ Not Started | — |
