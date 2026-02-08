@@ -36,10 +36,10 @@ export const HP_CRITICAL_THRESHOLD = 0.25;
 
 // Energy Defaults
 export const MAX_ENERGY = 100;
-export const ENERGY_PER_CLICK = 5;
-export const ENERGY_ON_KILL = 15;
-export const ENERGY_ON_BOSS_KILL = 50;
-export const ENERGY_REGEN_PER_SECOND = 2;
+export const ENERGY_PER_CLICK = 1;
+export const ENERGY_ON_KILL = 5;
+export const ENERGY_ON_BOSS_KILL = 20;
+export const ENERGY_REGEN_PER_SECOND = 0;
 
 // Death Penalties
 export const DEATH_GOLD_LOSS = 0.5;
@@ -71,6 +71,19 @@ export const XP_GROWTH_RATE = 0.12;
 export const ACTIVE_SKILL_SLOTS = 4;
 export const PASSIVE_SKILL_SLOTS = 3;
 export const BASE_SKILL_MAX_LEVEL = 5;
+
+// Mastery Points
+export const MASTERY_PER_BOSS = 2;
+export const MASTERY_MILESTONES = { 5:3, 10:3, 15:3, 20:3, 30:4, 40:4, 50:5, 60:5, 75:5, 90:5 };
+
+// Skill Unlock Costs by Tier
+export const SKILL_UNLOCK_COSTS = { starter:0, basic:3, utility:4, combat:5, advanced:6, elite:8, master:10 };
+
+// Upgrade Costs (index = levels gained, cost to reach level 2,3,4,5)
+export const SKILL_UPGRADE_COSTS = [1, 2, 3, 4];
+
+// Swap cooldown penalty (50% of skill's cooldown applied on swap-in)
+export const SKILL_SWAP_COOLDOWN_PENALTY = 0.5;
 
 // Ascension Defaults
 export const ASCENSION_DAMAGE_BONUS = 0.05;

@@ -15,6 +15,7 @@ import * as toasts from './toasts.js';
 import * as modals from './modals.js';
 import * as shopUI from './shop-ui.js';
 import * as zonesUI from './zones-ui.js';
+import * as skillsUI from './skills-ui.js';
 
 let dirty = true;
 
@@ -31,6 +32,7 @@ export function init() {
   modals.init();
   shopUI.init();
   zonesUI.init();
+  skillsUI.init();
 
   // Mark dirty on state-changing events
   on('combat:click', markDirty);
@@ -57,6 +59,16 @@ export function init() {
   on('zone:changed', markDirty);
   on('zone:bossDefeated', markDirty);
   on('zone:bossIntro', markDirty);
+  on('skill:used', markDirty);
+  on('skill:unlocked', markDirty);
+  on('skill:upgraded', markDirty);
+  on('skill:equipped', markDirty);
+  on('skill:unequipped', markDirty);
+  on('skill:buffApplied', markDirty);
+  on('skill:buffExpired', markDirty);
+  on('mastery:gained', markDirty);
+  on('skill:directDamage', markDirty);
+  on('skill:effectTriggered', markDirty);
 
   // Initial render
   statsUI.renderInitial();

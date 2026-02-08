@@ -15,6 +15,7 @@ import {
   ENERGY_ON_BOSS_KILL, ENERGY_REGEN_PER_SECOND,
   ENERGY_GAIN_COOLDOWN
 } from '../data/constants.js';
+import { getComputedStats } from './player.js';
 
 // 200ms cooldown between click-based energy gains (in seconds)
 const COOLDOWN_SEC = ENERGY_GAIN_COOLDOWN / 1000;
@@ -31,15 +32,17 @@ function onCombatClick() {
   const player = getPlayer();
   if (player.energy >= MAX_ENERGY) return;
 
-  player.energy = Math.min(player.energy + ENERGY_PER_CLICK, MAX_ENERGY);
+  const mult = getComputedStats().energyGainMult || 1.0;
+  player.energy = Math.min(player.energy + Math.floor(ENERGY_PER_CLICK * mult), MAX_ENERGY);
   timeSinceLastGain = 0;
   emitChanged();
 }
 
 function onMonsterKilled({ isBoss }) {
   const player = getPlayer();
+  const mult = getComputedStats().energyGainMult || 1.0;
   const bonus = isBoss ? ENERGY_ON_BOSS_KILL : ENERGY_ON_KILL;
-  player.energy = Math.min(player.energy + bonus, MAX_ENERGY);
+  player.energy = Math.min(player.energy + Math.floor(bonus * mult), MAX_ENERGY);
   emitChanged();
 }
 

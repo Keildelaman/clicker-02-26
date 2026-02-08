@@ -10,7 +10,7 @@
  */
 
 import { on, emit } from '../core/event-bus.js';
-import { getPlayer } from '../core/game-state.js';
+import { state, getPlayer } from '../core/game-state.js';
 import {
   BASE_CRIT_CHANCE, BASE_CRIT_MULTIPLIER,
   BASE_PLAYER_HP, BASE_HP_REGEN,
@@ -18,6 +18,7 @@ import {
 } from '../data/constants.js';
 import { maxHPAtLevel, baseAttackAtLevel } from '../data/balance.js';
 import { ITEMS } from '../data/items.data.js';
+import { SKILLS } from '../data/skills.data.js';
 
 // --- Stat Cache ---
 let statCache = null;
@@ -47,6 +48,65 @@ function getEquipmentBonus(player, statName) {
 }
 
 /**
+ * Get the bonus value from an equipped passive skill.
+ * @param {Object} player
+ * @param {string} statName - Skill stat field (e.g. 'damage', 'critChance')
+ * @returns {number}
+ */
+function getPassiveSkillBonus(player, statName) {
+  let total = 0;
+  for (const skillId of player.equippedPassiveSkills) {
+    if (!skillId) continue;
+    const skillDef = SKILLS[skillId];
+    if (!skillDef || skillDef.type !== 'passive') continue;
+    if (skillDef.stat !== statName) continue;
+    const skillState = player.skills[skillId];
+    if (!skillState) continue;
+    const levelData = skillDef.levels[skillState.level];
+    if (levelData && levelData.bonus !== undefined) {
+      total += levelData.bonus;
+    }
+  }
+  return total;
+}
+
+/**
+ * Aggregate buff effects from state.activeBuffs.
+ * @returns {Object} Combined buff effects
+ */
+function getBuffEffects() {
+  const effects = {
+    damageMultiplier: 1.0,
+    damageTakenMultiplier: 1.0,
+    critBonus: 0,
+    damageReduction: 0,
+    goldBonus: 0,
+    xpBonus: 0,
+    reflectMultiplier: 0,
+    survivePercent: 0,
+    invulnerable: false,
+    bonusDamage: 0
+  };
+
+  for (const buff of state.activeBuffs) {
+    const e = buff.effects;
+    if (e.damageMultiplier) effects.damageMultiplier *= e.damageMultiplier;
+    if (e.damageTakenMultiplier) effects.damageTakenMultiplier *= e.damageTakenMultiplier;
+    if (e.critBonus) effects.critBonus += e.critBonus;
+    if (e.damageReduction) effects.damageReduction += e.damageReduction;
+    if (e.goldBonus) effects.goldBonus += e.goldBonus;
+    if (e.xpBonus) effects.xpBonus += e.xpBonus;
+    if (e.reflectMultiplier) effects.reflectMultiplier += e.reflectMultiplier;
+    if (e.survivePercent) effects.survivePercent = Math.max(effects.survivePercent, e.survivePercent);
+    if (e.invulnerable) effects.invulnerable = true;
+    if (e.bonusDamage) effects.bonusDamage += e.bonusDamage;
+    if (e.damageBonus) effects.damageMultiplier *= (1 + e.damageBonus);
+  }
+
+  return effects;
+}
+
+/**
  * Get computed player stats (cached).
  * @returns {Object} Computed stats
  */
@@ -54,17 +114,65 @@ export function getComputedStats() {
   if (cacheValid && statCache) return statCache;
 
   const player = getPlayer();
+  const buffFx = getBuffEffects();
+
+  // Base + equipment
+  let attack = computeTotalAttack(player);
+  let critChance = computeTotalCritChance(player);
+  let critDamage = computeTotalCritDamage(player);
+  let maxHP = computeMaxHP(player);
+  let hpRegen = BASE_HP_REGEN + getEquipmentBonus(player, 'hpRegen');
+  let goldFind = getEquipmentBonus(player, 'goldFind');
+  let xpBonus = getEquipmentBonus(player, 'xpBonus');
+  let damageReduction = getEquipmentBonus(player, 'damageReduction');
+  let armorPen = getEquipmentBonus(player, 'armorPen');
+  let energyGainMult = 1.0;
+  let warningBonus = 0;
+
+  // Passive skill bonuses
+  const dmgPassive = getPassiveSkillBonus(player, 'damage');
+  if (dmgPassive) attack = Math.floor(attack * (1 + dmgPassive));
+
+  critChance += getPassiveSkillBonus(player, 'critChance');
+  armorPen += getPassiveSkillBonus(player, 'armorPen');
+
+  const hpPassive = getPassiveSkillBonus(player, 'maxHP');
+  if (hpPassive) maxHP = Math.floor(maxHP * (1 + hpPassive));
+
+  hpRegen += getPassiveSkillBonus(player, 'hpRegen');
+  goldFind += getPassiveSkillBonus(player, 'goldFind');
+  xpBonus += getPassiveSkillBonus(player, 'xpBonus');
+
+  const energyPassive = getPassiveSkillBonus(player, 'energyGain');
+  if (energyPassive) energyGainMult *= (1 + energyPassive);
+
+  warningBonus += getPassiveSkillBonus(player, 'warningTime');
+
+  // Active buff bonuses
+  attack = Math.floor(attack * buffFx.damageMultiplier);
+  critChance += buffFx.critBonus;
+  goldFind += buffFx.goldBonus;
+  xpBonus += buffFx.xpBonus;
+  damageReduction += buffFx.damageReduction;
 
   statCache = {
-    attack: computeTotalAttack(player),
-    critChance: computeTotalCritChance(player),
-    critDamage: computeTotalCritDamage(player),
-    maxHP: computeMaxHP(player),
-    hpRegen: BASE_HP_REGEN + getEquipmentBonus(player, 'hpRegen'),
-    goldFind: getEquipmentBonus(player, 'goldFind'),
-    xpBonus: getEquipmentBonus(player, 'xpBonus'),
-    damageReduction: getEquipmentBonus(player, 'damageReduction'),
-    armorPen: getEquipmentBonus(player, 'armorPen')
+    attack,
+    critChance,
+    critDamage,
+    maxHP,
+    hpRegen,
+    goldFind,
+    xpBonus,
+    damageReduction,
+    armorPen,
+    energyGainMult,
+    warningBonus,
+    damageMultiplier: buffFx.damageMultiplier,
+    damageTakenMultiplier: buffFx.damageTakenMultiplier,
+    reflectMultiplier: buffFx.reflectMultiplier,
+    survivePercent: buffFx.survivePercent,
+    invulnerable: buffFx.invulnerable,
+    bonusDamage: buffFx.bonusDamage
   };
   cacheValid = true;
   return statCache;
@@ -177,6 +285,10 @@ export function init() {
   on('player:levelUp', invalidateStatCache);
   on('item:equipped', invalidateStatCache);
   on('item:unequipped', invalidateStatCache);
+  on('skill:equipped', invalidateStatCache);
+  on('skill:unequipped', invalidateStatCache);
+  on('skill:buffApplied', invalidateStatCache);
+  on('skill:buffExpired', invalidateStatCache);
 }
 
 export function update(dt) {

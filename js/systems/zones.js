@@ -13,6 +13,7 @@ import { state, getPlayer } from '../core/game-state.js';
 import { ZONES, ZONE_ORDER } from '../data/zones.data.js';
 import { MONSTERS } from '../data/monsters.data.js';
 import { saveGame } from '../services/storage.js';
+import { MASTERY_PER_BOSS } from '../data/constants.js';
 
 /**
  * Check if the player can travel to a zone.
@@ -83,6 +84,10 @@ function handleMonsterKilled(data) {
   if (isFirstKill) {
     player.bossesDefeated.push(bossId);
     player.statistics.totalBossKills++;
+
+    // Grant Mastery Points for first boss kill
+    player.masteryPoints += MASTERY_PER_BOSS;
+    emit('mastery:gained', { amount: MASTERY_PER_BOSS, total: player.masteryPoints, source: 'boss' });
 
     // Find and unlock the next zone
     const nextZoneId = findNextZone(bossId);

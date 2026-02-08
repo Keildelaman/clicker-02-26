@@ -22,15 +22,18 @@ import * as progression from './systems/progression.js';
 import * as economy from './systems/economy.js';
 import * as loot from './systems/loot.js';
 import * as zones from './systems/zones.js';
+import * as skills from './systems/skills.js';
 
 // Data
 import { ITEMS } from './data/items.data.js';
 import { ZONES, ZONE_ORDER } from './data/zones.data.js';
+import { SKILLS } from './data/skills.data.js';
 
 // UI
 import * as renderer from './ui/renderer.js';
 import * as shopUI from './ui/shop-ui.js';
 import * as zonesUI from './ui/zones-ui.js';
+import * as skillsUI from './ui/skills-ui.js';
 
 // --- Boot ---
 
@@ -52,6 +55,7 @@ progression.init();
 economy.init();
 loot.init();
 zones.init();
+skills.init({ getComputedStats: player.getComputedStats, damagePlayer: health.damagePlayer });
 
 // 3. Initialize UI
 renderer.init();
@@ -63,6 +67,7 @@ registerTickSystem(health.update);
 registerTickSystem(energy.update);
 registerTickSystem(progression.update);
 registerTickSystem(economy.update);
+registerTickSystem(skills.update);
 registerTickSystem(renderer.update);
 
 // 5. Wire DOM events
@@ -102,6 +107,7 @@ function showScreen(name) {
   document.getElementById('combat-screen').style.display = name === 'combat' ? 'flex' : 'none';
   document.getElementById('shop-screen').style.display = name === 'shop' ? 'flex' : 'none';
   document.getElementById('zones-screen').style.display = name === 'zones' ? 'flex' : 'none';
+  document.getElementById('skills-screen').style.display = name === 'skills' ? 'flex' : 'none';
   document.querySelector('.game-header').style.display = name === 'combat' ? '' : 'none';
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.classList.toggle('nav-btn--active', btn.dataset.screen === name);
@@ -109,6 +115,7 @@ function showScreen(name) {
   state.currentScreen = name;
   if (name === 'shop') shopUI.onShow();
   if (name === 'zones') zonesUI.onShow();
+  if (name === 'skills') skillsUI.onShow();
 }
 
 document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -120,6 +127,11 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
 
 // Zones back button
 document.getElementById('zones-back-btn').addEventListener('click', () => {
+  showScreen('combat');
+});
+
+// Skills back button
+document.getElementById('skills-back-btn').addEventListener('click', () => {
   showScreen('combat');
 });
 
@@ -191,6 +203,21 @@ window.DEBUG = {
       }
     }
     console.log('All zones unlocked:', state.player.unlockedZones);
+  },
+  giveMP: (n) => {
+    state.player.masteryPoints += n;
+    emit('mastery:gained', { amount: n, total: state.player.masteryPoints, source: 'debug' });
+  },
+  useSkill: (id) => {
+    return skills.useSkill(id);
+  },
+  unlockAllSkills: () => {
+    for (const id of Object.keys(SKILLS)) {
+      if (!state.player.unlockedSkills.includes(id)) {
+        skills.unlockSkill(id);
+      }
+    }
+    console.log('All skills unlocked. Remaining MP:', state.player.masteryPoints);
   },
   reset: () => {
     clearSave();

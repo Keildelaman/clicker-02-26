@@ -12,10 +12,10 @@
 | 0+1 | Skeleton + Click Combat | ✅ Complete | — |
 | 2 | Player Bars & Resources | ✅ Complete | — |
 | 3 | Progression (XP & Leveling) | ✅ Complete | — |
-| 4 | Economy & Equipment | ⬜ Not Started | — |
-| 5 | Monster Types (all 6) | ⬜ Not Started | — |
-| 6 | Zones & Bosses | ⬜ Not Started | — |
-| 7 | Skills (all 25) | ⬜ Not Started | — |
+| 4 | Economy & Equipment | ✅ Complete | — |
+| 5 | Monster Types (all 6) | ✅ Complete | — |
+| 6 | Zones & Bosses | ✅ Complete | — |
+| 7 | Skills (all 25) | ✅ Complete | — |
 | 8 | Tutorial System | ⬜ Not Started | — |
 | 9 | Ascension & Vault | ⬜ Not Started | — |
 | 10 | Save/Load Hardening | ⬜ Not Started | — |

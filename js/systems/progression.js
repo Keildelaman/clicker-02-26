@@ -85,7 +85,10 @@ function checkMilestones(level) {
 
 export function init() {
   on('combat:monsterKilled', ({ xpReward }) => {
-    grantXP(xpReward);
+    // Apply xpBonus from equipment + passive skills + buffs
+    const stats = getComputedStats();
+    const finalXP = Math.floor(xpReward * (1 + (stats.xpBonus || 0)));
+    grantXP(finalXP);
   });
 }
 

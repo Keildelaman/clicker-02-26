@@ -56,6 +56,24 @@ export function handleClick() {
     return;
   }
 
+  // Timing mode: random per-click outcome
+  let timingResult = null;
+  if (state.timingMode) {
+    const tm = state.timingMode.levels;
+    const roll = Math.random();
+    if (roll < 0.30) {
+      timingResult = { type: 'perfect', multiplier: tm.perfectMultiplier };
+    } else if (roll < 0.70) {
+      timingResult = { type: 'good', multiplier: tm.goodMultiplier };
+    } else {
+      timingResult = { type: 'miss', multiplier: tm.missMultiplier };
+      // Miss deals self-damage
+      const selfDmg = Math.floor(player.maxHP * tm.missDamage);
+      hurtPlayer(selfDmg, 'timing_miss');
+    }
+    emit('skill:timingResult', timingResult);
+  }
+
   // Calculate base damage
   const isCrit = Math.random() < stats.critChance;
   let damage = stats.attack;
@@ -63,6 +81,36 @@ export function handleClick() {
     damage = Math.floor(damage * stats.critDamage);
   }
   damage = Math.max(damage, MIN_DAMAGE);
+
+  // Apply timing mode multiplier
+  if (timingResult) {
+    damage = Math.floor(damage * timingResult.multiplier);
+    damage = Math.max(damage, MIN_DAMAGE);
+  }
+
+  // Apply nextAttackModifier (Power Strike, Execute)
+  if (state.nextAttackModifier) {
+    const mod = state.nextAttackModifier;
+    let shouldApply = true;
+
+    if (mod.condition && mod.condition.type === 'hpBelow') {
+      const hpPercent = monster.currentHealth / monster.maxHealth;
+      shouldApply = hpPercent <= mod.condition.threshold;
+    }
+
+    if (shouldApply) {
+      damage = Math.floor(damage * mod.multiplier);
+      emit('skill:effectTriggered', { skillId: mod.skillId, result: 'applied', damage });
+    } else {
+      emit('skill:effectTriggered', { skillId: mod.skillId, result: 'wasted' });
+    }
+    state.nextAttackModifier = null;
+  }
+
+  // Shield Breaker buff: bonus damage vs shielded monsters
+  if (stats.bonusDamage > 0 && monster.shield > 0) {
+    damage = Math.floor(damage * (1 + stats.bonusDamage));
+  }
 
   // Armored: flat damage reduction
   if (hasType(monster, 'armored')) {
@@ -156,8 +204,9 @@ function updateAggressive(monster, dt) {
   const m = monster.mechanics;
   if (!m) return;
 
+  const stats = computeStats();
   const cycle = m.attackCycle || 4000;
-  const warningDur = m.warningDuration || 1500;
+  const warningDur = (m.warningDuration || 1500) + (stats.warningBonus || 0);
   const attackDur = m.attackDuration || 500;
   const safeDur = cycle - warningDur - attackDur;
 

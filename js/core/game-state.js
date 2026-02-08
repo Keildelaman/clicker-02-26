@@ -16,7 +16,13 @@ export const state = {
   combatState: 'idle',  // 'idle' | 'spawning' | 'active' | 'dying' | 'waiting' | 'dead'
 
   // UI state
-  currentScreen: 'combat'
+  currentScreen: 'combat',
+
+  // Skill runtime state (transient, not saved)
+  activeBuffs: [],          // [{ skillId, effects:{...}, expiresAt, startedAt }]
+  nextAttackModifier: null,  // { skillId, multiplier, condition? } — consumed on click
+  playerShield: null,        // { amount, maxAmount, expiresAt } — from Shield Wall
+  timingMode: null            // { skillId, expiresAt, levels:{...} } — from Perfect Strike
 };
 
 export function getState() {

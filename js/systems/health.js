@@ -15,6 +15,7 @@ import {
   DEATH_GOLD_LOSS, DEATH_LEVEL_MILESTONE, DEATH_RESPAWN_DELAY
 } from '../data/constants.js';
 import { xpToNextLevel } from '../data/balance.js';
+/* Note: state.activeBuffs and state.playerShield accessed for skill interactions */
 
 let respawnTimer = 0;
 let isRespawning = false;
@@ -61,15 +62,63 @@ export function damagePlayer(amount, source) {
   if (!player || isRespawning) return;
 
   const stats = getComputedStats();
-  const reduced = Math.max(1, Math.floor(amount * (1 - stats.damageReduction)));
-  player.hp -= reduced;
-  player.statistics.totalDamageTaken += reduced;
 
-  emit('player:damaged', { damage: reduced, source });
+  // Invulnerable (Transcendence buff)
+  if (stats.invulnerable) {
+    emit('player:damaged', { damage: 0, source, blocked: true });
+    return;
+  }
+
+  // Apply damage taken multiplier (Berserk Rage)
+  let finalAmount = amount;
+  if (stats.damageTakenMultiplier !== 1.0) {
+    finalAmount = Math.floor(finalAmount * stats.damageTakenMultiplier);
+  }
+
+  // Apply damage reduction (equipment + Iron Skin buff)
+  const reduced = Math.max(1, Math.floor(finalAmount * (1 - stats.damageReduction)));
+
+  // Player shield absorbs damage first
+  let remaining = reduced;
+  if (state.playerShield && state.playerShield.amount > 0) {
+    if (remaining <= state.playerShield.amount) {
+      state.playerShield.amount -= remaining;
+      remaining = 0;
+    } else {
+      remaining -= state.playerShield.amount;
+      state.playerShield.amount = 0;
+      state.playerShield = null;
+    }
+    emit('skill:effectTriggered', { effect: 'shieldAbsorbed' });
+  }
+
+  player.hp -= remaining;
+  player.statistics.totalDamageTaken += remaining;
+
+  emit('player:damaged', { damage: remaining, source });
+
+  // Undying: survive fatal blow
+  if (player.hp <= 0 && stats.survivePercent > 0) {
+    player.hp = Math.max(1, Math.floor(stats.maxHP * stats.survivePercent));
+    // Remove the undying buff (consumed)
+    state.activeBuffs = state.activeBuffs.filter(b => !b.effects.survivePercent);
+    emit('skill:buffExpired', { skillId: 'skill_undying' });
+    emitHPChanged();
+    return;
+  }
 
   if (player.hp <= 0) {
     player.hp = 0;
     handleDeath();
+  }
+
+  // Reflect: deal damage back to monster
+  if (stats.reflectMultiplier > 0 && state.currentMonster && remaining > 0) {
+    const reflectDmg = Math.floor(remaining * stats.reflectMultiplier);
+    if (reflectDmg > 0) {
+      state.currentMonster.currentHealth -= reflectDmg;
+      emit('skill:effectTriggered', { effect: 'reflect', damage: reflectDmg });
+    }
   }
 
   emitHPChanged();

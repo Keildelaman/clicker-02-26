@@ -81,6 +81,14 @@
         <button class="boss-challenge__btn" id="boss-challenge-btn">CHALLENGE BOSS</button>
       </div>
 
+      <!-- Skill Bar (4 active skill slots) -->
+      <div class="skill-bar" id="skill-bar">
+        <button class="skill-btn skill-btn--empty" id="skill-slot-0"></button>
+        <button class="skill-btn skill-btn--empty" id="skill-slot-1"></button>
+        <button class="skill-btn skill-btn--empty" id="skill-slot-2"></button>
+        <button class="skill-btn skill-btn--empty" id="skill-slot-3"></button>
+      </div>
+
       <!-- Bottom Section -->
       <div class="bottom-section">
 
@@ -145,6 +153,21 @@
       <div class="zones-list" id="zones-list"></div>
     </section>
 
+    <!-- Skills Screen -->
+    <section class="skills-screen" id="skills-screen" style="display: none;">
+      <div class="skills-header">
+        <button class="skills-header__back" id="skills-back-btn">&#x2190;</button>
+        <span class="skills-header__title">Skills</span>
+        <span class="skills-header__mp" id="skills-mp-display">MP: 0</span>
+      </div>
+      <div class="skills-tabs">
+        <button class="skills-tab skills-tab--active" data-tab="active">Active</button>
+        <button class="skills-tab" data-tab="passive">Passive</button>
+      </div>
+      <div class="skills-equipped" id="skills-equipped"></div>
+      <div class="skills-list" id="skills-list"></div>
+    </section>
+
     <!-- Boss Modal -->
     <div class="boss-modal-backdrop" id="boss-modal-backdrop" style="display: none;">
       <div class="boss-modal" id="boss-modal"></div>
@@ -160,7 +183,7 @@
         <span class="nav-btn__icon">&#x1F6D2;</span>
         <span>Shop</span>
       </button>
-      <button class="nav-btn" data-screen="skills" disabled>
+      <button class="nav-btn" data-screen="skills">
         <span class="nav-btn__icon">&#x2B50;</span>
         <span>Skills</span>
       </button>
