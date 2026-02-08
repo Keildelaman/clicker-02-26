@@ -73,6 +73,23 @@ body {
   overflow: hidden;
 }
 
+/* Zones Screen */
+.zones-screen {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.zones-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
 .monster-area {
   flex: 1;
   display: flex;

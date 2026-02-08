@@ -14,6 +14,7 @@ import * as barsUI from './bars-ui.js';
 import * as toasts from './toasts.js';
 import * as modals from './modals.js';
 import * as shopUI from './shop-ui.js';
+import * as zonesUI from './zones-ui.js';
 
 let dirty = true;
 
@@ -29,6 +30,7 @@ export function init() {
   toasts.init();
   modals.init();
   shopUI.init();
+  zonesUI.init();
 
   // Mark dirty on state-changing events
   on('combat:click', markDirty);
@@ -52,6 +54,9 @@ export function init() {
   on('combat:phaseChange', markDirty);
   on('combat:monsterEscaped', markDirty);
   on('combat:monsterRegenerated', markDirty);
+  on('zone:changed', markDirty);
+  on('zone:bossDefeated', markDirty);
+  on('zone:bossIntro', markDirty);
 
   // Initial render
   statsUI.renderInitial();

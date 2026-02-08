@@ -10,8 +10,10 @@
  * @see docs/systems/ui.system.md
  */
 
-import { on } from '../core/event-bus.js';
+import { on, emit } from '../core/event-bus.js';
 import { LEVEL_UP_CELEBRATION } from '../data/constants.js';
+import { ZONES } from '../data/zones.data.js';
+import { formatNumber } from '../services/utils.js';
 
 let container = null;
 let dismissTimer = null;
@@ -113,11 +115,100 @@ function dismissModal() {
   }, 500);
 }
 
+// === Boss Modals ===
+
+let bossBackdrop = null;
+let bossModal = null;
+
+function createBossContainer() {
+  bossBackdrop = document.getElementById('boss-modal-backdrop');
+  bossModal = document.getElementById('boss-modal');
+}
+
+/**
+ * Show boss intro modal (blocking).
+ * @param {Object} boss - Monster definition
+ * @param {Object} zone - Zone definition
+ */
+function showBossIntroModal({ boss, zone }) {
+  if (!bossBackdrop || !bossModal) return;
+
+  const types = boss.type.split('+').filter(t => t !== 'aggressive');
+  const typeWarning = types.length > 0
+    ? `Also: ${types.join(', ').toUpperCase()}`
+    : '';
+
+  bossModal.innerHTML = `
+    <div class="boss-modal__emoji">${boss.emoji}</div>
+    <div class="boss-modal__name">${boss.name}</div>
+    <div class="boss-modal__type">BOSS - AGGRESSIVE${typeWarning ? ' + ' + types.join(' + ').toUpperCase() : ''}</div>
+    <div class="boss-modal__hp">HP: ${formatNumber(boss.baseHealth)}</div>
+    <div class="boss-modal__desc">${boss.description}</div>
+    <div class="boss-modal__warning">Watch for attack phases!</div>
+    <div class="boss-modal__buttons">
+      <button class="boss-modal__btn boss-modal__btn--fight" id="boss-fight-btn">BEGIN BATTLE</button>
+      <button class="boss-modal__btn boss-modal__btn--retreat" id="boss-retreat-btn">RETREAT</button>
+    </div>
+  `;
+
+  bossBackdrop.style.display = 'flex';
+
+  document.getElementById('boss-fight-btn').addEventListener('click', () => {
+    bossBackdrop.style.display = 'none';
+    emit('zone:bossStart', { bossId: boss.id });
+  });
+
+  document.getElementById('boss-retreat-btn').addEventListener('click', () => {
+    bossBackdrop.style.display = 'none';
+  });
+}
+
+/**
+ * Show boss defeat modal.
+ * @param {Object} data - { bossId, firstKill, nextZoneId, nextZone }
+ */
+function showBossDefeatModal(data) {
+  if (!data.firstKill) return; // Repeat kills don't get a blocking modal
+
+  if (!bossBackdrop || !bossModal) return;
+
+  const nextZoneName = data.nextZone ? data.nextZone.name : null;
+  const nextZoneEmoji = data.nextZone ? data.nextZone.emoji : '';
+
+  bossModal.innerHTML = `
+    <div class="boss-modal__emoji">&#x1F389;</div>
+    <div class="boss-modal__name">VICTORY!</div>
+    <div class="boss-modal__desc">You have defeated the boss!</div>
+    ${nextZoneName ? `
+      <div class="boss-modal__unlock">
+        <div class="boss-modal__unlock-label">NEW ZONE UNLOCKED!</div>
+        <div class="boss-modal__unlock-zone">${nextZoneEmoji} ${nextZoneName}</div>
+      </div>
+    ` : ''}
+    <div class="boss-modal__buttons">
+      <button class="boss-modal__btn boss-modal__btn--fight" id="boss-continue-btn">${nextZoneName ? `TRAVEL TO ${nextZoneName.toUpperCase()}` : 'CONTINUE'}</button>
+    </div>
+  `;
+
+  bossBackdrop.style.display = 'flex';
+
+  document.getElementById('boss-continue-btn').addEventListener('click', () => {
+    bossBackdrop.style.display = 'none';
+    if (data.nextZoneId) {
+      emit('zone:autoTravel', { zoneId: data.nextZoneId });
+    }
+  });
+}
+
 // --- System Contract ---
 
 export function init() {
   createContainer();
+  createBossContainer();
+
   on('player:levelUp', ({ newLevel }) => {
     showLevelUpModal(newLevel);
   });
+  on('zone:bossIntro', showBossIntroModal);
+  on('zone:bossDefeated', showBossDefeatModal);
 }

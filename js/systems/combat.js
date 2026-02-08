@@ -125,6 +125,7 @@ function killMonster() {
 
   emit('combat:monsterKilled', {
     monster,
+    definitionId: monster.definitionId,
     isBoss: monster.isBoss,
     goldReward: monster.goldReward,
     xpReward: monster.xpReward

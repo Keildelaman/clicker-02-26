@@ -680,3 +680,291 @@
   font-size: var(--font-size-sm);
   padding: var(--spacing-xl);
 }
+
+/* === Boss Challenge Button === */
+.boss-challenge {
+  flex-shrink: 0;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+}
+
+.boss-challenge__btn {
+  width: 100%;
+  background: linear-gradient(135deg, rgba(239, 83, 80, 0.15) 0%, rgba(239, 83, 80, 0.05) 100%);
+  border: 2px solid var(--aggressive-color);
+  color: var(--aggressive-color);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-main);
+  font-weight: 800;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: 8px;
+  cursor: pointer;
+  min-height: var(--touch-target-min);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.boss-challenge__btn:active {
+  transform: scale(0.98);
+  background: rgba(239, 83, 80, 0.25);
+}
+
+/* === Zone Cards === */
+.zone-card {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.zone-card--current {
+  border-color: var(--zone-accent);
+  border-width: 2px;
+}
+
+.zone-card--locked {
+  opacity: 0.5;
+}
+
+.zone-card__header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.zone-card__emoji {
+  font-size: 32px;
+  flex-shrink: 0;
+  width: 40px;
+  text-align: center;
+}
+
+.zone-card__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.zone-card__name {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+}
+
+.zone-card__levels {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-dim);
+}
+
+.zone-card__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.zone-card__btn {
+  background: var(--zone-primary);
+  border: 1px solid var(--zone-accent);
+  color: var(--zone-accent);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-main);
+  font-weight: 700;
+  padding: var(--spacing-xs) var(--spacing-lg);
+  border-radius: 6px;
+  cursor: pointer;
+  min-height: 36px;
+  letter-spacing: 1px;
+  transition: opacity var(--transition-fast);
+}
+
+.zone-card__btn:active {
+  opacity: 0.7;
+}
+
+.zone-card__lock {
+  font-size: var(--font-size-xs);
+  color: var(--hp-critical);
+  font-weight: 600;
+}
+
+.zone-card__current-badge {
+  font-size: var(--font-size-xs);
+  font-weight: 800;
+  color: var(--zone-accent);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+
+.zone-card__boss-status {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-dim);
+}
+
+.zone-card__boss-status--defeated {
+  color: var(--hp-healthy);
+}
+
+/* === Boss Modal (Blocking) === */
+.boss-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: var(--spacing-lg);
+}
+
+.boss-modal {
+  background: linear-gradient(135deg, #1a0a0a 0%, #2a1515 50%, #1a0a0a 100%);
+  border: 2px solid var(--aggressive-color);
+  border-radius: 12px;
+  padding: var(--spacing-xl);
+  max-width: 320px;
+  width: 100%;
+  text-align: center;
+  box-shadow:
+    0 0 40px rgba(239, 83, 80, 0.2),
+    0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+.boss-modal__emoji {
+  font-size: 48px;
+  line-height: 1;
+  margin-bottom: var(--spacing-sm);
+}
+
+.boss-modal__name {
+  font-size: var(--font-size-lg);
+  font-weight: 800;
+  color: var(--aggressive-color);
+  margin-bottom: var(--spacing-xs);
+}
+
+.boss-modal__type {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.boss-modal__hp {
+  font-size: var(--font-size-base);
+  color: var(--hp-critical);
+  font-weight: 700;
+  margin-bottom: var(--spacing-sm);
+}
+
+.boss-modal__desc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-dim);
+  margin-bottom: var(--spacing-sm);
+  line-height: 1.4;
+}
+
+.boss-modal__warning {
+  font-size: var(--font-size-xs);
+  color: var(--aggressive-warning);
+  font-weight: 700;
+  margin-bottom: var(--spacing-lg);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.boss-modal__buttons {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.boss-modal__btn {
+  flex: 1;
+  border: none;
+  font-size: var(--font-size-sm);
+  font-family: var(--font-main);
+  font-weight: 700;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: 8px;
+  cursor: pointer;
+  min-height: var(--touch-target-min);
+  letter-spacing: 0.5px;
+  transition: opacity var(--transition-fast);
+}
+
+.boss-modal__btn:active {
+  opacity: 0.7;
+}
+
+.boss-modal__btn--fight {
+  background: var(--aggressive-color);
+  color: white;
+}
+
+.boss-modal__btn--retreat {
+  background: var(--color-surface-raised);
+  color: var(--color-text-dim);
+  border: 1px solid var(--color-border);
+}
+
+.boss-modal__unlock {
+  margin: var(--spacing-md) 0;
+  padding: var(--spacing-sm);
+  border: 1px solid var(--gold-color);
+  border-radius: 8px;
+  background: rgba(255, 215, 0, 0.05);
+}
+
+.boss-modal__unlock-label {
+  font-size: var(--font-size-xs);
+  color: var(--gold-color);
+  font-weight: 800;
+  letter-spacing: 1px;
+  margin-bottom: var(--spacing-xs);
+}
+
+.boss-modal__unlock-zone {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+}
+
+/* === Zones Screen Header === */
+.zones-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--zone-primary);
+  border-bottom: 2px solid var(--zone-accent);
+  height: var(--header-height);
+  flex-shrink: 0;
+}
+
+.zones-header__back {
+  background: none;
+  border: none;
+  color: var(--zone-accent);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-main);
+  cursor: pointer;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+  display: flex;
+  align-items: center;
+}
+
+.zones-header__title {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+}
+
+.zones-header__spacer {
+  min-width: var(--touch-target-min);
+}

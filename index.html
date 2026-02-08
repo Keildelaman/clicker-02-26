@@ -76,6 +76,11 @@
         </div>
       </div>
 
+      <!-- Boss Challenge Button -->
+      <div class="boss-challenge" id="boss-challenge" style="display: none;">
+        <button class="boss-challenge__btn" id="boss-challenge-btn">CHALLENGE BOSS</button>
+      </div>
+
       <!-- Bottom Section -->
       <div class="bottom-section">
 
@@ -130,6 +135,21 @@
 
     </section>
 
+    <!-- Zones Screen -->
+    <section class="zones-screen" id="zones-screen" style="display: none;">
+      <div class="zones-header">
+        <button class="zones-header__back" id="zones-back-btn">&#x2190;</button>
+        <span class="zones-header__title">Zones</span>
+        <span class="zones-header__spacer"></span>
+      </div>
+      <div class="zones-list" id="zones-list"></div>
+    </section>
+
+    <!-- Boss Modal -->
+    <div class="boss-modal-backdrop" id="boss-modal-backdrop" style="display: none;">
+      <div class="boss-modal" id="boss-modal"></div>
+    </div>
+
     <!-- Shared Navigation -->
     <nav class="game-nav">
       <button class="nav-btn nav-btn--active" data-screen="combat">
@@ -144,7 +164,7 @@
         <span class="nav-btn__icon">&#x2B50;</span>
         <span>Skills</span>
       </button>
-      <button class="nav-btn" data-screen="zones" disabled>
+      <button class="nav-btn" data-screen="zones">
         <span class="nav-btn__icon">&#x1F5FA;&#xFE0F;</span>
         <span>Zones</span>
       </button>

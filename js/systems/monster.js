@@ -1,8 +1,8 @@
 /**
  * monster.js - Monster System
  *
- * Owns: Monster selection, instance creation, type initialization.
- * Listens to: combat:dyingComplete, player:respawned
+ * Owns: Monster selection, instance creation, type initialization, boss spawning.
+ * Listens to: combat:dyingComplete, player:respawned, zone:changed
  * Emits: combat:monsterSpawned
  *
  * @see docs/systems/combat.system.md
@@ -154,6 +154,25 @@ export function spawnNext() {
 }
 
 /**
+ * Spawn a specific boss by ID.
+ * @param {string} bossId - Monster definition ID
+ */
+export function spawnBoss(bossId) {
+  const definition = MONSTERS[bossId];
+  if (!definition || !definition.isBoss) return;
+
+  // Cancel any pending spawn
+  waitingToSpawn = false;
+  spawnTimer = 0;
+
+  const monster = createMonsterInstance(definition);
+  state.currentMonster = monster;
+  state.combatState = 'active';
+
+  emit('combat:monsterSpawned', { monster });
+}
+
+/**
  * Schedule next monster spawn after delay.
  */
 export function scheduleSpawn() {
@@ -162,9 +181,21 @@ export function scheduleSpawn() {
   state.combatState = 'waiting';
 }
 
+/**
+ * Handle boss start event from the UI modal.
+ * Despawns current monster and spawns the boss.
+ */
+function handleBossStart({ bossId }) {
+  state.currentMonster = null;
+  state.combatState = 'idle';
+  spawnBoss(bossId);
+}
+
 export function init() {
   on('combat:dyingComplete', scheduleSpawn);
   on('player:respawned', scheduleSpawn);
+  on('zone:changed', scheduleSpawn);
+  on('zone:bossStart', handleBossStart);
 }
 
 export function update(dt) {

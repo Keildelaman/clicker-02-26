@@ -2,7 +2,7 @@
  * economy.js - Economy System
  *
  * Owns: Shop rotation, buy/sell/equip, pricing.
- * Listens to: zone:changed (future)
+ * Listens to: zone:changed
  * Emits: shop:refreshed, item:purchased, item:sold, item:equipped, item:unequipped
  *
  * @see docs/systems/economy.system.md
@@ -28,6 +28,10 @@ let tickAccumulator = 0;
 // --- Initialization ---
 
 export function init() {
+  on('zone:changed', () => {
+    shopRefreshCount = 0;
+    refreshShop(false);
+  });
   refreshShop(false);
 }
 

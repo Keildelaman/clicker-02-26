@@ -11,8 +11,9 @@ import { on } from '../core/event-bus.js';
 import { getPlayer } from '../core/game-state.js';
 import { getComputedStats } from '../systems/player.js';
 import { formatNumber } from '../services/utils.js';
+import { ZONES } from '../data/zones.data.js';
 
-let attackDisplay, goldDisplay, levelDisplay, xpFill, xpText;
+let attackDisplay, goldDisplay, levelDisplay, xpFill, xpText, zoneNameDisplay;
 
 export function init() {
   attackDisplay = document.getElementById('attack-display');
@@ -20,6 +21,7 @@ export function init() {
   levelDisplay = document.getElementById('level-display');
   xpFill = document.getElementById('xp-fill');
   xpText = document.getElementById('xp-text');
+  zoneNameDisplay = document.getElementById('zone-name');
 
   on('gold:earned', renderGold);
   on('xp:gained', renderXP);
@@ -28,6 +30,7 @@ export function init() {
   on('player:statsChanged', renderAttack);
   on('item:equipped', renderAll);
   on('item:unequipped', renderAll);
+  on('zone:changed', renderZoneName);
 }
 
 function renderAll() {
@@ -61,6 +64,14 @@ function renderLevel() {
   if (levelDisplay && player) levelDisplay.textContent = `Lv. ${player.level}`;
 }
 
+function renderZoneName() {
+  const player = getPlayer();
+  if (!zoneNameDisplay || !player) return;
+  const zone = ZONES[player.currentZone];
+  if (zone) zoneNameDisplay.textContent = zone.name;
+}
+
 export function renderInitial() {
   renderAll();
+  renderZoneName();
 }

@@ -21,13 +21,16 @@ import * as energy from './systems/energy.js';
 import * as progression from './systems/progression.js';
 import * as economy from './systems/economy.js';
 import * as loot from './systems/loot.js';
+import * as zones from './systems/zones.js';
 
 // Data
 import { ITEMS } from './data/items.data.js';
+import { ZONES, ZONE_ORDER } from './data/zones.data.js';
 
 // UI
 import * as renderer from './ui/renderer.js';
 import * as shopUI from './ui/shop-ui.js';
+import * as zonesUI from './ui/zones-ui.js';
 
 // --- Boot ---
 
@@ -48,6 +51,7 @@ energy.init();
 progression.init();
 economy.init();
 loot.init();
+zones.init();
 
 // 3. Initialize UI
 renderer.init();
@@ -97,12 +101,14 @@ on('combat:monsterKilled', ({ goldReward }) => {
 function showScreen(name) {
   document.getElementById('combat-screen').style.display = name === 'combat' ? 'flex' : 'none';
   document.getElementById('shop-screen').style.display = name === 'shop' ? 'flex' : 'none';
+  document.getElementById('zones-screen').style.display = name === 'zones' ? 'flex' : 'none';
   document.querySelector('.game-header').style.display = name === 'combat' ? '' : 'none';
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.classList.toggle('nav-btn--active', btn.dataset.screen === name);
   });
   state.currentScreen = name;
   if (name === 'shop') shopUI.onShow();
+  if (name === 'zones') zonesUI.onShow();
 }
 
 document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -110,6 +116,11 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     showScreen(btn.dataset.screen);
   });
+});
+
+// Zones back button
+document.getElementById('zones-back-btn').addEventListener('click', () => {
+  showScreen('combat');
 });
 
 // 8. Set up auto-save
@@ -161,6 +172,25 @@ window.DEBUG = {
     console.table(Object.values(ITEMS).map(i => ({
       id: i.id, name: i.name, type: i.type, rarity: i.rarity, zone: i.zone
     })));
+  },
+  travelZone: (id) => {
+    if (!ZONES[id]) { console.error('Unknown zone:', id); return; }
+    // Force-unlock if needed
+    if (!state.player.unlockedZones.includes(id)) {
+      state.player.unlockedZones.push(id);
+    }
+    zones.travelToZone(id);
+  },
+  challengeBoss: () => {
+    zones.challengeBoss();
+  },
+  unlockAllZones: () => {
+    for (const id of ZONE_ORDER) {
+      if (!state.player.unlockedZones.includes(id)) {
+        state.player.unlockedZones.push(id);
+      }
+    }
+    console.log('All zones unlocked:', state.player.unlockedZones);
   },
   reset: () => {
     clearSave();
