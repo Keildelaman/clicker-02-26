@@ -34,17 +34,19 @@ const cooldownReadyNotified = new Set();
 
 const EFFECT_HANDLERS = {
   nextAttackMultiplier(skillDef, levelData) {
+    const boost = computeStats ? (computeStats().skillBoost_power_strike || 0) : 0;
     state.nextAttackModifier = {
       skillId: skillDef.id,
-      multiplier: levelData.multiplier
+      multiplier: levelData.multiplier * (1 + boost)
     };
   },
 
   conditionalMultiplier(skillDef, levelData) {
+    const boost = computeStats ? (computeStats().skillBoost_execute || 0) : 0;
     state.nextAttackModifier = {
       skillId: skillDef.id,
       multiplier: levelData.multiplier,
-      condition: { type: 'hpBelow', threshold: levelData.threshold }
+      condition: { type: 'hpBelow', threshold: levelData.threshold + boost }
     };
   },
 
@@ -55,6 +57,12 @@ const EFFECT_HANDLERS = {
     const now = Date.now();
     const effects = { ...levelData };
     delete effects.duration;
+
+    // Apply berserk skill boost if applicable
+    if (skillDef.id === 'skill_berserk' && effects.damageBonus) {
+      const boost = computeStats ? (computeStats().skillBoost_berserk || 0) : 0;
+      effects.damageBonus *= (1 + boost);
+    }
 
     state.activeBuffs.push({
       skillId: skillDef.id,
@@ -86,7 +94,8 @@ const EFFECT_HANDLERS = {
   instantHeal(skillDef, levelData) {
     const player = getPlayer();
     const stats = computeStats();
-    const healAmount = Math.floor(stats.maxHP * levelData.healPercent);
+    const boost = stats.skillBoost_heal || 0;
+    const healAmount = Math.floor(stats.maxHP * levelData.healPercent * (1 + boost));
     const oldHP = player.hp;
     player.hp = Math.min(player.hp + healAmount, player.maxHP);
     const healed = player.hp - oldHP;
@@ -174,11 +183,14 @@ export function useSkill(skillId) {
   // Validate: not on cooldown
   if (getSkillCooldownRemaining(skillId) > 0) return false;
 
-  // Validate: enough energy
-  if (player.energy < skillDef.energyCost) return false;
+  // Validate: enough energy (with cost reduction from equipment)
+  const stats = computeStats();
+  const costReduction = stats.skillEnergyCost || 0;
+  const adjustedCost = Math.max(1, Math.floor(skillDef.energyCost * (1 - costReduction)));
+  if (player.energy < adjustedCost) return false;
 
   // Deduct energy
-  player.energy -= skillDef.energyCost;
+  player.energy -= adjustedCost;
   emit('energy:changed', { energy: player.energy, maxEnergy: player.maxEnergy });
 
   // Set last used for cooldown tracking
@@ -392,8 +404,10 @@ export function getSkillCooldownRemaining(skillId) {
   const skillState = player.skills[skillId];
   if (!skillDef || !skillState || !skillState.lastUsed) return 0;
 
+  const cdr = computeStats ? (computeStats().skillCooldown || 0) : 0;
+  const adjustedCooldown = skillDef.cooldown * (1 - cdr);
   const elapsed = Date.now() - skillState.lastUsed;
-  const remaining = skillDef.cooldown - elapsed;
+  const remaining = adjustedCooldown - elapsed;
   return Math.max(0, remaining);
 }
 

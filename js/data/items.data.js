@@ -974,7 +974,7 @@ export const ITEMS = {
     rarity: 'rare',
     zone: 'frostpeak',
     requiredLevel: 72,
-    stats: { damageReduction: 0.26, maxHP: 500, hpRegen: 0.020 },
+    stats: { damageReduction: 0.26, maxHP: 500, hpRegen: 0.020, skillCooldown: 0.10 },
     buyPrice: 75000,
     sellPrice: 18750,
     shopAvailable: false,
@@ -1187,7 +1187,7 @@ export const ITEMS = {
     rarity: 'rare',
     zone: 'voidrift',
     requiredLevel: 92,
-    stats: { damageReduction: 0.28, maxHP: 650, hpRegen: 0.022 },
+    stats: { damageReduction: 0.28, maxHP: 650, hpRegen: 0.022, skillCooldown: 0.12 },
     buyPrice: 180000,
     sellPrice: 45000,
     shopAvailable: false,
@@ -1203,11 +1203,280 @@ export const ITEMS = {
     rarity: 'legendary',
     zone: 'voidrift',
     requiredLevel: 100,
-    stats: { damageReduction: 0.35, maxHP: 1000, hpRegen: 0.025 },
+    stats: { damageReduction: 0.35, maxHP: 1000, hpRegen: 0.025, skillCooldown: 0.20, skillEnergyCost: 0.15 },
     buyPrice: 1500000,
     sellPrice: 375000,
     shopAvailable: false,
     dropOnly: true,
     emoji: '\u{1F451}'
+  },
+
+  // ===== EPIC & LEGENDARY ITEMS (MID-GAME) =====
+
+  // --- Shadowmire Epic ---
+  weapon_shadowmire_epic_01: {
+    id: 'weapon_shadowmire_epic_01',
+    name: 'Witchbane Edge',
+    description: 'Forged to slay the dark witches of the mire. Glows with purifying fire.',
+    type: 'weapon',
+    rarity: 'epic',
+    zone: 'shadowmire',
+    requiredLevel: 27,
+    stats: { attack: 85, critChance: 0.06, critDamage: 0.35, armorPen: 8 },
+    buyPrice: 7500,
+    sellPrice: 1875,
+    shopAvailable: false,
+    dropOnly: true,
+    emoji: '\u{1F52E}'
+  },
+
+  // --- Ironhold Epic ---
+  weapon_ironhold_epic_01: {
+    id: 'weapon_ironhold_epic_01',
+    name: "Runemaster's Warhammer",
+    description: 'Ancient dwarven runes cover this massive hammer. Each strike echoes through stone.',
+    type: 'weapon',
+    rarity: 'epic',
+    zone: 'ironhold',
+    requiredLevel: 40,
+    stats: { attack: 175, critChance: 0.07, critDamage: 0.45, armorPen: 25 },
+    buyPrice: 22500,
+    sellPrice: 5625,
+    shopAvailable: false,
+    dropOnly: true,
+    emoji: '\u{1F528}'
+  },
+
+  armor_ironhold_epic_01: {
+    id: 'armor_ironhold_epic_01',
+    name: 'Adamantine Bulwark',
+    description: 'Armor forged from the rarest metal in the peaks. Nearly impervious to harm.',
+    type: 'armor',
+    rarity: 'epic',
+    zone: 'ironhold',
+    requiredLevel: 42,
+    stats: { damageReduction: 0.28, maxHP: 400, hpRegen: 0.018 },
+    buyPrice: 22500,
+    sellPrice: 5625,
+    shopAvailable: false,
+    dropOnly: true,
+    emoji: '\u{1F6E1}\uFE0F'
+  },
+
+  // --- Emberfell Epic ---
+  weapon_emberfell_epic_01: {
+    id: 'weapon_emberfell_epic_01',
+    name: 'Phoenix Talon',
+    description: 'A blade crafted from phoenix claw. Burns eternally with rebirth fire.',
+    type: 'weapon',
+    rarity: 'epic',
+    zone: 'emberfell',
+    requiredLevel: 55,
+    stats: { attack: 350, critChance: 0.08, critDamage: 0.55, armorPen: 30 },
+    buyPrice: 60000,
+    sellPrice: 15000,
+    shopAvailable: false,
+    dropOnly: true,
+    emoji: '\u{1F525}'
+  },
+
+  armor_emberfell_epic_01: {
+    id: 'armor_emberfell_epic_01',
+    name: 'Magmaborn Plate',
+    description: 'Armor that emerged from a volcanic eruption, perfectly formed. Radiates intense heat.',
+    type: 'armor',
+    rarity: 'epic',
+    zone: 'emberfell',
+    requiredLevel: 55,
+    stats: { damageReduction: 0.28, maxHP: 450, hpRegen: 0.020, critChance: 0.06 },
+    buyPrice: 60000,
+    sellPrice: 15000,
+    shopAvailable: false,
+    dropOnly: true,
+    emoji: '\u{1F30B}'
+  },
+
+  // --- Frostpeak Legendary ---
+  weapon_frostpeak_legendary_01: {
+    id: 'weapon_frostpeak_legendary_01',
+    name: 'Winterheart',
+    description: 'A sword blessed by the Winter Queen herself. Its wielder becomes one with the eternal cold.',
+    type: 'weapon',
+    rarity: 'legendary',
+    zone: 'frostpeak',
+    requiredLevel: 73,
+    stats: { attack: 750, critChance: 0.10, critDamage: 0.75, armorPen: 40, skillCooldown: 0.15 },
+    buyPrice: 500000,
+    sellPrice: 125000,
+    shopAvailable: false,
+    dropOnly: true,
+    emoji: '\u2744\uFE0F'
+  },
+
+  armor_frostpeak_legendary_01: {
+    id: 'armor_frostpeak_legendary_01',
+    name: 'Permafrost Mantle',
+    description: "The frozen armor of Glacielle's personal guard. Grants immunity to all that would slow you.",
+    type: 'armor',
+    rarity: 'legendary',
+    zone: 'frostpeak',
+    requiredLevel: 73,
+    stats: { damageReduction: 0.32, maxHP: 750, hpRegen: 0.025, skillEnergyCost: 0.20 },
+    buyPrice: 500000,
+    sellPrice: 125000,
+    shopAvailable: false,
+    dropOnly: true,
+    emoji: '\u{1F9CA}'
+  },
+
+  // ===== SKILL-ENHANCING ACCESSORIES =====
+
+  // --- Berserk Build ---
+  accessory_skillboost_berserk_01: {
+    id: 'accessory_skillboost_berserk_01',
+    name: "Berserker's Torc",
+    description: 'A neck ring worn by ancient berserker warriors. Your rage burns hotter.',
+    type: 'accessory',
+    rarity: 'rare',
+    zone: 'dustwind',
+    requiredLevel: 18,
+    stats: { attack: 15, skillBoost_berserk: 0.20 },
+    buyPrice: 1800,
+    sellPrice: 450,
+    shopAvailable: true,
+    dropOnly: false,
+    emoji: '\u2B55'
+  },
+
+  accessory_skillboost_berserk_02: {
+    id: 'accessory_skillboost_berserk_02',
+    name: 'Fury Incarnate',
+    description: 'Pure rage condensed into physical form. Handle with extreme caution.',
+    type: 'accessory',
+    rarity: 'legendary',
+    zone: 'emberfell',
+    requiredLevel: 55,
+    stats: { attack: 100, critChance: 0.10, critDamage: 0.50, skillBoost_berserk: 0.50, damageReduction: -0.10 },
+    buyPrice: 250000,
+    sellPrice: 62500,
+    shopAvailable: false,
+    dropOnly: true,
+    emoji: '\u{1F525}'
+  },
+
+  // --- Heal Build ---
+  accessory_skillboost_heal_01: {
+    id: 'accessory_skillboost_heal_01',
+    name: "Healer's Pendant",
+    description: 'A crystal pendant that amplifies restorative magic.',
+    type: 'accessory',
+    rarity: 'rare',
+    zone: 'shadowmire',
+    requiredLevel: 25,
+    stats: { maxHP: 75, skillBoost_heal: 0.30 },
+    buyPrice: 4000,
+    sellPrice: 1000,
+    shopAvailable: true,
+    dropOnly: false,
+    emoji: '\u{1F4FF}'
+  },
+
+  accessory_skillboost_heal_02: {
+    id: 'accessory_skillboost_heal_02',
+    name: "Life Guardian's Amulet",
+    description: 'The healing energies flow through you like a river of life.',
+    type: 'accessory',
+    rarity: 'epic',
+    zone: 'frostpeak',
+    requiredLevel: 65,
+    stats: { maxHP: 200, hpRegen: 0.02, skillBoost_heal: 0.50, skillEnergyCost: 0.15 },
+    buyPrice: 180000,
+    sellPrice: 45000,
+    shopAvailable: false,
+    dropOnly: true,
+    emoji: '\u{1F52E}'
+  },
+
+  // --- Power Strike Build ---
+  accessory_skillboost_power_strike_01: {
+    id: 'accessory_skillboost_power_strike_01',
+    name: "Striker's Gauntlet",
+    description: 'An ancient gauntlet that channels raw power into your strikes.',
+    type: 'accessory',
+    rarity: 'rare',
+    zone: 'ironhold',
+    requiredLevel: 35,
+    stats: { attack: 25, skillBoost_power_strike: 0.25 },
+    buyPrice: 12000,
+    sellPrice: 3000,
+    shopAvailable: true,
+    dropOnly: false,
+    emoji: '\u{1F9E4}'
+  },
+
+  accessory_skillboost_power_strike_02: {
+    id: 'accessory_skillboost_power_strike_02',
+    name: "Devastator's Ring",
+    description: 'Each Power Strike echoes with the force of a thousand warriors.',
+    type: 'accessory',
+    rarity: 'epic',
+    zone: 'emberfell',
+    requiredLevel: 50,
+    stats: { critDamage: 0.3, skillBoost_power_strike: 0.50, skillCooldown: 0.10 },
+    buyPrice: 75000,
+    sellPrice: 18750,
+    shopAvailable: false,
+    dropOnly: true,
+    emoji: '\u{1F48D}'
+  },
+
+  // --- Execute Build ---
+  accessory_skillboost_execute_01: {
+    id: 'accessory_skillboost_execute_01',
+    name: "Executioner's Hood",
+    description: 'Worn by those who deliver final judgments. Execution threshold increased.',
+    type: 'accessory',
+    rarity: 'rare',
+    zone: 'ironhold',
+    requiredLevel: 40,
+    stats: { critChance: 0.05, skillBoost_execute: 0.05 },
+    buyPrice: 15000,
+    sellPrice: 3750,
+    shopAvailable: true,
+    dropOnly: false,
+    emoji: '\u{1F3AD}'
+  },
+
+  accessory_skillboost_execute_02: {
+    id: 'accessory_skillboost_execute_02',
+    name: "Death's Judgment",
+    description: 'When you wear this, every monster knows their time is short.',
+    type: 'accessory',
+    rarity: 'legendary',
+    zone: 'voidrift',
+    requiredLevel: 85,
+    stats: { attack: 150, critChance: 0.08, skillBoost_execute: 0.15, skillCooldown: 0.20 },
+    buyPrice: 500000,
+    sellPrice: 125000,
+    shopAvailable: false,
+    dropOnly: true,
+    emoji: '\u{1F480}'
+  },
+
+  // --- General Skill Enhancement ---
+  accessory_skillboost_general_01: {
+    id: 'accessory_skillboost_general_01',
+    name: "Sage's Focus Crystal",
+    description: 'A crystal that helps channel your mental focus. All skills become more efficient.',
+    type: 'accessory',
+    rarity: 'epic',
+    zone: 'frostpeak',
+    requiredLevel: 60,
+    stats: { energyGain: 0.15, skillCooldown: 0.15, skillEnergyCost: 0.10 },
+    buyPrice: 100000,
+    sellPrice: 25000,
+    shopAvailable: true,
+    dropOnly: false,
+    emoji: '\u{1F48E}'
   }
 };

@@ -17,6 +17,7 @@
 | 6 | Zones & Bosses | ✅ Complete | — |
 | 7 | Skills (all 25) | ✅ Complete | — |
 | 8 | Tutorial System | ✅ Complete | — |
+| 8.5 | Content Expansion (35 monsters + 16 items) | ✅ Complete | — |
 | 9 | Ascension & Vault | ⬜ Not Started | — |
 | 10 | Save/Load Hardening | ⬜ Not Started | — |
 | 11 | Polish & Accessibility | ⬜ Not Started | — |

@@ -148,6 +148,14 @@ export function getComputedStats() {
 
   warningBonus += getPassiveSkillBonus(player, 'warningTime');
 
+  // Skill-enhancing stats from equipment
+  const skillCooldown = getEquipmentBonus(player, 'skillCooldown');
+  const skillEnergyCost = getEquipmentBonus(player, 'skillEnergyCost');
+  const skillBoost_power_strike = getEquipmentBonus(player, 'skillBoost_power_strike');
+  const skillBoost_heal = getEquipmentBonus(player, 'skillBoost_heal');
+  const skillBoost_execute = getEquipmentBonus(player, 'skillBoost_execute');
+  const skillBoost_berserk = getEquipmentBonus(player, 'skillBoost_berserk');
+
   // Active buff bonuses
   attack = Math.floor(attack * buffFx.damageMultiplier);
   critChance += buffFx.critBonus;
@@ -167,6 +175,12 @@ export function getComputedStats() {
     armorPen,
     energyGainMult,
     warningBonus,
+    skillCooldown,
+    skillEnergyCost,
+    skillBoost_power_strike,
+    skillBoost_heal,
+    skillBoost_execute,
+    skillBoost_berserk,
     damageMultiplier: buffFx.damageMultiplier,
     damageTakenMultiplier: buffFx.damageTakenMultiplier,
     reflectMultiplier: buffFx.reflectMultiplier,

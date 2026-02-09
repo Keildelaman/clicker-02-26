@@ -16,7 +16,7 @@ export const ZONES = {
     levelMin: 1,
     levelMax: 10,
     unlockCondition: { type: 'default' },
-    monsters: ['whisperwood_sprite', 'whisperwood_boar', 'whisperwood_wolf', 'whisperwood_treant'],
+    monsters: ['whisperwood_sprite', 'whisperwood_boar', 'whisperwood_wolf', 'whisperwood_treant', 'whisperwood_rabbit', 'whisperwood_mushroom', 'whisperwood_spider', 'whisperwood_bear', 'whisperwood_owl'],
     bossId: 'boss_mossback',
     theme: {
       primary: '#2d5a27',
@@ -45,7 +45,7 @@ export const ZONES = {
     levelMin: 10,
     levelMax: 20,
     unlockCondition: { type: 'boss', bossId: 'boss_mossback' },
-    monsters: ['dustwind_dog', 'dustwind_devil', 'dustwind_bandit', 'dustwind_stalker'],
+    monsters: ['dustwind_dog', 'dustwind_devil', 'dustwind_bandit', 'dustwind_stalker', 'dustwind_scorpion', 'dustwind_snake', 'dustwind_vulture', 'dustwind_raider', 'dustwind_coyote'],
     bossId: 'boss_redfang',
     theme: {
       primary: '#c2a366',
@@ -62,7 +62,8 @@ export const ZONES = {
       'accessory_dustwind_common_01',
       'accessory_dustwind_uncommon_01',
       'armor_dustwind_common_01',
-      'armor_dustwind_uncommon_01'
+      'armor_dustwind_uncommon_01',
+      'accessory_skillboost_berserk_01'
     ]
   },
 
@@ -74,7 +75,7 @@ export const ZONES = {
     levelMin: 20,
     levelMax: 30,
     unlockCondition: { type: 'boss', bossId: 'boss_redfang' },
-    monsters: ['shadowmire_crawler', 'shadowmire_wisp', 'shadowmire_hag', 'shadowmire_husk'],
+    monsters: ['shadowmire_crawler', 'shadowmire_wisp', 'shadowmire_hag', 'shadowmire_husk', 'shadowmire_toad', 'shadowmire_vine', 'shadowmire_leech', 'shadowmire_shade', 'shadowmire_serpent'],
     bossId: 'boss_mire_mother',
     theme: {
       primary: '#2d4a3e',
@@ -91,7 +92,8 @@ export const ZONES = {
       'accessory_shadowmire_common_01',
       'accessory_shadowmire_uncommon_01',
       'armor_shadowmire_common_01',
-      'armor_shadowmire_uncommon_01'
+      'armor_shadowmire_uncommon_01',
+      'accessory_skillboost_heal_01'
     ]
   },
 
@@ -103,7 +105,7 @@ export const ZONES = {
     levelMin: 30,
     levelMax: 45,
     unlockCondition: { type: 'boss', bossId: 'boss_mire_mother' },
-    monsters: ['ironhold_elemental', 'ironhold_bat', 'ironhold_kobold', 'ironhold_golem'],
+    monsters: ['ironhold_elemental', 'ironhold_bat', 'ironhold_kobold', 'ironhold_golem', 'ironhold_spider', 'ironhold_sentinel', 'ironhold_worm', 'ironhold_drake', 'ironhold_guardian'],
     bossId: 'boss_grimstone',
     theme: {
       primary: '#5a5a5a',
@@ -120,7 +122,9 @@ export const ZONES = {
       'accessory_ironhold_common_01',
       'accessory_ironhold_uncommon_01',
       'armor_ironhold_common_01',
-      'armor_ironhold_uncommon_01'
+      'armor_ironhold_uncommon_01',
+      'accessory_skillboost_power_strike_01',
+      'accessory_skillboost_execute_01'
     ]
   },
 
@@ -132,7 +136,7 @@ export const ZONES = {
     levelMin: 45,
     levelMax: 60,
     unlockCondition: { type: 'boss', bossId: 'boss_grimstone' },
-    monsters: ['emberfell_slime', 'emberfell_imp', 'emberfell_wraith', 'emberfell_giant'],
+    monsters: ['emberfell_slime', 'emberfell_imp', 'emberfell_wraith', 'emberfell_giant', 'emberfell_hound', 'emberfell_cultist', 'emberfell_golem', 'emberfell_salamander', 'emberfell_drake'],
     bossId: 'boss_pyrax',
     theme: {
       primary: '#8b2500',
@@ -161,7 +165,7 @@ export const ZONES = {
     levelMin: 60,
     levelMax: 75,
     unlockCondition: { type: 'boss', bossId: 'boss_pyrax' },
-    monsters: ['frostpeak_sprite', 'frostpeak_prowler', 'frostpeak_wraith', 'frostpeak_giant'],
+    monsters: ['frostpeak_sprite', 'frostpeak_prowler', 'frostpeak_wraith', 'frostpeak_giant', 'frostpeak_yeti', 'frostpeak_elemental', 'frostpeak_wolf', 'frostpeak_banshee', 'frostpeak_wyrm'],
     bossId: 'boss_glacielle',
     theme: {
       primary: '#a5c7d3',
@@ -178,7 +182,8 @@ export const ZONES = {
       'accessory_frostpeak_common_01',
       'accessory_frostpeak_uncommon_01',
       'armor_frostpeak_common_01',
-      'armor_frostpeak_uncommon_01'
+      'armor_frostpeak_uncommon_01',
+      'accessory_skillboost_general_01'
     ]
   },
 
@@ -190,7 +195,7 @@ export const ZONES = {
     levelMin: 75,
     levelMax: 100,
     unlockCondition: { type: 'boss', bossId: 'boss_glacielle' },
-    monsters: ['voidrift_walker', 'voidrift_imp', 'voidrift_bender', 'voidrift_horror'],
+    monsters: ['voidrift_walker', 'voidrift_imp', 'voidrift_bender', 'voidrift_horror', 'voidrift_stalker', 'voidrift_golem', 'voidrift_leech', 'voidrift_wraith', 'voidrift_titan'],
     bossId: 'boss_xaltheron',
     theme: {
       primary: '#2d1b4e',
