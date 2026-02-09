@@ -109,6 +109,7 @@ body {
   position: relative;
   min-height: 180px;
   transition: background-color var(--transition-fast);
+  touch-action: manipulation;
 }
 
 .monster-area:active {

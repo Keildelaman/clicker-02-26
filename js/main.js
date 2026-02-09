@@ -73,7 +73,9 @@ registerTickSystem(skills.update);
 registerTickSystem(renderer.update);
 
 // 5. Wire DOM events
-document.getElementById('monster-area').addEventListener('click', () => {
+document.getElementById('monster-area').addEventListener('pointerdown', (e) => {
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
+  e.preventDefault();
   combat.handleClick();
 });
 
