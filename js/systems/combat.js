@@ -14,13 +14,16 @@
  * @see docs/systems/combat.system.md
  */
 
-import { emit } from '../core/event-bus.js';
+import { on, emit } from '../core/event-bus.js';
 import { state, getPlayer } from '../core/game-state.js';
-import { MIN_DAMAGE, DEATH_ANIMATION_DURATION } from '../data/constants.js';
+import { MIN_DAMAGE, DEATH_ANIMATION_DURATION, BOSS_TIMERS } from '../data/constants.js';
 
 let dyingTimer = 0;
 let computeStats = null;    // Injected dependency
 let hurtPlayer = null;      // Injected dependency: damagePlayer(amount, source)
+
+// Boss timer state
+let bossTimer = null;  // { remaining, duration, bossId } or null
 
 /**
  * Check if a monster has a given type (supports multi-type "type1+type2").
@@ -161,12 +164,74 @@ export function handleClick() {
 }
 
 /**
+ * Start boss enrage timer when a boss spawns.
+ */
+function startBossTimer(monster) {
+  const duration = BOSS_TIMERS[monster.definitionId];
+  if (!duration) return;
+
+  bossTimer = {
+    remaining: duration,
+    duration,
+    bossId: monster.definitionId
+  };
+
+  emit('combat:bossTimerStarted', {
+    duration,
+    bossId: monster.definitionId
+  });
+}
+
+/**
+ * Clear boss timer (on boss death or timeout).
+ */
+function clearBossTimer() {
+  bossTimer = null;
+}
+
+/**
+ * Handle boss timeout — reset boss HP, return to normal spawning.
+ */
+function handleBossTimeout() {
+  const monster = state.currentMonster;
+  if (!monster || !monster.isBoss) return;
+
+  clearBossTimer();
+
+  // Despawn boss
+  state.currentMonster = null;
+  state.combatState = 'waiting';
+
+  emit('combat:bossTimeout', {
+    bossId: monster.definitionId,
+    bossName: monster.name
+  });
+
+  // Schedule next normal monster spawn
+  emit('combat:dyingComplete', {});
+}
+
+/**
+ * Handle boss spawn event — start the timer.
+ */
+function onMonsterSpawned({ monster }) {
+  if (monster.isBoss) {
+    startBossTimer(monster);
+  }
+}
+
+/**
  * Process monster death: rewards and schedule next spawn.
  */
 function killMonster() {
   const monster = state.currentMonster;
   state.combatState = 'dying';
   dyingTimer = DEATH_ANIMATION_DURATION / 1000;
+
+  // Clear boss timer on kill
+  if (monster.isBoss) {
+    clearBossTimer();
+  }
 
   const player = getPlayer();
   player.statistics.totalKills++;
@@ -287,6 +352,8 @@ function updateMonsterTypes(monster, dt) {
 export function init(deps = {}) {
   computeStats = deps.getComputedStats;
   hurtPlayer = deps.damagePlayer;
+
+  on('combat:monsterSpawned', onMonsterSpawned);
 }
 
 export function update(dt) {
@@ -300,8 +367,22 @@ export function update(dt) {
     return;
   }
 
-  // Active combat: run monster type updates
+  // Active combat: run monster type updates + boss timer
   if (state.combatState === 'active' && state.currentMonster) {
     updateMonsterTypes(state.currentMonster, dt);
+
+    // Boss timer countdown
+    if (bossTimer) {
+      bossTimer.remaining -= dt * 1000; // dt is seconds, timer is ms
+
+      emit('combat:bossTimerTick', {
+        remaining: bossTimer.remaining,
+        duration: bossTimer.duration
+      });
+
+      if (bossTimer.remaining <= 0) {
+        handleBossTimeout();
+      }
+    }
   }
 }

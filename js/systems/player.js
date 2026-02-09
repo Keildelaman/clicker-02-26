@@ -250,6 +250,7 @@ export function createNewPlayer() {
     currentZone: 'whisperwood',
     unlockedZones: ['whisperwood'],
     bossesDefeated: [],
+    zoneKills: {},
 
     ascension: {
       level: 0,

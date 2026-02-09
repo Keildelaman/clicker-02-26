@@ -2,7 +2,15 @@
  * monsters.data.js - Monster Definitions
  *
  * Static data for all monsters and bosses across 7 zones.
- * Phase 6: 35 monsters (28 regular + 7 bosses).
+ * Phase 9 Balance Overhaul: "The Grind Matters"
+ *
+ * HP values tuned via "clicks budget" approach:
+ *   Zone entry with prev boss weapon = 12-15 clicks (weakest monster)
+ *   Zone entry with prev boss weapon = 25-38 clicks (strongest monster)
+ *   With zone uncommon weapon = 8-19 clicks (satisfying power spike)
+ *
+ * Gold/XP values ~3x old values to maintain gold-per-minute parity
+ * with the ~3x increase in clicks-to-kill.
  *
  * Monster types: normal, swift, aggressive, regenerating, armored, shielded
  * Bosses are always aggressive + may have secondary types (e.g. "aggressive+armored")
@@ -16,6 +24,34 @@
 export const MONSTERS = {
   // ===== ZONE 1: WHISPERWOOD GLEN (Levels 1-10) =====
   // All normal type — types introduced starting from Zone 2
+  // Zone HP range: 75 (weakest) → 190 (strongest)
+  // Entry attack: 5 (no gear) | With uncommon weapon (18): 23
+
+  whisperwood_rabbit: {
+    id: 'whisperwood_rabbit',
+    name: 'Giant Rabbit',
+    description: 'An oversized rabbit with surprisingly sharp teeth. Hops erratically to dodge attacks.',
+    zone: 'whisperwood',
+    type: 'normal',
+    isBoss: false,
+    levelMin: 1,
+    levelMax: 3,
+    baseHealth: 75,
+    healthPerLevel: 25,
+    goldMin: 3,
+    goldMax: 8,
+    goldPerLevel: 3,
+    xpMin: 18,
+    xpMax: 30,
+    xpPerLevel: 6,
+    lootTable: [
+      { itemId: 'weapon_whisperwood_common_01', chance: 0.06 },
+      { itemId: 'armor_whisperwood_common_01', chance: 0.04 }
+    ],
+    emoji: '\u{1F407}',
+    deathEmoji: '\u{1F480}',
+    spawnWeight: 30
+  },
 
   whisperwood_sprite: {
     id: 'whisperwood_sprite',
@@ -26,20 +62,48 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 1,
     levelMax: 4,
-    baseHealth: 20,
-    healthPerLevel: 5,
-    goldMin: 2,
-    goldMax: 4,
-    goldPerLevel: 1,
-    xpMin: 8,
-    xpMax: 12,
-    xpPerLevel: 2,
+    baseHealth: 85,
+    healthPerLevel: 20,
+    goldMin: 5,
+    goldMax: 12,
+    goldPerLevel: 3,
+    xpMin: 22,
+    xpMax: 35,
+    xpPerLevel: 6,
     lootTable: [
-      { itemId: 'weapon_whisperwood_common_01', chance: 0.08 }
+      { itemId: 'weapon_whisperwood_common_01', chance: 0.08 },
+      { itemId: 'armor_whisperwood_common_01', chance: 0.04 }
     ],
     emoji: '\u{1F9DA}',
     deathEmoji: '\u2728',
     spawnWeight: 30
+  },
+
+  whisperwood_mushroom: {
+    id: 'whisperwood_mushroom',
+    name: 'Spore Puff',
+    description: 'A walking mushroom that releases toxic spores when threatened. Surprisingly sturdy.',
+    zone: 'whisperwood',
+    type: 'normal',
+    isBoss: false,
+    levelMin: 2,
+    levelMax: 5,
+    baseHealth: 90,
+    healthPerLevel: 22,
+    goldMin: 6,
+    goldMax: 14,
+    goldPerLevel: 3,
+    xpMin: 24,
+    xpMax: 38,
+    xpPerLevel: 6,
+    lootTable: [
+      { itemId: 'weapon_whisperwood_common_01', chance: 0.05 },
+      { itemId: 'accessory_whisperwood_common_01', chance: 0.04 },
+      { itemId: 'armor_whisperwood_common_01', chance: 0.03 }
+    ],
+    emoji: '\u{1F344}',
+    deathEmoji: '\u{1F4A8}',
+    spawnWeight: 28
   },
 
   whisperwood_boar: {
@@ -49,21 +113,50 @@ export const MONSTERS = {
     zone: 'whisperwood',
     type: 'normal',
     isBoss: false,
-    levelMin: 2,
+    levelMin: 3,
     levelMax: 6,
-    baseHealth: 35,
-    healthPerLevel: 8,
-    goldMin: 3,
-    goldMax: 6,
-    goldPerLevel: 1,
-    xpMin: 10,
-    xpMax: 15,
-    xpPerLevel: 3,
+    baseHealth: 100,
+    healthPerLevel: 20,
+    goldMin: 8,
+    goldMax: 17,
+    goldPerLevel: 3,
+    xpMin: 28,
+    xpMax: 42,
+    xpPerLevel: 7,
     lootTable: [
       { itemId: 'weapon_whisperwood_common_01', chance: 0.06 },
-      { itemId: 'weapon_whisperwood_common_02', chance: 0.06 }
+      { itemId: 'weapon_whisperwood_common_02', chance: 0.06 },
+      { itemId: 'armor_whisperwood_common_01', chance: 0.03 },
+      { itemId: 'accessory_whisperwood_common_01', chance: 0.02 }
     ],
     emoji: '\u{1F417}',
+    deathEmoji: '\u{1F480}',
+    spawnWeight: 25
+  },
+
+  whisperwood_spider: {
+    id: 'whisperwood_spider',
+    name: 'Cave Spider',
+    description: 'A large arachnid that lurks in shadowy corners of the forest. Its web is sticky and strong.',
+    zone: 'whisperwood',
+    type: 'normal',
+    isBoss: false,
+    levelMin: 3,
+    levelMax: 7,
+    baseHealth: 110,
+    healthPerLevel: 18,
+    goldMin: 8,
+    goldMax: 18,
+    goldPerLevel: 3,
+    xpMin: 26,
+    xpMax: 40,
+    xpPerLevel: 7,
+    lootTable: [
+      { itemId: 'weapon_whisperwood_common_02', chance: 0.06 },
+      { itemId: 'armor_whisperwood_common_01', chance: 0.03 },
+      { itemId: 'accessory_whisperwood_common_01', chance: 0.02 }
+    ],
+    emoji: '\u{1F577}\uFE0F',
     deathEmoji: '\u{1F480}',
     spawnWeight: 25
   },
@@ -77,122 +170,21 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 4,
     levelMax: 8,
-    baseHealth: 45,
-    healthPerLevel: 10,
-    goldMin: 4,
-    goldMax: 8,
-    goldPerLevel: 2,
-    xpMin: 12,
-    xpMax: 18,
-    xpPerLevel: 3,
+    baseHealth: 120,
+    healthPerLevel: 20,
+    goldMin: 10,
+    goldMax: 22,
+    goldPerLevel: 4,
+    xpMin: 30,
+    xpMax: 48,
+    xpPerLevel: 8,
     lootTable: [
       { itemId: 'weapon_whisperwood_common_02', chance: 0.08 },
-      { itemId: 'weapon_whisperwood_uncommon_01', chance: 0.03 }
+      { itemId: 'weapon_whisperwood_uncommon_01', chance: 0.03 },
+      { itemId: 'armor_whisperwood_uncommon_01', chance: 0.02 },
+      { itemId: 'accessory_whisperwood_uncommon_01', chance: 0.02 }
     ],
     emoji: '\u{1F43A}',
-    deathEmoji: '\u{1F480}',
-    spawnWeight: 25
-  },
-
-  whisperwood_treant: {
-    id: 'whisperwood_treant',
-    name: 'Grumpy Treant',
-    description: 'An awakened tree spirit, cranky from centuries of standing in one place.',
-    zone: 'whisperwood',
-    type: 'normal',
-    isBoss: false,
-    levelMin: 6,
-    levelMax: 10,
-    baseHealth: 70,
-    healthPerLevel: 15,
-    goldMin: 5,
-    goldMax: 10,
-    goldPerLevel: 2,
-    xpMin: 15,
-    xpMax: 22,
-    xpPerLevel: 4,
-    lootTable: [
-      { itemId: 'weapon_whisperwood_uncommon_01', chance: 0.05 },
-      { itemId: 'accessory_whisperwood_common_01', chance: 0.06 },
-      { itemId: 'weapon_whisperwood_rare_01', chance: 0.005 }
-    ],
-    emoji: '\u{1F333}',
-    deathEmoji: '\u{1FAB5}',
-    spawnWeight: 20
-  },
-
-  whisperwood_rabbit: {
-    id: 'whisperwood_rabbit',
-    name: 'Giant Rabbit',
-    description: 'An oversized rabbit with surprisingly sharp teeth. Hops erratically to dodge attacks.',
-    zone: 'whisperwood',
-    type: 'normal',
-    isBoss: false,
-    levelMin: 1,
-    levelMax: 3,
-    baseHealth: 15,
-    healthPerLevel: 4,
-    goldMin: 1,
-    goldMax: 3,
-    goldPerLevel: 1,
-    xpMin: 6,
-    xpMax: 10,
-    xpPerLevel: 2,
-    lootTable: [
-      { itemId: 'weapon_whisperwood_common_01', chance: 0.06 }
-    ],
-    emoji: '\u{1F407}',
-    deathEmoji: '\u{1F480}',
-    spawnWeight: 30
-  },
-
-  whisperwood_mushroom: {
-    id: 'whisperwood_mushroom',
-    name: 'Spore Puff',
-    description: 'A walking mushroom that releases toxic spores when threatened. Surprisingly sturdy.',
-    zone: 'whisperwood',
-    type: 'normal',
-    isBoss: false,
-    levelMin: 2,
-    levelMax: 5,
-    baseHealth: 25,
-    healthPerLevel: 6,
-    goldMin: 2,
-    goldMax: 5,
-    goldPerLevel: 1,
-    xpMin: 8,
-    xpMax: 13,
-    xpPerLevel: 2,
-    lootTable: [
-      { itemId: 'weapon_whisperwood_common_01', chance: 0.05 },
-      { itemId: 'accessory_whisperwood_common_01', chance: 0.04 }
-    ],
-    emoji: '\u{1F344}',
-    deathEmoji: '\u{1F4A8}',
-    spawnWeight: 28
-  },
-
-  whisperwood_spider: {
-    id: 'whisperwood_spider',
-    name: 'Cave Spider',
-    description: 'A large arachnid that lurks in shadowy corners of the forest. Its web is sticky and strong.',
-    zone: 'whisperwood',
-    type: 'normal',
-    isBoss: false,
-    levelMin: 3,
-    levelMax: 7,
-    baseHealth: 30,
-    healthPerLevel: 7,
-    goldMin: 3,
-    goldMax: 6,
-    goldPerLevel: 1,
-    xpMin: 9,
-    xpMax: 14,
-    xpPerLevel: 3,
-    lootTable: [
-      { itemId: 'weapon_whisperwood_common_02', chance: 0.06 }
-    ],
-    emoji: '\u{1F577}\uFE0F',
     deathEmoji: '\u{1F480}',
     spawnWeight: 25
   },
@@ -206,17 +198,19 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 5,
     levelMax: 9,
-    baseHealth: 55,
-    healthPerLevel: 12,
-    goldMin: 4,
-    goldMax: 9,
-    goldPerLevel: 2,
-    xpMin: 13,
-    xpMax: 20,
-    xpPerLevel: 3,
+    baseHealth: 135,
+    healthPerLevel: 18,
+    goldMin: 12,
+    goldMax: 25,
+    goldPerLevel: 4,
+    xpMin: 35,
+    xpMax: 55,
+    xpPerLevel: 8,
     lootTable: [
       { itemId: 'weapon_whisperwood_uncommon_01', chance: 0.04 },
-      { itemId: 'armor_whisperwood_common_01', chance: 0.05 }
+      { itemId: 'armor_whisperwood_common_01', chance: 0.05 },
+      { itemId: 'armor_whisperwood_uncommon_01', chance: 0.03 },
+      { itemId: 'accessory_whisperwood_uncommon_01', chance: 0.02 }
     ],
     emoji: '\u{1F43B}',
     deathEmoji: '\u{1F480}',
@@ -232,20 +226,52 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 7,
     levelMax: 10,
-    baseHealth: 60,
-    healthPerLevel: 13,
-    goldMin: 5,
-    goldMax: 10,
-    goldPerLevel: 2,
-    xpMin: 15,
-    xpMax: 22,
-    xpPerLevel: 4,
+    baseHealth: 140,
+    healthPerLevel: 18,
+    goldMin: 14,
+    goldMax: 28,
+    goldPerLevel: 5,
+    xpMin: 40,
+    xpMax: 60,
+    xpPerLevel: 9,
     lootTable: [
       { itemId: 'weapon_whisperwood_uncommon_01', chance: 0.05 },
-      { itemId: 'weapon_whisperwood_rare_01', chance: 0.004 }
+      { itemId: 'weapon_whisperwood_rare_01', chance: 0.004 },
+      { itemId: 'armor_whisperwood_uncommon_01', chance: 0.03 },
+      { itemId: 'accessory_whisperwood_uncommon_01', chance: 0.02 },
+      { itemId: 'armor_whisperwood_rare_01', chance: 0.003 }
     ],
     emoji: '\u{1F989}',
     deathEmoji: '\u{1FAB6}',
+    spawnWeight: 20
+  },
+
+  whisperwood_treant: {
+    id: 'whisperwood_treant',
+    name: 'Grumpy Treant',
+    description: 'An awakened tree spirit, cranky from centuries of standing in one place.',
+    zone: 'whisperwood',
+    type: 'normal',
+    isBoss: false,
+    levelMin: 6,
+    levelMax: 10,
+    baseHealth: 160,
+    healthPerLevel: 22,
+    goldMin: 15,
+    goldMax: 30,
+    goldPerLevel: 5,
+    xpMin: 42,
+    xpMax: 65,
+    xpPerLevel: 10,
+    lootTable: [
+      { itemId: 'weapon_whisperwood_uncommon_01', chance: 0.05 },
+      { itemId: 'accessory_whisperwood_common_01', chance: 0.06 },
+      { itemId: 'weapon_whisperwood_rare_01', chance: 0.005 },
+      { itemId: 'armor_whisperwood_uncommon_01', chance: 0.03 },
+      { itemId: 'armor_whisperwood_rare_01', chance: 0.004 }
+    ],
+    emoji: '\u{1F333}',
+    deathEmoji: '\u{1FAB5}',
     spawnWeight: 20
   },
 
@@ -258,13 +284,13 @@ export const MONSTERS = {
     isBoss: true,
     levelMin: 10,
     levelMax: 10,
-    baseHealth: 500,
+    baseHealth: 750,
     healthPerLevel: 0,
-    goldMin: 100,
-    goldMax: 150,
+    goldMin: 300,
+    goldMax: 450,
     goldPerLevel: 0,
-    xpMin: 200,
-    xpMax: 250,
+    xpMin: 600,
+    xpMax: 750,
     xpPerLevel: 0,
     mechanics: {
       attackCycle: 6000,
@@ -282,6 +308,8 @@ export const MONSTERS = {
   },
 
   // ===== ZONE 2: DUSTWIND PLAINS (Levels 10-20) =====
+  // Zone HP range: 630 (weakest) → 1575 (strongest)
+  // Entry attack with Z1 boss weapon (28): 14+28 = 42
 
   dustwind_dog: {
     id: 'dustwind_dog',
@@ -292,109 +320,21 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 10,
     levelMax: 13,
-    baseHealth: 80,
-    healthPerLevel: 12,
-    goldMin: 6,
-    goldMax: 12,
-    goldPerLevel: 2,
-    xpMin: 18,
-    xpMax: 25,
-    xpPerLevel: 4,
+    baseHealth: 630,
+    healthPerLevel: 70,
+    goldMin: 18,
+    goldMax: 35,
+    goldPerLevel: 5,
+    xpMin: 50,
+    xpMax: 75,
+    xpPerLevel: 10,
     lootTable: [
-      { itemId: 'weapon_dustwind_common_01', chance: 0.08 }
+      { itemId: 'weapon_dustwind_common_01', chance: 0.08 },
+      { itemId: 'armor_dustwind_common_01', chance: 0.05 }
     ],
     emoji: '\u{1F43F}\uFE0F',
     deathEmoji: '\u{1F480}',
     spawnWeight: 30
-  },
-
-  dustwind_devil: {
-    id: 'dustwind_devil',
-    name: 'Dust Devil',
-    description: 'A small air elemental that whips up debris into a stinging whirlwind.',
-    zone: 'dustwind',
-    type: 'swift',
-    isBoss: false,
-    levelMin: 11,
-    levelMax: 15,
-    baseHealth: 95,
-    healthPerLevel: 15,
-    escapeTimer: 8000,
-    escapeDamage: 0.05,
-    goldMin: 8,
-    goldMax: 15,
-    goldPerLevel: 2,
-    xpMin: 22,
-    xpMax: 30,
-    xpPerLevel: 4,
-    lootTable: [
-      { itemId: 'weapon_dustwind_common_01', chance: 0.06 },
-      { itemId: 'accessory_dustwind_common_01', chance: 0.05 }
-    ],
-    emoji: '\u{1F32A}\uFE0F',
-    deathEmoji: '\u{1F4A8}',
-    spawnWeight: 25
-  },
-
-  dustwind_bandit: {
-    id: 'dustwind_bandit',
-    name: 'Bandit Scout',
-    description: 'A lowly member of Redfang\'s gang, sent to patrol the roads and rob unwary travelers.',
-    zone: 'dustwind',
-    type: 'aggressive',
-    isBoss: false,
-    levelMin: 13,
-    levelMax: 17,
-    baseHealth: 120,
-    healthPerLevel: 18,
-    mechanics: {
-      attackCycle: 6400,
-      warningDuration: 600,
-      attackDuration: 800,
-      damagePercent: 0.08
-    },
-    goldMin: 10,
-    goldMax: 20,
-    goldPerLevel: 3,
-    xpMin: 28,
-    xpMax: 38,
-    xpPerLevel: 5,
-    lootTable: [
-      { itemId: 'weapon_dustwind_common_02', chance: 0.08 },
-      { itemId: 'weapon_dustwind_uncommon_01', chance: 0.04 }
-    ],
-    emoji: '\u{1F5E1}\uFE0F',
-    deathEmoji: '\u{1F480}',
-    spawnWeight: 25
-  },
-
-  dustwind_stalker: {
-    id: 'dustwind_stalker',
-    name: 'Plains Stalker',
-    description: 'A large predatory cat that hunts the grasslands. Silent, fast, and deadly.',
-    zone: 'dustwind',
-    type: 'swift',
-    isBoss: false,
-    levelMin: 15,
-    levelMax: 20,
-    baseHealth: 150,
-    healthPerLevel: 20,
-    escapeTimer: 7000,
-    escapeDamage: 0.08,
-    goldMin: 12,
-    goldMax: 25,
-    goldPerLevel: 3,
-    xpMin: 35,
-    xpMax: 48,
-    xpPerLevel: 6,
-    lootTable: [
-      { itemId: 'weapon_dustwind_uncommon_01', chance: 0.05 },
-      { itemId: 'weapon_dustwind_rare_01', chance: 0.008 },
-      { itemId: 'accessory_dustwind_uncommon_01', chance: 0.03 }
-    ],
-    emoji: '\u{1F406}',
-    deathEmoji: '\u{1F480}',
-    spawnWeight: 20
   },
 
   dustwind_scorpion: {
@@ -406,14 +346,14 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 10,
     levelMax: 14,
-    baseHealth: 90,
-    healthPerLevel: 14,
-    goldMin: 7,
-    goldMax: 14,
-    goldPerLevel: 2,
-    xpMin: 20,
-    xpMax: 28,
-    xpPerLevel: 4,
+    baseHealth: 680,
+    healthPerLevel: 75,
+    goldMin: 20,
+    goldMax: 40,
+    goldPerLevel: 6,
+    xpMin: 55,
+    xpMax: 82,
+    xpPerLevel: 10,
     lootTable: [
       { itemId: 'weapon_dustwind_common_01', chance: 0.07 },
       { itemId: 'armor_dustwind_common_01', chance: 0.04 }
@@ -432,21 +372,52 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 11,
     levelMax: 15,
-    baseHealth: 85,
-    healthPerLevel: 12,
-    escapeTimer: 8500,
+    baseHealth: 700,
+    healthPerLevel: 72,
+    escapeTimer: 14000,
     escapeDamage: 0.04,
-    goldMin: 9,
-    goldMax: 16,
-    goldPerLevel: 2,
-    xpMin: 24,
-    xpMax: 32,
-    xpPerLevel: 5,
+    goldMin: 25,
+    goldMax: 48,
+    goldPerLevel: 6,
+    xpMin: 65,
+    xpMax: 95,
+    xpPerLevel: 12,
     lootTable: [
-      { itemId: 'weapon_dustwind_common_02', chance: 0.06 }
+      { itemId: 'weapon_dustwind_common_02', chance: 0.06 },
+      { itemId: 'armor_dustwind_common_01', chance: 0.03 },
+      { itemId: 'accessory_dustwind_common_01', chance: 0.02 }
     ],
     emoji: '\u{1F40D}',
     deathEmoji: '\u{1F480}',
+    spawnWeight: 25
+  },
+
+  dustwind_devil: {
+    id: 'dustwind_devil',
+    name: 'Dust Devil',
+    description: 'A small air elemental that whips up debris into a stinging whirlwind.',
+    zone: 'dustwind',
+    type: 'swift',
+    isBoss: false,
+    levelMin: 11,
+    levelMax: 15,
+    baseHealth: 720,
+    healthPerLevel: 75,
+    escapeTimer: 14000,
+    escapeDamage: 0.05,
+    goldMin: 22,
+    goldMax: 44,
+    goldPerLevel: 6,
+    xpMin: 60,
+    xpMax: 88,
+    xpPerLevel: 11,
+    lootTable: [
+      { itemId: 'weapon_dustwind_common_01', chance: 0.06 },
+      { itemId: 'accessory_dustwind_common_01', chance: 0.05 },
+      { itemId: 'armor_dustwind_common_01', chance: 0.03 }
+    ],
+    emoji: '\u{1F32A}\uFE0F',
+    deathEmoji: '\u{1F4A8}',
     spawnWeight: 25
   },
 
@@ -459,23 +430,59 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 12,
     levelMax: 16,
-    baseHealth: 100,
-    healthPerLevel: 14,
-    escapeTimer: 7500,
+    baseHealth: 780,
+    healthPerLevel: 78,
+    escapeTimer: 13000,
     escapeDamage: 0.06,
-    goldMin: 9,
-    goldMax: 17,
-    goldPerLevel: 3,
-    xpMin: 25,
-    xpMax: 34,
-    xpPerLevel: 5,
+    goldMin: 25,
+    goldMax: 50,
+    goldPerLevel: 7,
+    xpMin: 68,
+    xpMax: 100,
+    xpPerLevel: 12,
     lootTable: [
       { itemId: 'accessory_dustwind_common_01', chance: 0.06 },
-      { itemId: 'weapon_dustwind_uncommon_01', chance: 0.03 }
+      { itemId: 'weapon_dustwind_uncommon_01', chance: 0.03 },
+      { itemId: 'armor_dustwind_uncommon_01', chance: 0.02 },
+      { itemId: 'accessory_dustwind_uncommon_01', chance: 0.02 }
     ],
     emoji: '\u{1F985}',
     deathEmoji: '\u{1FAB6}',
     spawnWeight: 23
+  },
+
+  dustwind_bandit: {
+    id: 'dustwind_bandit',
+    name: 'Bandit Scout',
+    description: 'A lowly member of Redfang\'s gang, sent to patrol the roads and rob unwary travelers.',
+    zone: 'dustwind',
+    type: 'aggressive',
+    isBoss: false,
+    levelMin: 13,
+    levelMax: 17,
+    baseHealth: 900,
+    healthPerLevel: 82,
+    mechanics: {
+      attackCycle: 6400,
+      warningDuration: 600,
+      attackDuration: 800,
+      damagePercent: 0.08
+    },
+    goldMin: 28,
+    goldMax: 55,
+    goldPerLevel: 7,
+    xpMin: 75,
+    xpMax: 110,
+    xpPerLevel: 13,
+    lootTable: [
+      { itemId: 'weapon_dustwind_common_02', chance: 0.08 },
+      { itemId: 'weapon_dustwind_uncommon_01', chance: 0.04 },
+      { itemId: 'armor_dustwind_uncommon_01', chance: 0.02 },
+      { itemId: 'accessory_dustwind_common_01', chance: 0.03 }
+    ],
+    emoji: '\u{1F5E1}\uFE0F',
+    deathEmoji: '\u{1F480}',
+    spawnWeight: 25
   },
 
   dustwind_raider: {
@@ -487,27 +494,60 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 14,
     levelMax: 18,
-    baseHealth: 140,
-    healthPerLevel: 18,
+    baseHealth: 1050,
+    healthPerLevel: 88,
     mechanics: {
       attackCycle: 5800,
       warningDuration: 550,
       attackDuration: 750,
       damagePercent: 0.09
     },
-    goldMin: 12,
-    goldMax: 22,
-    goldPerLevel: 3,
-    xpMin: 30,
-    xpMax: 42,
-    xpPerLevel: 5,
+    goldMin: 32,
+    goldMax: 62,
+    goldPerLevel: 8,
+    xpMin: 85,
+    xpMax: 125,
+    xpPerLevel: 14,
     lootTable: [
       { itemId: 'weapon_dustwind_uncommon_01', chance: 0.05 },
-      { itemId: 'accessory_dustwind_uncommon_01', chance: 0.03 }
+      { itemId: 'accessory_dustwind_uncommon_01', chance: 0.03 },
+      { itemId: 'armor_dustwind_uncommon_01', chance: 0.03 },
+      { itemId: 'armor_dustwind_rare_01', chance: 0.003 }
     ],
     emoji: '\u2694\uFE0F',
     deathEmoji: '\u{1F480}',
     spawnWeight: 22
+  },
+
+  dustwind_stalker: {
+    id: 'dustwind_stalker',
+    name: 'Plains Stalker',
+    description: 'A large predatory cat that hunts the grasslands. Silent, fast, and deadly.',
+    zone: 'dustwind',
+    type: 'swift',
+    isBoss: false,
+    levelMin: 15,
+    levelMax: 20,
+    baseHealth: 1200,
+    healthPerLevel: 90,
+    escapeTimer: 13000,
+    escapeDamage: 0.08,
+    goldMin: 35,
+    goldMax: 70,
+    goldPerLevel: 8,
+    xpMin: 95,
+    xpMax: 140,
+    xpPerLevel: 15,
+    lootTable: [
+      { itemId: 'weapon_dustwind_uncommon_01', chance: 0.05 },
+      { itemId: 'weapon_dustwind_rare_01', chance: 0.008 },
+      { itemId: 'accessory_dustwind_uncommon_01', chance: 0.03 },
+      { itemId: 'armor_dustwind_uncommon_01', chance: 0.02 },
+      { itemId: 'armor_dustwind_rare_01', chance: 0.004 }
+    ],
+    emoji: '\u{1F406}',
+    deathEmoji: '\u{1F480}',
+    spawnWeight: 20
   },
 
   dustwind_coyote: {
@@ -519,17 +559,20 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 16,
     levelMax: 20,
-    baseHealth: 160,
-    healthPerLevel: 20,
-    goldMin: 13,
-    goldMax: 25,
-    goldPerLevel: 3,
-    xpMin: 35,
-    xpMax: 48,
-    xpPerLevel: 6,
+    baseHealth: 1350,
+    healthPerLevel: 95,
+    goldMin: 38,
+    goldMax: 75,
+    goldPerLevel: 9,
+    xpMin: 100,
+    xpMax: 145,
+    xpPerLevel: 16,
     lootTable: [
       { itemId: 'weapon_dustwind_uncommon_01', chance: 0.06 },
-      { itemId: 'weapon_dustwind_rare_01', chance: 0.006 }
+      { itemId: 'weapon_dustwind_rare_01', chance: 0.006 },
+      { itemId: 'armor_dustwind_uncommon_01', chance: 0.03 },
+      { itemId: 'accessory_dustwind_uncommon_01', chance: 0.02 },
+      { itemId: 'accessory_dustwind_rare_01', chance: 0.003 }
     ],
     emoji: '\u{1F415}',
     deathEmoji: '\u{1F480}',
@@ -545,13 +588,13 @@ export const MONSTERS = {
     isBoss: true,
     levelMin: 20,
     levelMax: 20,
-    baseHealth: 1200,
+    baseHealth: 3000,
     healthPerLevel: 0,
-    goldMin: 300,
-    goldMax: 450,
+    goldMin: 900,
+    goldMax: 1350,
     goldPerLevel: 0,
-    xpMin: 500,
-    xpMax: 600,
+    xpMin: 1500,
+    xpMax: 1800,
     xpPerLevel: 0,
     mechanics: {
       attackCycle: 5200,
@@ -569,6 +612,8 @@ export const MONSTERS = {
   },
 
   // ===== ZONE 3: SHADOWMIRE SWAMP (Levels 20-30) =====
+  // Zone HP range: 1485 (weakest) → 3715 (strongest)
+  // Entry attack with Z2 boss weapon (75): 24+75 = 99
 
   shadowmire_crawler: {
     id: 'shadowmire_crawler',
@@ -579,107 +624,21 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 20,
     levelMax: 24,
-    baseHealth: 200,
-    healthPerLevel: 25,
-    goldMin: 15,
-    goldMax: 30,
-    goldPerLevel: 4,
-    xpMin: 45,
-    xpMax: 60,
-    xpPerLevel: 7,
+    baseHealth: 1485,
+    healthPerLevel: 110,
+    goldMin: 45,
+    goldMax: 85,
+    goldPerLevel: 10,
+    xpMin: 120,
+    xpMax: 175,
+    xpPerLevel: 18,
     lootTable: [
-      { itemId: 'weapon_shadowmire_common_01', chance: 0.08 }
+      { itemId: 'weapon_shadowmire_common_01', chance: 0.08 },
+      { itemId: 'armor_shadowmire_common_01', chance: 0.05 }
     ],
     emoji: '\u{1F982}',
     deathEmoji: '\u{1F480}',
     spawnWeight: 30
-  },
-
-  shadowmire_wisp: {
-    id: 'shadowmire_wisp',
-    name: 'Will-o-Wisp',
-    description: 'Deceptive lights that lead travelers astray. Actually malevolent spirits.',
-    zone: 'shadowmire',
-    type: 'swift',
-    isBoss: false,
-    levelMin: 21,
-    levelMax: 26,
-    baseHealth: 180,
-    healthPerLevel: 22,
-    escapeTimer: 6000,
-    escapeDamage: 0.07,
-    goldMin: 18,
-    goldMax: 35,
-    goldPerLevel: 4,
-    xpMin: 50,
-    xpMax: 68,
-    xpPerLevel: 8,
-    lootTable: [
-      { itemId: 'weapon_shadowmire_common_02', chance: 0.07 },
-      { itemId: 'accessory_shadowmire_common_01', chance: 0.05 }
-    ],
-    emoji: '\u{1F47B}',
-    deathEmoji: '\u2728',
-    spawnWeight: 25
-  },
-
-  shadowmire_hag: {
-    id: 'shadowmire_hag',
-    name: 'Swamp Hag',
-    description: 'A twisted crone who made dark pacts for power. She collects bones and weaves curses.',
-    zone: 'shadowmire',
-    type: 'regenerating',
-    isBoss: false,
-    levelMin: 24,
-    levelMax: 28,
-    baseHealth: 280,
-    healthPerLevel: 30,
-    regenRate: 0.03,
-    goldMin: 25,
-    goldMax: 45,
-    goldPerLevel: 5,
-    xpMin: 60,
-    xpMax: 82,
-    xpPerLevel: 9,
-    lootTable: [
-      { itemId: 'weapon_shadowmire_uncommon_01', chance: 0.05 },
-      { itemId: 'accessory_shadowmire_uncommon_01', chance: 0.04 }
-    ],
-    emoji: '\u{1F9D9}\u200D\u2640\uFE0F',
-    deathEmoji: '\u{1F480}',
-    spawnWeight: 25
-  },
-
-  shadowmire_husk: {
-    id: 'shadowmire_husk',
-    name: 'Rotting Husk',
-    description: 'The animated remains of those who died in the swamp. Shambles forward with mindless hunger.',
-    zone: 'shadowmire',
-    type: 'aggressive',
-    isBoss: false,
-    levelMin: 26,
-    levelMax: 30,
-    baseHealth: 350,
-    healthPerLevel: 35,
-    mechanics: {
-      attackCycle: 6000,
-      warningDuration: 600,
-      attackDuration: 900,
-      damagePercent: 0.08
-    },
-    goldMin: 30,
-    goldMax: 55,
-    goldPerLevel: 6,
-    xpMin: 72,
-    xpMax: 95,
-    xpPerLevel: 10,
-    lootTable: [
-      { itemId: 'weapon_shadowmire_uncommon_01', chance: 0.06 },
-      { itemId: 'weapon_shadowmire_rare_01', chance: 0.008 }
-    ],
-    emoji: '\u{1F9DF}',
-    deathEmoji: '\u{1F480}',
-    spawnWeight: 20
   },
 
   shadowmire_toad: {
@@ -691,15 +650,15 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 20,
     levelMax: 25,
-    baseHealth: 240,
-    healthPerLevel: 28,
-    regenRate: 0.025,
-    goldMin: 18,
-    goldMax: 34,
-    goldPerLevel: 4,
-    xpMin: 48,
-    xpMax: 65,
-    xpPerLevel: 7,
+    baseHealth: 1600,
+    healthPerLevel: 115,
+    regenRate: 0.008,
+    goldMin: 50,
+    goldMax: 95,
+    goldPerLevel: 11,
+    xpMin: 130,
+    xpMax: 190,
+    xpPerLevel: 18,
     lootTable: [
       { itemId: 'weapon_shadowmire_common_01', chance: 0.07 },
       { itemId: 'armor_shadowmire_common_01', chance: 0.04 }
@@ -707,6 +666,35 @@ export const MONSTERS = {
     emoji: '\u{1F438}',
     deathEmoji: '\u{1F480}',
     spawnWeight: 28
+  },
+
+  shadowmire_wisp: {
+    id: 'shadowmire_wisp',
+    name: 'Will-o-Wisp',
+    description: 'Deceptive lights that lead travelers astray. Actually malevolent spirits.',
+    zone: 'shadowmire',
+    type: 'swift',
+    isBoss: false,
+    levelMin: 21,
+    levelMax: 26,
+    baseHealth: 1650,
+    healthPerLevel: 118,
+    escapeTimer: 12000,
+    escapeDamage: 0.10,
+    goldMin: 52,
+    goldMax: 100,
+    goldPerLevel: 12,
+    xpMin: 140,
+    xpMax: 200,
+    xpPerLevel: 20,
+    lootTable: [
+      { itemId: 'weapon_shadowmire_common_02', chance: 0.07 },
+      { itemId: 'accessory_shadowmire_common_01', chance: 0.05 },
+      { itemId: 'armor_shadowmire_common_01', chance: 0.03 }
+    ],
+    emoji: '\u{1F47B}',
+    deathEmoji: '\u2728',
+    spawnWeight: 25
   },
 
   shadowmire_vine: {
@@ -718,23 +706,25 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 22,
     levelMax: 27,
-    baseHealth: 260,
-    healthPerLevel: 28,
+    baseHealth: 1900,
+    healthPerLevel: 125,
     mechanics: {
       attackCycle: 5800,
       warningDuration: 550,
       attackDuration: 850,
-      damagePercent: 0.08
+      damagePercent: 0.12
     },
-    goldMin: 20,
-    goldMax: 38,
-    goldPerLevel: 5,
-    xpMin: 52,
-    xpMax: 72,
-    xpPerLevel: 8,
+    goldMin: 58,
+    goldMax: 110,
+    goldPerLevel: 12,
+    xpMin: 150,
+    xpMax: 215,
+    xpPerLevel: 20,
     lootTable: [
       { itemId: 'weapon_shadowmire_common_02', chance: 0.06 },
-      { itemId: 'accessory_shadowmire_common_01', chance: 0.04 }
+      { itemId: 'accessory_shadowmire_common_01', chance: 0.04 },
+      { itemId: 'armor_shadowmire_uncommon_01', chance: 0.02 },
+      { itemId: 'accessory_shadowmire_common_01', chance: 0.02 }
     ],
     emoji: '\u{1F33F}',
     deathEmoji: '\u{1FAB4}',
@@ -750,23 +740,53 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 23,
     levelMax: 28,
-    baseHealth: 210,
-    healthPerLevel: 24,
-    escapeTimer: 6500,
-    escapeDamage: 0.08,
-    goldMin: 22,
-    goldMax: 40,
-    goldPerLevel: 5,
-    xpMin: 55,
-    xpMax: 75,
-    xpPerLevel: 8,
+    baseHealth: 2000,
+    healthPerLevel: 130,
+    escapeTimer: 12000,
+    escapeDamage: 0.12,
+    goldMin: 62,
+    goldMax: 120,
+    goldPerLevel: 13,
+    xpMin: 160,
+    xpMax: 225,
+    xpPerLevel: 22,
     lootTable: [
       { itemId: 'weapon_shadowmire_uncommon_01', chance: 0.04 },
-      { itemId: 'accessory_shadowmire_uncommon_01', chance: 0.03 }
+      { itemId: 'accessory_shadowmire_uncommon_01', chance: 0.03 },
+      { itemId: 'armor_shadowmire_uncommon_01', chance: 0.02 }
     ],
     emoji: '\u{1FAB1}',
     deathEmoji: '\u{1F4A7}',
     spawnWeight: 24
+  },
+
+  shadowmire_hag: {
+    id: 'shadowmire_hag',
+    name: 'Swamp Hag',
+    description: 'A twisted crone who made dark pacts for power. She collects bones and weaves curses.',
+    zone: 'shadowmire',
+    type: 'regenerating',
+    isBoss: false,
+    levelMin: 24,
+    levelMax: 28,
+    baseHealth: 2200,
+    healthPerLevel: 135,
+    regenRate: 0.008,
+    goldMin: 70,
+    goldMax: 130,
+    goldPerLevel: 14,
+    xpMin: 175,
+    xpMax: 245,
+    xpPerLevel: 24,
+    lootTable: [
+      { itemId: 'weapon_shadowmire_uncommon_01', chance: 0.05 },
+      { itemId: 'accessory_shadowmire_uncommon_01', chance: 0.04 },
+      { itemId: 'armor_shadowmire_uncommon_01', chance: 0.02 },
+      { itemId: 'accessory_shadowmire_rare_01', chance: 0.003 }
+    ],
+    emoji: '\u{1F9D9}\u200D\u2640\uFE0F',
+    deathEmoji: '\u{1F480}',
+    spawnWeight: 25
   },
 
   shadowmire_shade: {
@@ -778,21 +798,58 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 25,
     levelMax: 30,
-    baseHealth: 320,
-    healthPerLevel: 32,
-    goldMin: 28,
-    goldMax: 50,
-    goldPerLevel: 5,
-    xpMin: 65,
-    xpMax: 88,
-    xpPerLevel: 9,
+    baseHealth: 2600,
+    healthPerLevel: 140,
+    goldMin: 78,
+    goldMax: 145,
+    goldPerLevel: 15,
+    xpMin: 190,
+    xpMax: 265,
+    xpPerLevel: 25,
     lootTable: [
       { itemId: 'weapon_shadowmire_uncommon_01', chance: 0.05 },
-      { itemId: 'weapon_shadowmire_epic_01', chance: 0.003 }
+      { itemId: 'weapon_shadowmire_epic_01', chance: 0.003 },
+      { itemId: 'armor_shadowmire_uncommon_01', chance: 0.03 },
+      { itemId: 'accessory_shadowmire_uncommon_01', chance: 0.02 },
+      { itemId: 'armor_shadowmire_rare_01', chance: 0.004 }
     ],
     emoji: '\u{1F32B}\uFE0F',
     deathEmoji: '\u{1F4A8}',
     spawnWeight: 22
+  },
+
+  shadowmire_husk: {
+    id: 'shadowmire_husk',
+    name: 'Rotting Husk',
+    description: 'The animated remains of those who died in the swamp. Shambles forward with mindless hunger.',
+    zone: 'shadowmire',
+    type: 'aggressive',
+    isBoss: false,
+    levelMin: 26,
+    levelMax: 30,
+    baseHealth: 2900,
+    healthPerLevel: 150,
+    mechanics: {
+      attackCycle: 6000,
+      warningDuration: 600,
+      attackDuration: 1000,
+      damagePercent: 0.14
+    },
+    goldMin: 85,
+    goldMax: 160,
+    goldPerLevel: 16,
+    xpMin: 205,
+    xpMax: 285,
+    xpPerLevel: 26,
+    lootTable: [
+      { itemId: 'weapon_shadowmire_uncommon_01', chance: 0.06 },
+      { itemId: 'weapon_shadowmire_rare_01', chance: 0.008 },
+      { itemId: 'armor_shadowmire_uncommon_01', chance: 0.03 },
+      { itemId: 'accessory_shadowmire_uncommon_01', chance: 0.02 }
+    ],
+    emoji: '\u{1F9DF}',
+    deathEmoji: '\u{1F480}',
+    spawnWeight: 20
   },
 
   shadowmire_serpent: {
@@ -804,23 +861,25 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 27,
     levelMax: 30,
-    baseHealth: 380,
-    healthPerLevel: 38,
+    baseHealth: 3200,
+    healthPerLevel: 160,
     mechanics: {
       attackCycle: 5200,
       warningDuration: 500,
-      attackDuration: 800,
-      damagePercent: 0.09
+      attackDuration: 900,
+      damagePercent: 0.15
     },
-    goldMin: 32,
-    goldMax: 58,
-    goldPerLevel: 6,
-    xpMin: 75,
-    xpMax: 100,
-    xpPerLevel: 10,
+    goldMin: 92,
+    goldMax: 170,
+    goldPerLevel: 17,
+    xpMin: 220,
+    xpMax: 300,
+    xpPerLevel: 28,
     lootTable: [
       { itemId: 'weapon_shadowmire_rare_01', chance: 0.01 },
-      { itemId: 'weapon_shadowmire_epic_01', chance: 0.005 }
+      { itemId: 'weapon_shadowmire_epic_01', chance: 0.005 },
+      { itemId: 'armor_shadowmire_rare_01', chance: 0.005 },
+      { itemId: 'accessory_shadowmire_rare_01', chance: 0.003 }
     ],
     emoji: '\u{1F40D}',
     deathEmoji: '\u{1F480}',
@@ -836,21 +895,21 @@ export const MONSTERS = {
     isBoss: true,
     levelMin: 30,
     levelMax: 30,
-    baseHealth: 3000,
+    baseHealth: 8000,
     healthPerLevel: 0,
-    goldMin: 700,
-    goldMax: 1000,
+    goldMin: 2100,
+    goldMax: 3000,
     goldPerLevel: 0,
-    xpMin: 1200,
-    xpMax: 1500,
+    xpMin: 3600,
+    xpMax: 4500,
     xpPerLevel: 0,
     mechanics: {
       attackCycle: 4800,
       warningDuration: 700,
       attackDuration: 1100,
-      damagePercent: 0.10
+      damagePercent: 0.15
     },
-    regenRate: 0.02,
+    regenRate: 0.006,
     lootTable: [
       { itemId: 'weapon_shadowmire_rare_01', chance: 1.0 },
       { itemId: 'accessory_shadowmire_rare_01', chance: 0.25 }
@@ -861,6 +920,8 @@ export const MONSTERS = {
   },
 
   // ===== ZONE 4: IRONHOLD PEAKS (Levels 30-45) =====
+  // Zone HP range: 3135 (weakest) → 7840 (strongest)
+  // Entry attack with Z3 boss weapon (175): 34+175 = 209
 
   ironhold_elemental: {
     id: 'ironhold_elemental',
@@ -871,109 +932,22 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 30,
     levelMax: 36,
-    baseHealth: 450,
-    healthPerLevel: 40,
-    armorValue: 15,
-    goldMin: 40,
-    goldMax: 75,
-    goldPerLevel: 6,
-    xpMin: 90,
-    xpMax: 120,
-    xpPerLevel: 10,
+    baseHealth: 3135,
+    healthPerLevel: 180,
+    armorValue: 40,
+    goldMin: 110,
+    goldMax: 210,
+    goldPerLevel: 15,
+    xpMin: 250,
+    xpMax: 350,
+    xpPerLevel: 25,
     lootTable: [
-      { itemId: 'weapon_ironhold_common_01', chance: 0.08 }
+      { itemId: 'weapon_ironhold_common_01', chance: 0.08 },
+      { itemId: 'armor_ironhold_common_01', chance: 0.05 }
     ],
     emoji: '\u{1F5FF}',
     deathEmoji: '\u{1F48E}',
     spawnWeight: 30
-  },
-
-  ironhold_bat: {
-    id: 'ironhold_bat',
-    name: 'Cave Bat Swarm',
-    description: 'Hundreds of small bats moving as one hungry cloud.',
-    zone: 'ironhold',
-    type: 'swift',
-    isBoss: false,
-    levelMin: 32,
-    levelMax: 38,
-    baseHealth: 400,
-    healthPerLevel: 35,
-    escapeTimer: 6000,
-    escapeDamage: 0.10,
-    goldMin: 45,
-    goldMax: 85,
-    goldPerLevel: 7,
-    xpMin: 100,
-    xpMax: 135,
-    xpPerLevel: 11,
-    lootTable: [
-      { itemId: 'weapon_ironhold_common_02', chance: 0.07 },
-      { itemId: 'accessory_ironhold_common_01', chance: 0.05 }
-    ],
-    emoji: '\u{1F987}',
-    deathEmoji: '\u{1F480}',
-    spawnWeight: 25
-  },
-
-  ironhold_kobold: {
-    id: 'ironhold_kobold',
-    name: 'Kobold Miner',
-    description: 'Small but vicious creatures who claimed the abandoned mines.',
-    zone: 'ironhold',
-    type: 'aggressive',
-    isBoss: false,
-    levelMin: 35,
-    levelMax: 42,
-    baseHealth: 520,
-    healthPerLevel: 45,
-    mechanics: {
-      attackCycle: 5200,
-      warningDuration: 500,
-      attackDuration: 700,
-      damagePercent: 0.08
-    },
-    goldMin: 55,
-    goldMax: 100,
-    goldPerLevel: 8,
-    xpMin: 115,
-    xpMax: 155,
-    xpPerLevel: 12,
-    lootTable: [
-      { itemId: 'weapon_ironhold_uncommon_01', chance: 0.05 },
-      { itemId: 'accessory_ironhold_uncommon_01', chance: 0.04 }
-    ],
-    emoji: '\u26CF\uFE0F',
-    deathEmoji: '\u{1F480}',
-    spawnWeight: 25
-  },
-
-  ironhold_golem: {
-    id: 'ironhold_golem',
-    name: 'Crystal Golem',
-    description: 'A construct of pure crystal, refracting light into deadly beams.',
-    zone: 'ironhold',
-    type: 'shielded',
-    isBoss: false,
-    levelMin: 38,
-    levelMax: 45,
-    baseHealth: 700,
-    healthPerLevel: 55,
-    shieldPercent: 0.30,
-    shieldDamageReduction: 0.50,
-    goldMin: 70,
-    goldMax: 130,
-    goldPerLevel: 10,
-    xpMin: 140,
-    xpMax: 190,
-    xpPerLevel: 14,
-    lootTable: [
-      { itemId: 'weapon_ironhold_uncommon_01', chance: 0.06 },
-      { itemId: 'weapon_ironhold_rare_01', chance: 0.01 }
-    ],
-    emoji: '\u{1F48E}',
-    deathEmoji: '\u2728',
-    spawnWeight: 20
   },
 
   ironhold_spider: {
@@ -985,22 +959,52 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 30,
     levelMax: 36,
-    baseHealth: 420,
-    healthPerLevel: 38,
-    escapeTimer: 5500,
-    escapeDamage: 0.10,
-    goldMin: 45,
-    goldMax: 80,
-    goldPerLevel: 7,
-    xpMin: 95,
-    xpMax: 128,
-    xpPerLevel: 11,
+    baseHealth: 3200,
+    healthPerLevel: 185,
+    escapeTimer: 11000,
+    escapeDamage: 0.12,
+    goldMin: 115,
+    goldMax: 220,
+    goldPerLevel: 16,
+    xpMin: 260,
+    xpMax: 365,
+    xpPerLevel: 26,
     lootTable: [
       { itemId: 'weapon_ironhold_common_01', chance: 0.07 },
-      { itemId: 'weapon_ironhold_common_02', chance: 0.05 }
+      { itemId: 'weapon_ironhold_common_02', chance: 0.05 },
+      { itemId: 'armor_ironhold_common_01', chance: 0.03 }
     ],
     emoji: '\u{1F577}\uFE0F',
     deathEmoji: '\u2728',
+    spawnWeight: 25
+  },
+
+  ironhold_bat: {
+    id: 'ironhold_bat',
+    name: 'Cave Bat Swarm',
+    description: 'Hundreds of small bats moving as one hungry cloud.',
+    zone: 'ironhold',
+    type: 'swift',
+    isBoss: false,
+    levelMin: 32,
+    levelMax: 38,
+    baseHealth: 3600,
+    healthPerLevel: 195,
+    escapeTimer: 11000,
+    escapeDamage: 0.13,
+    goldMin: 125,
+    goldMax: 240,
+    goldPerLevel: 17,
+    xpMin: 280,
+    xpMax: 395,
+    xpPerLevel: 28,
+    lootTable: [
+      { itemId: 'weapon_ironhold_common_02', chance: 0.07 },
+      { itemId: 'accessory_ironhold_common_01', chance: 0.05 },
+      { itemId: 'armor_ironhold_common_01', chance: 0.03 }
+    ],
+    emoji: '\u{1F987}',
+    deathEmoji: '\u{1F480}',
     spawnWeight: 25
   },
 
@@ -1013,25 +1017,26 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 33,
     levelMax: 40,
-    baseHealth: 600,
-    healthPerLevel: 50,
-    armorValue: 18,
+    baseHealth: 4200,
+    healthPerLevel: 210,
+    armorValue: 50,
     mechanics: {
       attackCycle: 5400,
       warningDuration: 550,
-      attackDuration: 750,
-      damagePercent: 0.08
+      attackDuration: 850,
+      damagePercent: 0.14
     },
-    goldMin: 55,
-    goldMax: 100,
-    goldPerLevel: 8,
-    xpMin: 110,
-    xpMax: 148,
-    xpPerLevel: 12,
+    goldMin: 140,
+    goldMax: 270,
+    goldPerLevel: 18,
+    xpMin: 300,
+    xpMax: 425,
+    xpPerLevel: 30,
     lootTable: [
       { itemId: 'weapon_ironhold_uncommon_01', chance: 0.05 },
       { itemId: 'armor_ironhold_uncommon_01', chance: 0.03 },
-      { itemId: 'weapon_ironhold_epic_01', chance: 0.004 }
+      { itemId: 'weapon_ironhold_epic_01', chance: 0.004 },
+      { itemId: 'accessory_ironhold_uncommon_01', chance: 0.02 }
     ],
     emoji: '\u{1F916}',
     deathEmoji: '\u{1F4A5}',
@@ -1047,22 +1052,56 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 34,
     levelMax: 41,
-    baseHealth: 550,
-    healthPerLevel: 48,
-    regenRate: 0.035,
-    goldMin: 52,
-    goldMax: 95,
-    goldPerLevel: 8,
-    xpMin: 105,
-    xpMax: 142,
-    xpPerLevel: 12,
+    baseHealth: 4400,
+    healthPerLevel: 215,
+    regenRate: 0.010,
+    goldMin: 148,
+    goldMax: 280,
+    goldPerLevel: 19,
+    xpMin: 310,
+    xpMax: 440,
+    xpPerLevel: 30,
     lootTable: [
       { itemId: 'weapon_ironhold_common_02', chance: 0.06 },
-      { itemId: 'accessory_ironhold_common_01', chance: 0.04 }
+      { itemId: 'accessory_ironhold_common_01', chance: 0.04 },
+      { itemId: 'armor_ironhold_uncommon_01', chance: 0.02 }
     ],
     emoji: '\u{1FAB1}',
     deathEmoji: '\u{1F480}',
     spawnWeight: 24
+  },
+
+  ironhold_kobold: {
+    id: 'ironhold_kobold',
+    name: 'Kobold Miner',
+    description: 'Small but vicious creatures who claimed the abandoned mines.',
+    zone: 'ironhold',
+    type: 'aggressive',
+    isBoss: false,
+    levelMin: 35,
+    levelMax: 42,
+    baseHealth: 4800,
+    healthPerLevel: 220,
+    mechanics: {
+      attackCycle: 5200,
+      warningDuration: 500,
+      attackDuration: 800,
+      damagePercent: 0.14
+    },
+    goldMin: 155,
+    goldMax: 300,
+    goldPerLevel: 20,
+    xpMin: 330,
+    xpMax: 465,
+    xpPerLevel: 32,
+    lootTable: [
+      { itemId: 'weapon_ironhold_uncommon_01', chance: 0.05 },
+      { itemId: 'accessory_ironhold_uncommon_01', chance: 0.04 },
+      { itemId: 'armor_ironhold_uncommon_01', chance: 0.02 }
+    ],
+    emoji: '\u26CF\uFE0F',
+    deathEmoji: '\u{1F480}',
+    spawnWeight: 25
   },
 
   ironhold_drake: {
@@ -1074,27 +1113,60 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 36,
     levelMax: 43,
-    baseHealth: 580,
-    healthPerLevel: 50,
+    baseHealth: 5200,
+    healthPerLevel: 230,
     mechanics: {
       attackCycle: 4800,
       warningDuration: 450,
-      attackDuration: 650,
-      damagePercent: 0.09
+      attackDuration: 750,
+      damagePercent: 0.16
     },
-    goldMin: 60,
-    goldMax: 110,
-    goldPerLevel: 9,
-    xpMin: 120,
-    xpMax: 160,
-    xpPerLevel: 13,
+    goldMin: 170,
+    goldMax: 320,
+    goldPerLevel: 21,
+    xpMin: 350,
+    xpMax: 490,
+    xpPerLevel: 33,
     lootTable: [
       { itemId: 'weapon_ironhold_uncommon_01', chance: 0.06 },
-      { itemId: 'weapon_ironhold_rare_01', chance: 0.008 }
+      { itemId: 'weapon_ironhold_rare_01', chance: 0.008 },
+      { itemId: 'armor_ironhold_uncommon_01', chance: 0.03 },
+      { itemId: 'accessory_ironhold_uncommon_01', chance: 0.02 },
+      { itemId: 'armor_ironhold_rare_01', chance: 0.004 }
     ],
     emoji: '\u{1F409}',
     deathEmoji: '\u{1F525}',
     spawnWeight: 22
+  },
+
+  ironhold_golem: {
+    id: 'ironhold_golem',
+    name: 'Crystal Golem',
+    description: 'A construct of pure crystal, refracting light into deadly beams.',
+    zone: 'ironhold',
+    type: 'shielded',
+    isBoss: false,
+    levelMin: 38,
+    levelMax: 45,
+    baseHealth: 5800,
+    healthPerLevel: 240,
+    shieldPercent: 0.30,
+    shieldDamageReduction: 0.50,
+    goldMin: 190,
+    goldMax: 360,
+    goldPerLevel: 23,
+    xpMin: 380,
+    xpMax: 535,
+    xpPerLevel: 35,
+    lootTable: [
+      { itemId: 'weapon_ironhold_uncommon_01', chance: 0.06 },
+      { itemId: 'weapon_ironhold_rare_01', chance: 0.01 },
+      { itemId: 'armor_ironhold_uncommon_01', chance: 0.03 },
+      { itemId: 'accessory_ironhold_uncommon_01', chance: 0.02 }
+    ],
+    emoji: '\u{1F48E}',
+    deathEmoji: '\u2728',
+    spawnWeight: 20
   },
 
   ironhold_guardian: {
@@ -1106,19 +1178,21 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 40,
     levelMax: 45,
-    baseHealth: 750,
-    healthPerLevel: 60,
+    baseHealth: 6800,
+    healthPerLevel: 260,
     shieldPercent: 0.35,
     shieldDamageReduction: 0.55,
-    goldMin: 75,
-    goldMax: 140,
-    goldPerLevel: 10,
-    xpMin: 145,
-    xpMax: 195,
-    xpPerLevel: 14,
+    goldMin: 210,
+    goldMax: 400,
+    goldPerLevel: 25,
+    xpMin: 410,
+    xpMax: 575,
+    xpPerLevel: 38,
     lootTable: [
       { itemId: 'weapon_ironhold_rare_01', chance: 0.01 },
-      { itemId: 'armor_ironhold_epic_01', chance: 0.004 }
+      { itemId: 'armor_ironhold_epic_01', chance: 0.004 },
+      { itemId: 'armor_ironhold_rare_01', chance: 0.005 },
+      { itemId: 'accessory_ironhold_rare_01', chance: 0.003 }
     ],
     emoji: '\u{1F6E1}\uFE0F',
     deathEmoji: '\u{1F48E}',
@@ -1134,21 +1208,21 @@ export const MONSTERS = {
     isBoss: true,
     levelMin: 45,
     levelMax: 45,
-    baseHealth: 8000,
+    baseHealth: 22000,
     healthPerLevel: 0,
-    goldMin: 1500,
-    goldMax: 2200,
+    goldMin: 4500,
+    goldMax: 6600,
     goldPerLevel: 0,
-    xpMin: 3000,
-    xpMax: 3800,
+    xpMin: 9000,
+    xpMax: 11400,
     xpPerLevel: 0,
     mechanics: {
       attackCycle: 4800,
       warningDuration: 800,
       attackDuration: 1200,
-      damagePercent: 0.12
+      damagePercent: 0.16
     },
-    armorValue: 25,
+    armorValue: 65,
     lootTable: [
       { itemId: 'weapon_ironhold_rare_01', chance: 1.0 },
       { itemId: 'accessory_ironhold_rare_01', chance: 0.25 }
@@ -1159,6 +1233,37 @@ export const MONSTERS = {
   },
 
   // ===== ZONE 5: EMBERFELL WASTES (Levels 45-60) =====
+  // Zone HP range: 6735 (weakest) → 16840 (strongest)
+  // Entry attack with Z4 boss weapon (400): 49+400 = 449
+
+  emberfell_hound: {
+    id: 'emberfell_hound',
+    name: 'Hellhound',
+    description: 'A demonic dog wreathed in flame. Incredibly fast and will flee if wounded.',
+    zone: 'emberfell',
+    type: 'swift',
+    isBoss: false,
+    levelMin: 45,
+    levelMax: 52,
+    baseHealth: 6735,
+    healthPerLevel: 340,
+    escapeTimer: 10000,
+    escapeDamage: 0.15,
+    goldMin: 260,
+    goldMax: 500,
+    goldPerLevel: 28,
+    xpMin: 500,
+    xpMax: 710,
+    xpPerLevel: 40,
+    lootTable: [
+      { itemId: 'weapon_emberfell_common_01', chance: 0.07 },
+      { itemId: 'weapon_emberfell_common_02', chance: 0.05 },
+      { itemId: 'armor_emberfell_common_01', chance: 0.04 }
+    ],
+    emoji: '\u{1F9AE}',
+    deathEmoji: '\u{1F525}',
+    spawnWeight: 25
+  },
 
   emberfell_slime: {
     id: 'emberfell_slime',
@@ -1169,17 +1274,18 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 45,
     levelMax: 51,
-    baseHealth: 800,
-    healthPerLevel: 55,
-    regenRate: 0.04,
-    goldMin: 90,
-    goldMax: 170,
-    goldPerLevel: 10,
-    xpMin: 180,
-    xpMax: 240,
-    xpPerLevel: 15,
+    baseHealth: 6900,
+    healthPerLevel: 350,
+    regenRate: 0.012,
+    goldMin: 270,
+    goldMax: 520,
+    goldPerLevel: 30,
+    xpMin: 520,
+    xpMax: 735,
+    xpPerLevel: 42,
     lootTable: [
-      { itemId: 'weapon_emberfell_common_01', chance: 0.08 }
+      { itemId: 'weapon_emberfell_common_01', chance: 0.08 },
+      { itemId: 'armor_emberfell_common_01', chance: 0.05 }
     ],
     emoji: '\u{1F534}',
     deathEmoji: '\u{1F4A7}',
@@ -1195,108 +1301,26 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 47,
     levelMax: 54,
-    baseHealth: 750,
-    healthPerLevel: 50,
+    baseHealth: 7800,
+    healthPerLevel: 370,
     mechanics: {
       attackCycle: 4500,
       warningDuration: 400,
-      attackDuration: 600,
-      damagePercent: 0.08
+      attackDuration: 700,
+      damagePercent: 0.16
     },
-    goldMin: 100,
-    goldMax: 190,
-    goldPerLevel: 11,
-    xpMin: 200,
-    xpMax: 270,
-    xpPerLevel: 16,
+    goldMin: 300,
+    goldMax: 570,
+    goldPerLevel: 32,
+    xpMin: 560,
+    xpMax: 790,
+    xpPerLevel: 44,
     lootTable: [
       { itemId: 'weapon_emberfell_common_02', chance: 0.07 },
-      { itemId: 'accessory_emberfell_common_01', chance: 0.05 }
+      { itemId: 'accessory_emberfell_common_01', chance: 0.05 },
+      { itemId: 'armor_emberfell_common_01', chance: 0.03 }
     ],
     emoji: '\u{1F608}',
-    deathEmoji: '\u{1F525}',
-    spawnWeight: 25
-  },
-
-  emberfell_wraith: {
-    id: 'emberfell_wraith',
-    name: 'Ash Wraith',
-    description: 'The spirit of one who died in volcanic fire. Now it spreads that suffering to others.',
-    zone: 'emberfell',
-    type: 'shielded',
-    isBoss: false,
-    levelMin: 50,
-    levelMax: 57,
-    baseHealth: 950,
-    healthPerLevel: 60,
-    shieldPercent: 0.35,
-    shieldDamageReduction: 0.50,
-    goldMin: 120,
-    goldMax: 220,
-    goldPerLevel: 13,
-    xpMin: 230,
-    xpMax: 310,
-    xpPerLevel: 18,
-    lootTable: [
-      { itemId: 'weapon_emberfell_uncommon_01', chance: 0.05 },
-      { itemId: 'accessory_emberfell_uncommon_01', chance: 0.04 }
-    ],
-    emoji: '\u{1F464}',
-    deathEmoji: '\u{1F4A8}',
-    spawnWeight: 25
-  },
-
-  emberfell_giant: {
-    id: 'emberfell_giant',
-    name: 'Molten Giant',
-    description: 'A towering humanoid of living rock and fire. Each step leaves burning footprints.',
-    zone: 'emberfell',
-    type: 'armored',
-    isBoss: false,
-    levelMin: 54,
-    levelMax: 60,
-    baseHealth: 1300,
-    healthPerLevel: 80,
-    armorValue: 30,
-    goldMin: 150,
-    goldMax: 280,
-    goldPerLevel: 15,
-    xpMin: 280,
-    xpMax: 380,
-    xpPerLevel: 20,
-    lootTable: [
-      { itemId: 'weapon_emberfell_uncommon_01', chance: 0.06 },
-      { itemId: 'weapon_emberfell_rare_01', chance: 0.01 }
-    ],
-    emoji: '\u{1F525}',
-    deathEmoji: '\u{1F480}',
-    spawnWeight: 20
-  },
-
-  emberfell_hound: {
-    id: 'emberfell_hound',
-    name: 'Hellhound',
-    description: 'A demonic dog wreathed in flame. Incredibly fast and will flee if wounded.',
-    zone: 'emberfell',
-    type: 'swift',
-    isBoss: false,
-    levelMin: 45,
-    levelMax: 52,
-    baseHealth: 780,
-    healthPerLevel: 52,
-    escapeTimer: 5000,
-    escapeDamage: 0.12,
-    goldMin: 95,
-    goldMax: 180,
-    goldPerLevel: 11,
-    xpMin: 190,
-    xpMax: 255,
-    xpPerLevel: 16,
-    lootTable: [
-      { itemId: 'weapon_emberfell_common_01', chance: 0.07 },
-      { itemId: 'weapon_emberfell_common_02', chance: 0.05 }
-    ],
-    emoji: '\u{1F9AE}',
     deathEmoji: '\u{1F525}',
     spawnWeight: 25
   },
@@ -1310,28 +1334,59 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 48,
     levelMax: 55,
-    baseHealth: 900,
-    healthPerLevel: 58,
+    baseHealth: 8500,
+    healthPerLevel: 390,
     mechanics: {
       attackCycle: 4600,
       warningDuration: 450,
-      attackDuration: 650,
-      damagePercent: 0.08
+      attackDuration: 750,
+      damagePercent: 0.16
     },
-    regenRate: 0.03,
-    goldMin: 110,
-    goldMax: 200,
-    goldPerLevel: 12,
-    xpMin: 210,
-    xpMax: 285,
-    xpPerLevel: 17,
+    regenRate: 0.010,
+    goldMin: 320,
+    goldMax: 610,
+    goldPerLevel: 34,
+    xpMin: 590,
+    xpMax: 830,
+    xpPerLevel: 46,
     lootTable: [
       { itemId: 'weapon_emberfell_uncommon_01', chance: 0.04 },
-      { itemId: 'weapon_emberfell_epic_01', chance: 0.004 }
+      { itemId: 'weapon_emberfell_epic_01', chance: 0.004 },
+      { itemId: 'armor_emberfell_uncommon_01', chance: 0.02 },
+      { itemId: 'accessory_emberfell_uncommon_01', chance: 0.02 }
     ],
     emoji: '\u{1F9D9}',
     deathEmoji: '\u{1F525}',
     spawnWeight: 20
+  },
+
+  emberfell_wraith: {
+    id: 'emberfell_wraith',
+    name: 'Ash Wraith',
+    description: 'The spirit of one who died in volcanic fire. Now it spreads that suffering to others.',
+    zone: 'emberfell',
+    type: 'shielded',
+    isBoss: false,
+    levelMin: 50,
+    levelMax: 57,
+    baseHealth: 9500,
+    healthPerLevel: 410,
+    shieldPercent: 0.35,
+    shieldDamageReduction: 0.50,
+    goldMin: 350,
+    goldMax: 660,
+    goldPerLevel: 36,
+    xpMin: 640,
+    xpMax: 900,
+    xpPerLevel: 48,
+    lootTable: [
+      { itemId: 'weapon_emberfell_uncommon_01', chance: 0.05 },
+      { itemId: 'accessory_emberfell_uncommon_01', chance: 0.04 },
+      { itemId: 'armor_emberfell_uncommon_01', chance: 0.02 }
+    ],
+    emoji: '\u{1F464}',
+    deathEmoji: '\u{1F4A8}',
+    spawnWeight: 25
   },
 
   emberfell_golem: {
@@ -1343,20 +1398,21 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 50,
     levelMax: 57,
-    baseHealth: 1100,
-    healthPerLevel: 70,
-    armorValue: 25,
+    baseHealth: 10500,
+    healthPerLevel: 430,
+    armorValue: 90,
     shieldPercent: 0.30,
     shieldDamageReduction: 0.45,
-    goldMin: 130,
-    goldMax: 240,
-    goldPerLevel: 13,
-    xpMin: 240,
-    xpMax: 325,
-    xpPerLevel: 18,
+    goldMin: 370,
+    goldMax: 700,
+    goldPerLevel: 38,
+    xpMin: 670,
+    xpMax: 940,
+    xpPerLevel: 50,
     lootTable: [
       { itemId: 'weapon_emberfell_uncommon_01', chance: 0.05 },
-      { itemId: 'armor_emberfell_epic_01', chance: 0.004 }
+      { itemId: 'armor_emberfell_epic_01', chance: 0.004 },
+      { itemId: 'armor_emberfell_uncommon_01', chance: 0.02 }
     ],
     emoji: '\u{1F5FF}',
     deathEmoji: '\u{1F4A5}',
@@ -1372,22 +1428,54 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 52,
     levelMax: 58,
-    baseHealth: 1000,
-    healthPerLevel: 65,
-    regenRate: 0.045,
-    goldMin: 135,
-    goldMax: 250,
-    goldPerLevel: 14,
-    xpMin: 250,
-    xpMax: 340,
-    xpPerLevel: 19,
+    baseHealth: 11000,
+    healthPerLevel: 440,
+    regenRate: 0.012,
+    goldMin: 390,
+    goldMax: 740,
+    goldPerLevel: 40,
+    xpMin: 700,
+    xpMax: 985,
+    xpPerLevel: 52,
     lootTable: [
       { itemId: 'weapon_emberfell_uncommon_01', chance: 0.06 },
-      { itemId: 'accessory_emberfell_uncommon_01', chance: 0.04 }
+      { itemId: 'accessory_emberfell_uncommon_01', chance: 0.04 },
+      { itemId: 'armor_emberfell_uncommon_01', chance: 0.03 },
+      { itemId: 'armor_emberfell_rare_01', chance: 0.004 }
     ],
     emoji: '\u{1F98E}',
     deathEmoji: '\u{1F525}',
     spawnWeight: 22
+  },
+
+  emberfell_giant: {
+    id: 'emberfell_giant',
+    name: 'Molten Giant',
+    description: 'A towering humanoid of living rock and fire. Each step leaves burning footprints.',
+    zone: 'emberfell',
+    type: 'armored',
+    isBoss: false,
+    levelMin: 54,
+    levelMax: 60,
+    baseHealth: 13000,
+    healthPerLevel: 480,
+    armorValue: 90,
+    goldMin: 430,
+    goldMax: 810,
+    goldPerLevel: 44,
+    xpMin: 760,
+    xpMax: 1070,
+    xpPerLevel: 55,
+    lootTable: [
+      { itemId: 'weapon_emberfell_uncommon_01', chance: 0.06 },
+      { itemId: 'weapon_emberfell_rare_01', chance: 0.01 },
+      { itemId: 'armor_emberfell_uncommon_01', chance: 0.03 },
+      { itemId: 'accessory_emberfell_uncommon_01', chance: 0.02 },
+      { itemId: 'accessory_emberfell_rare_01', chance: 0.003 }
+    ],
+    emoji: '\u{1F525}',
+    deathEmoji: '\u{1F480}',
+    spawnWeight: 20
   },
 
   emberfell_drake: {
@@ -1399,23 +1487,25 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 55,
     levelMax: 60,
-    baseHealth: 1200,
-    healthPerLevel: 75,
+    baseHealth: 14500,
+    healthPerLevel: 500,
     mechanics: {
       attackCycle: 4200,
       warningDuration: 400,
-      attackDuration: 600,
-      damagePercent: 0.10
+      attackDuration: 750,
+      damagePercent: 0.18
     },
-    goldMin: 150,
-    goldMax: 280,
-    goldPerLevel: 15,
-    xpMin: 280,
-    xpMax: 380,
-    xpPerLevel: 20,
+    goldMin: 450,
+    goldMax: 850,
+    goldPerLevel: 46,
+    xpMin: 800,
+    xpMax: 1120,
+    xpPerLevel: 58,
     lootTable: [
       { itemId: 'weapon_emberfell_rare_01', chance: 0.01 },
-      { itemId: 'weapon_emberfell_epic_01', chance: 0.006 }
+      { itemId: 'weapon_emberfell_epic_01', chance: 0.006 },
+      { itemId: 'armor_emberfell_rare_01', chance: 0.005 },
+      { itemId: 'accessory_emberfell_rare_01', chance: 0.003 }
     ],
     emoji: '\u{1F409}',
     deathEmoji: '\u{1F4A5}',
@@ -1431,19 +1521,19 @@ export const MONSTERS = {
     isBoss: true,
     levelMin: 60,
     levelMax: 60,
-    baseHealth: 20000,
+    baseHealth: 55000,
     healthPerLevel: 0,
-    goldMin: 3500,
-    goldMax: 5000,
+    goldMin: 10500,
+    goldMax: 15000,
     goldPerLevel: 0,
-    xpMin: 7500,
-    xpMax: 9500,
+    xpMin: 22500,
+    xpMax: 28500,
     xpPerLevel: 0,
     mechanics: {
       attackCycle: 4100,
       warningDuration: 600,
       attackDuration: 1000,
-      damagePercent: 0.12
+      damagePercent: 0.18
     },
     shieldPercent: 0.25,
     shieldDamageReduction: 0.40,
@@ -1457,6 +1547,8 @@ export const MONSTERS = {
   },
 
   // ===== ZONE 6: FROSTPEAK SUMMIT (Levels 60-75) =====
+  // Zone HP range: 14460 (weakest) → 36150 (strongest)
+  // Entry attack with Z5 boss weapon (900): 64+900 = 964
 
   frostpeak_sprite: {
     id: 'frostpeak_sprite',
@@ -1467,108 +1559,23 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 60,
     levelMax: 66,
-    baseHealth: 1400,
-    healthPerLevel: 80,
-    escapeTimer: 5000,
-    escapeDamage: 0.12,
-    goldMin: 200,
-    goldMax: 380,
-    goldPerLevel: 18,
-    xpMin: 350,
-    xpMax: 470,
-    xpPerLevel: 22,
+    baseHealth: 14460,
+    healthPerLevel: 700,
+    escapeTimer: 9000,
+    escapeDamage: 0.16,
+    goldMin: 580,
+    goldMax: 1100,
+    goldPerLevel: 50,
+    xpMin: 950,
+    xpMax: 1340,
+    xpPerLevel: 60,
     lootTable: [
-      { itemId: 'weapon_frostpeak_common_01', chance: 0.08 }
+      { itemId: 'weapon_frostpeak_common_01', chance: 0.08 },
+      { itemId: 'armor_frostpeak_common_01', chance: 0.04 }
     ],
     emoji: '\u2744\uFE0F',
     deathEmoji: '\u2728',
     spawnWeight: 30
-  },
-
-  frostpeak_prowler: {
-    id: 'frostpeak_prowler',
-    name: 'Snow Prowler',
-    description: 'A massive white-furred predator, nearly invisible against the snow.',
-    zone: 'frostpeak',
-    type: 'aggressive',
-    isBoss: false,
-    levelMin: 62,
-    levelMax: 68,
-    baseHealth: 1600,
-    healthPerLevel: 90,
-    mechanics: {
-      attackCycle: 4200,
-      warningDuration: 400,
-      attackDuration: 800,
-      damagePercent: 0.10
-    },
-    goldMin: 230,
-    goldMax: 430,
-    goldPerLevel: 20,
-    xpMin: 400,
-    xpMax: 540,
-    xpPerLevel: 25,
-    lootTable: [
-      { itemId: 'weapon_frostpeak_common_02', chance: 0.07 },
-      { itemId: 'accessory_frostpeak_common_01', chance: 0.05 }
-    ],
-    emoji: '\u{1F43B}\u200D\u2744\uFE0F',
-    deathEmoji: '\u{1F480}',
-    spawnWeight: 25
-  },
-
-  frostpeak_wraith: {
-    id: 'frostpeak_wraith',
-    name: 'Ice Wraith',
-    description: 'The frozen soul of a climber who never made it down.',
-    zone: 'frostpeak',
-    type: 'regenerating',
-    isBoss: false,
-    levelMin: 65,
-    levelMax: 72,
-    baseHealth: 1900,
-    healthPerLevel: 100,
-    regenRate: 0.05,
-    goldMin: 270,
-    goldMax: 500,
-    goldPerLevel: 22,
-    xpMin: 470,
-    xpMax: 630,
-    xpPerLevel: 28,
-    lootTable: [
-      { itemId: 'weapon_frostpeak_uncommon_01', chance: 0.05 },
-      { itemId: 'accessory_frostpeak_uncommon_01', chance: 0.04 }
-    ],
-    emoji: '\u{1F47B}',
-    deathEmoji: '\u2744\uFE0F',
-    spawnWeight: 25
-  },
-
-  frostpeak_giant: {
-    id: 'frostpeak_giant',
-    name: 'Frozen Giant',
-    description: 'An ancient titan encased in eternal ice. Each blow carries the weight of glaciers.',
-    zone: 'frostpeak',
-    type: 'armored',
-    isBoss: false,
-    levelMin: 68,
-    levelMax: 75,
-    baseHealth: 2500,
-    healthPerLevel: 120,
-    armorValue: 45,
-    goldMin: 320,
-    goldMax: 600,
-    goldPerLevel: 25,
-    xpMin: 560,
-    xpMax: 750,
-    xpPerLevel: 32,
-    lootTable: [
-      { itemId: 'weapon_frostpeak_uncommon_01', chance: 0.06 },
-      { itemId: 'weapon_frostpeak_rare_01', chance: 0.01 }
-    ],
-    emoji: '\u{1F9CA}',
-    deathEmoji: '\u{1F48E}',
-    spawnWeight: 20
   },
 
   frostpeak_yeti: {
@@ -1580,24 +1587,25 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 60,
     levelMax: 67,
-    baseHealth: 1800,
-    healthPerLevel: 95,
-    armorValue: 35,
+    baseHealth: 15500,
+    healthPerLevel: 730,
+    armorValue: 180,
     mechanics: {
       attackCycle: 4400,
       warningDuration: 450,
-      attackDuration: 800,
-      damagePercent: 0.10
+      attackDuration: 900,
+      damagePercent: 0.18
     },
-    goldMin: 220,
-    goldMax: 410,
-    goldPerLevel: 20,
-    xpMin: 380,
-    xpMax: 510,
-    xpPerLevel: 24,
+    goldMin: 620,
+    goldMax: 1180,
+    goldPerLevel: 55,
+    xpMin: 1020,
+    xpMax: 1440,
+    xpPerLevel: 65,
     lootTable: [
       { itemId: 'weapon_frostpeak_common_01', chance: 0.07 },
-      { itemId: 'armor_frostpeak_common_01', chance: 0.05 }
+      { itemId: 'armor_frostpeak_common_01', chance: 0.05 },
+      { itemId: 'armor_frostpeak_uncommon_01', chance: 0.03 }
     ],
     emoji: '\u{1F9CD}',
     deathEmoji: '\u{1F4A5}',
@@ -1613,23 +1621,57 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 62,
     levelMax: 69,
-    baseHealth: 1700,
-    healthPerLevel: 90,
+    baseHealth: 17000,
+    healthPerLevel: 760,
     shieldPercent: 0.38,
     shieldDamageReduction: 0.55,
-    goldMin: 240,
-    goldMax: 450,
-    goldPerLevel: 21,
-    xpMin: 410,
-    xpMax: 555,
-    xpPerLevel: 26,
+    goldMin: 680,
+    goldMax: 1300,
+    goldPerLevel: 58,
+    xpMin: 1100,
+    xpMax: 1550,
+    xpPerLevel: 70,
     lootTable: [
       { itemId: 'weapon_frostpeak_common_02', chance: 0.06 },
-      { itemId: 'accessory_frostpeak_common_01', chance: 0.04 }
+      { itemId: 'accessory_frostpeak_common_01', chance: 0.04 },
+      { itemId: 'armor_frostpeak_common_01', chance: 0.03 }
     ],
     emoji: '\u2744\uFE0F',
     deathEmoji: '\u2728',
     spawnWeight: 24
+  },
+
+  frostpeak_prowler: {
+    id: 'frostpeak_prowler',
+    name: 'Snow Prowler',
+    description: 'A massive white-furred predator, nearly invisible against the snow.',
+    zone: 'frostpeak',
+    type: 'aggressive',
+    isBoss: false,
+    levelMin: 62,
+    levelMax: 68,
+    baseHealth: 17500,
+    healthPerLevel: 780,
+    mechanics: {
+      attackCycle: 4200,
+      warningDuration: 400,
+      attackDuration: 900,
+      damagePercent: 0.18
+    },
+    goldMin: 700,
+    goldMax: 1340,
+    goldPerLevel: 60,
+    xpMin: 1140,
+    xpMax: 1600,
+    xpPerLevel: 72,
+    lootTable: [
+      { itemId: 'weapon_frostpeak_common_02', chance: 0.07 },
+      { itemId: 'accessory_frostpeak_common_01', chance: 0.05 },
+      { itemId: 'armor_frostpeak_uncommon_01', chance: 0.02 }
+    ],
+    emoji: '\u{1F43B}\u200D\u2744\uFE0F',
+    deathEmoji: '\u{1F480}',
+    spawnWeight: 25
   },
 
   frostpeak_wolf: {
@@ -1641,23 +1683,53 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 63,
     levelMax: 70,
-    baseHealth: 1500,
-    healthPerLevel: 85,
-    escapeTimer: 4500,
-    escapeDamage: 0.12,
-    goldMin: 250,
-    goldMax: 470,
-    goldPerLevel: 22,
-    xpMin: 430,
-    xpMax: 580,
-    xpPerLevel: 27,
+    baseHealth: 18500,
+    healthPerLevel: 800,
+    escapeTimer: 9000,
+    escapeDamage: 0.16,
+    goldMin: 720,
+    goldMax: 1380,
+    goldPerLevel: 62,
+    xpMin: 1180,
+    xpMax: 1660,
+    xpPerLevel: 75,
     lootTable: [
       { itemId: 'weapon_frostpeak_uncommon_01', chance: 0.04 },
-      { itemId: 'accessory_frostpeak_uncommon_01', chance: 0.03 }
+      { itemId: 'accessory_frostpeak_uncommon_01', chance: 0.03 },
+      { itemId: 'armor_frostpeak_uncommon_01', chance: 0.02 }
     ],
     emoji: '\u{1F43A}',
     deathEmoji: '\u{1F480}',
     spawnWeight: 24
+  },
+
+  frostpeak_wraith: {
+    id: 'frostpeak_wraith',
+    name: 'Ice Wraith',
+    description: 'The frozen soul of a climber who never made it down.',
+    zone: 'frostpeak',
+    type: 'regenerating',
+    isBoss: false,
+    levelMin: 65,
+    levelMax: 72,
+    baseHealth: 21000,
+    healthPerLevel: 850,
+    regenRate: 0.008,
+    goldMin: 780,
+    goldMax: 1480,
+    goldPerLevel: 65,
+    xpMin: 1260,
+    xpMax: 1780,
+    xpPerLevel: 78,
+    lootTable: [
+      { itemId: 'weapon_frostpeak_uncommon_01', chance: 0.05 },
+      { itemId: 'accessory_frostpeak_uncommon_01', chance: 0.04 },
+      { itemId: 'armor_frostpeak_uncommon_01', chance: 0.02 },
+      { itemId: 'accessory_frostpeak_uncommon_01', chance: 0.02 }
+    ],
+    emoji: '\u{1F47B}',
+    deathEmoji: '\u2744\uFE0F',
+    spawnWeight: 25
   },
 
   frostpeak_banshee: {
@@ -1669,24 +1741,56 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 66,
     levelMax: 73,
-    baseHealth: 2100,
-    healthPerLevel: 105,
-    regenRate: 0.04,
+    baseHealth: 24000,
+    healthPerLevel: 880,
+    regenRate: 0.008,
     shieldPercent: 0.30,
     shieldDamageReduction: 0.45,
-    goldMin: 290,
-    goldMax: 540,
-    goldPerLevel: 24,
-    xpMin: 490,
-    xpMax: 660,
-    xpPerLevel: 30,
+    goldMin: 840,
+    goldMax: 1600,
+    goldPerLevel: 70,
+    xpMin: 1360,
+    xpMax: 1920,
+    xpPerLevel: 82,
     lootTable: [
       { itemId: 'weapon_frostpeak_uncommon_01', chance: 0.05 },
-      { itemId: 'weapon_frostpeak_rare_01', chance: 0.008 }
+      { itemId: 'weapon_frostpeak_rare_01', chance: 0.008 },
+      { itemId: 'armor_frostpeak_uncommon_01', chance: 0.03 },
+      { itemId: 'accessory_frostpeak_uncommon_01', chance: 0.02 },
+      { itemId: 'armor_frostpeak_rare_01', chance: 0.004 }
     ],
     emoji: '\u{1F47B}',
     deathEmoji: '\u2744\uFE0F',
     spawnWeight: 18
+  },
+
+  frostpeak_giant: {
+    id: 'frostpeak_giant',
+    name: 'Frozen Giant',
+    description: 'An ancient titan encased in eternal ice. Each blow carries the weight of glaciers.',
+    zone: 'frostpeak',
+    type: 'armored',
+    isBoss: false,
+    levelMin: 68,
+    levelMax: 75,
+    baseHealth: 28000,
+    healthPerLevel: 920,
+    armorValue: 180,
+    goldMin: 920,
+    goldMax: 1750,
+    goldPerLevel: 75,
+    xpMin: 1480,
+    xpMax: 2080,
+    xpPerLevel: 88,
+    lootTable: [
+      { itemId: 'weapon_frostpeak_uncommon_01', chance: 0.06 },
+      { itemId: 'weapon_frostpeak_rare_01', chance: 0.01 },
+      { itemId: 'armor_frostpeak_uncommon_01', chance: 0.03 },
+      { itemId: 'accessory_frostpeak_uncommon_01', chance: 0.02 }
+    ],
+    emoji: '\u{1F9CA}',
+    deathEmoji: '\u{1F48E}',
+    spawnWeight: 20
   },
 
   frostpeak_wyrm: {
@@ -1698,23 +1802,25 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 70,
     levelMax: 75,
-    baseHealth: 2600,
-    healthPerLevel: 125,
+    baseHealth: 32000,
+    healthPerLevel: 960,
     mechanics: {
       attackCycle: 3800,
       warningDuration: 400,
-      attackDuration: 800,
-      damagePercent: 0.11
+      attackDuration: 900,
+      damagePercent: 0.20
     },
-    goldMin: 330,
-    goldMax: 620,
-    goldPerLevel: 26,
-    xpMin: 570,
-    xpMax: 760,
-    xpPerLevel: 33,
+    goldMin: 980,
+    goldMax: 1860,
+    goldPerLevel: 80,
+    xpMin: 1560,
+    xpMax: 2200,
+    xpPerLevel: 92,
     lootTable: [
       { itemId: 'weapon_frostpeak_rare_01', chance: 0.01 },
-      { itemId: 'weapon_frostpeak_legendary_01', chance: 0.003 }
+      { itemId: 'weapon_frostpeak_legendary_01', chance: 0.003 },
+      { itemId: 'armor_frostpeak_rare_01', chance: 0.005 },
+      { itemId: 'accessory_frostpeak_rare_01', chance: 0.003 }
     ],
     emoji: '\u{1F432}',
     deathEmoji: '\u{1F4A5}',
@@ -1730,21 +1836,21 @@ export const MONSTERS = {
     isBoss: true,
     levelMin: 75,
     levelMax: 75,
-    baseHealth: 50000,
+    baseHealth: 140000,
     healthPerLevel: 0,
-    goldMin: 8000,
-    goldMax: 12000,
+    goldMin: 24000,
+    goldMax: 36000,
     goldPerLevel: 0,
-    xpMin: 18000,
-    xpMax: 23000,
+    xpMin: 54000,
+    xpMax: 69000,
     xpPerLevel: 0,
     mechanics: {
       attackCycle: 3600,
       warningDuration: 500,
       attackDuration: 900,
-      damagePercent: 0.12
+      damagePercent: 0.20
     },
-    regenRate: 0.015,
+    regenRate: 0.005,
     lootTable: [
       { itemId: 'weapon_frostpeak_rare_01', chance: 1.0 },
       { itemId: 'accessory_frostpeak_rare_01', chance: 0.25 }
@@ -1755,6 +1861,8 @@ export const MONSTERS = {
   },
 
   // ===== ZONE 7: THE VOID RIFT (Levels 75-100) =====
+  // Zone HP range: 31185 (weakest) → 77960 (strongest)
+  // Entry attack with Z6 boss weapon (2000): 79+2000 = 2079
 
   voidrift_walker: {
     id: 'voidrift_walker',
@@ -1765,111 +1873,23 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 75,
     levelMax: 84,
-    baseHealth: 3000,
-    healthPerLevel: 150,
+    baseHealth: 31185,
+    healthPerLevel: 1200,
     shieldPercent: 0.40,
     shieldDamageReduction: 0.60,
-    goldMin: 450,
-    goldMax: 850,
-    goldPerLevel: 35,
-    xpMin: 700,
-    xpMax: 950,
-    xpPerLevel: 40,
+    goldMin: 1300,
+    goldMax: 2500,
+    goldPerLevel: 100,
+    xpMin: 1900,
+    xpMax: 2700,
+    xpPerLevel: 110,
     lootTable: [
-      { itemId: 'weapon_voidrift_common_01', chance: 0.08 }
+      { itemId: 'weapon_voidrift_common_01', chance: 0.08 },
+      { itemId: 'armor_voidrift_common_01', chance: 0.05 }
     ],
     emoji: '\u{1F573}\uFE0F',
     deathEmoji: '\u2728',
     spawnWeight: 30
-  },
-
-  voidrift_imp: {
-    id: 'voidrift_imp',
-    name: 'Chaos Imp',
-    description: 'A small demon of pure chaos. Its form constantly shifts.',
-    zone: 'voidrift',
-    type: 'swift',
-    isBoss: false,
-    levelMin: 78,
-    levelMax: 88,
-    baseHealth: 2800,
-    healthPerLevel: 140,
-    escapeTimer: 4000,
-    escapeDamage: 0.15,
-    goldMin: 500,
-    goldMax: 950,
-    goldPerLevel: 38,
-    xpMin: 780,
-    xpMax: 1050,
-    xpPerLevel: 45,
-    lootTable: [
-      { itemId: 'weapon_voidrift_common_02', chance: 0.07 },
-      { itemId: 'accessory_voidrift_common_01', chance: 0.05 }
-    ],
-    emoji: '\u{1F47F}',
-    deathEmoji: '\u{1F4AB}',
-    spawnWeight: 25
-  },
-
-  voidrift_bender: {
-    id: 'voidrift_bender',
-    name: 'Reality Bender',
-    description: 'A creature that doesn\'t obey the laws of physics. Space warps around it.',
-    zone: 'voidrift',
-    type: 'aggressive',
-    isBoss: false,
-    levelMin: 82,
-    levelMax: 93,
-    baseHealth: 4000,
-    healthPerLevel: 180,
-    mechanics: {
-      attackCycle: 3000,
-      warningDuration: 300,
-      attackDuration: 700,
-      damagePercent: 0.10
-    },
-    goldMin: 600,
-    goldMax: 1100,
-    goldPerLevel: 42,
-    xpMin: 900,
-    xpMax: 1200,
-    xpPerLevel: 50,
-    lootTable: [
-      { itemId: 'weapon_voidrift_uncommon_01', chance: 0.05 },
-      { itemId: 'accessory_voidrift_uncommon_01', chance: 0.04 }
-    ],
-    emoji: '\u{1F300}',
-    deathEmoji: '\u{1F4A5}',
-    spawnWeight: 25
-  },
-
-  voidrift_horror: {
-    id: 'voidrift_horror',
-    name: 'Eldritch Horror',
-    description: 'Something that should not exist. Looking at it too long causes madness.',
-    zone: 'voidrift',
-    type: 'armored+regenerating',
-    isBoss: false,
-    levelMin: 88,
-    levelMax: 100,
-    baseHealth: 5500,
-    healthPerLevel: 220,
-    armorValue: 50,
-    regenRate: 0.03,
-    goldMin: 750,
-    goldMax: 1400,
-    goldPerLevel: 50,
-    xpMin: 1100,
-    xpMax: 1500,
-    xpPerLevel: 60,
-    lootTable: [
-      { itemId: 'weapon_voidrift_uncommon_01', chance: 0.06 },
-      { itemId: 'weapon_voidrift_rare_01', chance: 0.015 },
-      { itemId: 'weapon_voidrift_epic_01', chance: 0.003 }
-    ],
-    emoji: '\u{1F441}\uFE0F\u200D\u{1F5E8}\uFE0F',
-    deathEmoji: '\u{1F573}\uFE0F',
-    spawnWeight: 20
   },
 
   voidrift_stalker: {
@@ -1881,29 +1901,60 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 75,
     levelMax: 85,
-    baseHealth: 3200,
-    healthPerLevel: 155,
-    escapeTimer: 4500,
-    escapeDamage: 0.12,
+    baseHealth: 33000,
+    healthPerLevel: 1250,
+    escapeTimer: 9000,
+    escapeDamage: 0.18,
     mechanics: {
       attackCycle: 3500,
       warningDuration: 350,
-      attackDuration: 650,
-      damagePercent: 0.10
+      attackDuration: 750,
+      damagePercent: 0.20
     },
-    goldMin: 480,
-    goldMax: 900,
-    goldPerLevel: 36,
-    xpMin: 740,
-    xpMax: 1000,
-    xpPerLevel: 42,
+    goldMin: 1400,
+    goldMax: 2650,
+    goldPerLevel: 105,
+    xpMin: 2000,
+    xpMax: 2850,
+    xpPerLevel: 115,
     lootTable: [
       { itemId: 'weapon_voidrift_common_01', chance: 0.07 },
-      { itemId: 'weapon_voidrift_common_02', chance: 0.05 }
+      { itemId: 'weapon_voidrift_common_02', chance: 0.05 },
+      { itemId: 'armor_voidrift_common_01', chance: 0.03 },
+      { itemId: 'accessory_voidrift_common_01', chance: 0.03 }
     ],
     emoji: '\u{1F977}',
     deathEmoji: '\u{1F4A8}',
     spawnWeight: 22
+  },
+
+  voidrift_imp: {
+    id: 'voidrift_imp',
+    name: 'Chaos Imp',
+    description: 'A small demon of pure chaos. Its form constantly shifts.',
+    zone: 'voidrift',
+    type: 'swift',
+    isBoss: false,
+    levelMin: 78,
+    levelMax: 88,
+    baseHealth: 36000,
+    healthPerLevel: 1300,
+    escapeTimer: 10000,
+    escapeDamage: 0.18,
+    goldMin: 1500,
+    goldMax: 2850,
+    goldPerLevel: 110,
+    xpMin: 2150,
+    xpMax: 3050,
+    xpPerLevel: 120,
+    lootTable: [
+      { itemId: 'weapon_voidrift_common_02', chance: 0.07 },
+      { itemId: 'accessory_voidrift_common_01', chance: 0.05 },
+      { itemId: 'armor_voidrift_common_01', chance: 0.03 }
+    ],
+    emoji: '\u{1F47F}',
+    deathEmoji: '\u{1F4AB}',
+    spawnWeight: 25
   },
 
   voidrift_golem: {
@@ -1915,20 +1966,21 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 78,
     levelMax: 89,
-    baseHealth: 4500,
-    healthPerLevel: 190,
-    armorValue: 45,
+    baseHealth: 40000,
+    healthPerLevel: 1400,
+    armorValue: 400,
     shieldPercent: 0.35,
     shieldDamageReduction: 0.55,
-    goldMin: 550,
-    goldMax: 1000,
-    goldPerLevel: 40,
-    xpMin: 820,
-    xpMax: 1100,
-    xpPerLevel: 48,
+    goldMin: 1600,
+    goldMax: 3050,
+    goldPerLevel: 115,
+    xpMin: 2300,
+    xpMax: 3250,
+    xpPerLevel: 125,
     lootTable: [
       { itemId: 'weapon_voidrift_uncommon_01', chance: 0.04 },
-      { itemId: 'armor_voidrift_rare_01', chance: 0.008 }
+      { itemId: 'armor_voidrift_rare_01', chance: 0.008 },
+      { itemId: 'armor_voidrift_uncommon_01', chance: 0.02 }
     ],
     emoji: '\u{1F3DB}\uFE0F',
     deathEmoji: '\u{1F4A5}',
@@ -1944,24 +1996,59 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 80,
     levelMax: 91,
-    baseHealth: 3500,
-    healthPerLevel: 165,
-    regenRate: 0.04,
-    escapeTimer: 4200,
-    escapeDamage: 0.14,
-    goldMin: 580,
-    goldMax: 1050,
-    goldPerLevel: 42,
-    xpMin: 860,
-    xpMax: 1150,
-    xpPerLevel: 50,
+    baseHealth: 42000,
+    healthPerLevel: 1450,
+    regenRate: 0.006,
+    escapeTimer: 10000,
+    escapeDamage: 0.18,
+    goldMin: 1700,
+    goldMax: 3200,
+    goldPerLevel: 120,
+    xpMin: 2400,
+    xpMax: 3400,
+    xpPerLevel: 130,
     lootTable: [
       { itemId: 'weapon_voidrift_uncommon_01', chance: 0.05 },
-      { itemId: 'accessory_voidrift_uncommon_01', chance: 0.04 }
+      { itemId: 'accessory_voidrift_uncommon_01', chance: 0.04 },
+      { itemId: 'armor_voidrift_uncommon_01', chance: 0.02 }
     ],
     emoji: '\u{1F419}',
     deathEmoji: '\u{1F4A8}',
     spawnWeight: 20
+  },
+
+  voidrift_bender: {
+    id: 'voidrift_bender',
+    name: 'Reality Bender',
+    description: 'A creature that doesn\'t obey the laws of physics. Space warps around it.',
+    zone: 'voidrift',
+    type: 'aggressive',
+    isBoss: false,
+    levelMin: 82,
+    levelMax: 93,
+    baseHealth: 48000,
+    healthPerLevel: 1500,
+    mechanics: {
+      attackCycle: 3000,
+      warningDuration: 300,
+      attackDuration: 800,
+      damagePercent: 0.20
+    },
+    goldMin: 1800,
+    goldMax: 3400,
+    goldPerLevel: 125,
+    xpMin: 2550,
+    xpMax: 3600,
+    xpPerLevel: 135,
+    lootTable: [
+      { itemId: 'weapon_voidrift_uncommon_01', chance: 0.05 },
+      { itemId: 'accessory_voidrift_uncommon_01', chance: 0.04 },
+      { itemId: 'armor_voidrift_uncommon_01', chance: 0.02 },
+      { itemId: 'accessory_voidrift_uncommon_01', chance: 0.02 }
+    ],
+    emoji: '\u{1F300}',
+    deathEmoji: '\u{1F4A5}',
+    spawnWeight: 25
   },
 
   voidrift_wraith: {
@@ -1973,28 +2060,63 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 85,
     levelMax: 96,
-    baseHealth: 4800,
-    healthPerLevel: 200,
+    baseHealth: 55000,
+    healthPerLevel: 1600,
     mechanics: {
       attackCycle: 3200,
       warningDuration: 350,
-      attackDuration: 700,
-      damagePercent: 0.10
+      attackDuration: 800,
+      damagePercent: 0.22
     },
-    regenRate: 0.035,
-    goldMin: 650,
-    goldMax: 1200,
-    goldPerLevel: 45,
-    xpMin: 950,
-    xpMax: 1280,
-    xpPerLevel: 55,
+    regenRate: 0.006,
+    goldMin: 1950,
+    goldMax: 3700,
+    goldPerLevel: 130,
+    xpMin: 2750,
+    xpMax: 3880,
+    xpPerLevel: 145,
     lootTable: [
       { itemId: 'weapon_voidrift_rare_01', chance: 0.012 },
-      { itemId: 'weapon_voidrift_epic_01', chance: 0.004 }
+      { itemId: 'weapon_voidrift_epic_01', chance: 0.004 },
+      { itemId: 'armor_voidrift_uncommon_01', chance: 0.03 },
+      { itemId: 'accessory_voidrift_uncommon_01', chance: 0.02 },
+      { itemId: 'armor_voidrift_rare_01', chance: 0.005 }
     ],
     emoji: '\u{1F47D}',
     deathEmoji: '\u{1F573}\uFE0F',
     spawnWeight: 18
+  },
+
+  voidrift_horror: {
+    id: 'voidrift_horror',
+    name: 'Eldritch Horror',
+    description: 'Something that should not exist. Looking at it too long causes madness.',
+    zone: 'voidrift',
+    type: 'armored+regenerating',
+    isBoss: false,
+    levelMin: 88,
+    levelMax: 100,
+    baseHealth: 62000,
+    healthPerLevel: 1700,
+    armorValue: 350,
+    regenRate: 0.006,
+    goldMin: 2200,
+    goldMax: 4200,
+    goldPerLevel: 140,
+    xpMin: 3100,
+    xpMax: 4400,
+    xpPerLevel: 155,
+    lootTable: [
+      { itemId: 'weapon_voidrift_uncommon_01', chance: 0.06 },
+      { itemId: 'weapon_voidrift_rare_01', chance: 0.015 },
+      { itemId: 'weapon_voidrift_epic_01', chance: 0.003 },
+      { itemId: 'armor_voidrift_uncommon_01', chance: 0.03 },
+      { itemId: 'armor_voidrift_rare_01', chance: 0.005 },
+      { itemId: 'accessory_voidrift_rare_01', chance: 0.003 }
+    ],
+    emoji: '\u{1F441}\uFE0F\u200D\u{1F5E8}\uFE0F',
+    deathEmoji: '\u{1F573}\uFE0F',
+    spawnWeight: 20
   },
 
   voidrift_titan: {
@@ -2006,22 +2128,24 @@ export const MONSTERS = {
     isBoss: false,
     levelMin: 92,
     levelMax: 100,
-    baseHealth: 6000,
-    healthPerLevel: 250,
-    armorValue: 55,
+    baseHealth: 72000,
+    healthPerLevel: 1900,
+    armorValue: 400,
     shieldPercent: 0.30,
     shieldDamageReduction: 0.50,
-    regenRate: 0.025,
-    goldMin: 800,
-    goldMax: 1500,
-    goldPerLevel: 55,
-    xpMin: 1150,
-    xpMax: 1550,
-    xpPerLevel: 65,
+    regenRate: 0.005,
+    goldMin: 2500,
+    goldMax: 4800,
+    goldPerLevel: 155,
+    xpMin: 3500,
+    xpMax: 5000,
+    xpPerLevel: 170,
     lootTable: [
       { itemId: 'weapon_voidrift_epic_01', chance: 0.006 },
       { itemId: 'weapon_voidrift_legendary_01', chance: 0.001 },
-      { itemId: 'accessory_voidrift_legendary_01', chance: 0.001 }
+      { itemId: 'accessory_voidrift_legendary_01', chance: 0.001 },
+      { itemId: 'armor_voidrift_rare_01', chance: 0.008 },
+      { itemId: 'armor_voidrift_legendary_01', chance: 0.001 }
     ],
     emoji: '\u{1F5FF}',
     deathEmoji: '\u{1F4A5}',
@@ -2037,23 +2161,23 @@ export const MONSTERS = {
     isBoss: true,
     levelMin: 100,
     levelMax: 100,
-    baseHealth: 150000,
+    baseHealth: 400000,
     healthPerLevel: 0,
-    goldMin: 25000,
-    goldMax: 40000,
+    goldMin: 75000,
+    goldMax: 120000,
     goldPerLevel: 0,
-    xpMin: 50000,
-    xpMax: 65000,
+    xpMin: 150000,
+    xpMax: 195000,
     xpPerLevel: 0,
     mechanics: {
       attackCycle: 3000,
       warningDuration: 400,
-      attackDuration: 800,
-      damagePercent: 0.15
+      attackDuration: 900,
+      damagePercent: 0.25
     },
     shieldPercent: 0.20,
     shieldDamageReduction: 0.50,
-    regenRate: 0.01,
+    regenRate: 0.004,
     lootTable: [
       { itemId: 'weapon_voidrift_legendary_01', chance: 1.0 },
       { itemId: 'accessory_voidrift_legendary_01', chance: 0.5 }

@@ -48,12 +48,23 @@ export const DEATH_RESPAWN_DELAY = 1500; // ms before respawn after death
 
 // Monster Type Defaults
 export const ESCAPE_DAMAGE_DEFAULT = 0.05;   // 5% of player maxHP
-export const ESCAPE_TIMER_DEFAULT = 8000;     // ms
+export const ESCAPE_TIMER_DEFAULT = 12000;    // ms (Phase 9: increased for higher HP pools)
 export const SHIELD_PERCENT_DEFAULT = 0.30;   // 30% of monster HP
 export const SHIELD_DR_DEFAULT = 0.50;        // 50% damage reduction while shielded
-export const REGEN_RATE_DEFAULT = 0.03;       // 3% maxHP per second
-export const ARMOR_VALUE_DEFAULT = 15;
+export const REGEN_RATE_DEFAULT = 0.008;      // 0.8% maxHP per second (Phase 9: reduced for higher HP pools)
+export const ARMOR_VALUE_DEFAULT = 40;        // Phase 9: scaled for new attack values
 export const AGGRESSIVE_DAMAGE_DEFAULT = 0.10; // 10% of player maxHP
+
+// Boss Timer Durations (milliseconds) — Phase 9: DPS check timers
+export const BOSS_TIMERS = {
+  boss_mossback: 60000,     // 60s  - tutorial boss, lenient
+  boss_redfang: 90000,      // 90s  - first real test
+  boss_mire_mother: 120000, // 120s - regen makes it tighter
+  boss_grimstone: 150000,   // 150s - armor eats damage
+  boss_pyrax: 180000,       // 180s - shield adds complexity
+  boss_glacielle: 240000,   // 240s - multi-type nightmare
+  boss_xaltheron: 300000    // 300s - final challenge
+};
 
 // Economy Defaults
 export const STARTING_GOLD = 0;
@@ -97,8 +108,8 @@ export const VAULT_MAX_SLOTS = 8;
 export const VAULT_WITHDRAW_COST = 0.25;
 
 // Save
-export const SAVE_KEY = 'clickoria_save_v2';
-export const SAVE_VERSION = 2;
+export const SAVE_KEY = 'clickoria_save_v3';
+export const SAVE_VERSION = 3;
 
 // Shop / Economy
 export const SHOP_REFRESH_INTERVAL = 600000; // 10 minutes

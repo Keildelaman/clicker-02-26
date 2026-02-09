@@ -11,6 +11,8 @@ import { SAVE_KEY, SAVE_VERSION, AUTO_SAVE_INTERVAL } from '../data/constants.js
 import { getPlayer } from '../core/game-state.js';
 import { emit } from '../core/event-bus.js';
 
+const PREVIOUS_SAVE_KEYS = ['clickoria_save_v2'];
+
 let autoSaveTimer = null;
 let savingDisabled = false;
 
@@ -52,10 +54,31 @@ export function saveGame() {
  */
 export function loadGame() {
   try {
-    const raw = localStorage.getItem(SAVE_KEY);
+    // Try current save key first
+    let raw = localStorage.getItem(SAVE_KEY);
+
+    // If not found, try previous save keys for migration
+    if (!raw) {
+      for (const oldKey of PREVIOUS_SAVE_KEYS) {
+        raw = localStorage.getItem(oldKey);
+        if (raw) {
+          // Remove old key — will be saved under new key
+          localStorage.removeItem(oldKey);
+          break;
+        }
+      }
+    }
+
     if (!raw) return null;
 
     const data = JSON.parse(raw);
+
+    // Migrate from v2 -> v3: add zoneKills
+    if (data.saveVersion === 2) {
+      data.zoneKills = {};
+      data.saveVersion = 3;
+      console.log('Migrated save v2 -> v3 (added zoneKills)');
+    }
 
     if (data.saveVersion !== SAVE_VERSION) {
       console.error('Save version mismatch — starting fresh');

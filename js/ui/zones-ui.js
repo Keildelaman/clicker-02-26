@@ -13,16 +13,19 @@ import { on, emit } from '../core/event-bus.js';
 import { getPlayer } from '../core/game-state.js';
 import { ZONES, ZONE_ORDER } from '../data/zones.data.js';
 import { MONSTERS } from '../data/monsters.data.js';
-import { travelToZone, challengeBoss, canTravelToZone } from '../systems/zones.js';
+import { travelToZone, challengeBoss, canTravelToZone, getBossKillProgress } from '../systems/zones.js';
+import { showToast } from './toasts.js';
 
 let zonesList = null;
 let bossChallenge = null;
 let bossChallengeBtn = null;
+let bossKillProgress = null;
 
 export function init() {
   zonesList = document.getElementById('zones-list');
   bossChallenge = document.getElementById('boss-challenge');
   bossChallengeBtn = document.getElementById('boss-challenge-btn');
+  bossKillProgress = document.getElementById('boss-kill-progress');
 
   // Boss challenge button
   if (bossChallengeBtn) {
@@ -38,6 +41,10 @@ export function init() {
   });
   on('zone:bossDefeated', updateBossButton);
   on('combat:monsterSpawned', updateBossButton);
+  on('zone:killTracked', updateBossButton);
+  on('zone:bossLocked', ({ current, required }) => {
+    showToast(`Defeat ${required - current} more monsters!`, 'warning');
+  });
 
   // Apply initial theme from player's current zone
   const player = getPlayer();
@@ -150,6 +157,7 @@ function renderZoneList() {
 
 /**
  * Show/hide boss challenge button on the combat screen.
+ * Shows kill progress bar when boss is locked behind kill gate.
  */
 function updateBossButton() {
   if (!bossChallenge) return;
@@ -166,11 +174,33 @@ function updateBossButton() {
 
   const boss = MONSTERS[zone.bossId];
   const defeated = player.bossesDefeated.includes(zone.bossId);
+  const progress = getBossKillProgress();
 
   if (bossChallengeBtn) {
-    bossChallengeBtn.textContent = defeated
-      ? `RE-CHALLENGE ${boss ? boss.name.toUpperCase() : 'BOSS'}`
-      : `CHALLENGE ${boss ? boss.name.toUpperCase() : 'BOSS'}`;
+    if (defeated) {
+      bossChallengeBtn.textContent = `RE-CHALLENGE ${boss ? boss.name.toUpperCase() : 'BOSS'}`;
+      bossChallengeBtn.disabled = false;
+    } else if (progress.met) {
+      bossChallengeBtn.textContent = `CHALLENGE ${boss ? boss.name.toUpperCase() : 'BOSS'}`;
+      bossChallengeBtn.disabled = false;
+    } else {
+      bossChallengeBtn.textContent = `DEFEAT ${progress.required - progress.current} MORE MONSTERS`;
+      bossChallengeBtn.disabled = true;
+    }
+  }
+
+  // Update kill progress bar
+  if (bossKillProgress) {
+    if (defeated || progress.met) {
+      bossKillProgress.style.display = 'none';
+    } else {
+      bossKillProgress.style.display = '';
+      const pct = Math.min(100, Math.floor((progress.current / progress.required) * 100));
+      const fillEl = bossKillProgress.querySelector('.boss-kill-progress__fill');
+      const textEl = bossKillProgress.querySelector('.boss-kill-progress__text');
+      if (fillEl) fillEl.style.width = `${pct}%`;
+      if (textEl) textEl.textContent = `${progress.current} / ${progress.required} kills`;
+    }
   }
 }
 

@@ -2,6 +2,9 @@
 
 > All scaling formulas, XP tables, and balance tuning numbers.
 > This document ensures consistent progression feel across the game.
+>
+> **Phase 9: "The Grind Matters" Balance Overhaul** — Monster HP, weapon attack,
+> gold/XP rewards, and prices retuned to create a "wave" difficulty pattern.
 
 ---
 
@@ -11,6 +14,7 @@
 2. **Mid game is engaging** - Meaningful choices, steady progress
 3. **Late game is rewarding** - Long-term goals, prestige tease
 4. **Always:** "Just one more..." feeling
+5. **Wave pattern:** Each zone cycles hard → gear → easy → harder → gear → easy (Phase 9)
 
 ---
 
@@ -70,7 +74,7 @@ function xpToNextLevel(level) {
 
 ---
 
-## Monster Scaling
+## Monster Scaling (Phase 9)
 
 ### Health Formula
 
@@ -83,122 +87,219 @@ function monsterHealth(monster, level) {
 }
 ```
 
-### Zone Health Multipliers
+### Zone HP Targets (Phase 9)
 
-| Zone | Level Range | Base HP Mult | Target Clicks to Kill* |
-|------|-------------|--------------|----------------------|
-| Whisperwood | 1-10 | 1.0x | 5-15 clicks |
-| Dustwind | 10-20 | 2.5x | 10-25 clicks |
-| Shadowmire | 20-30 | 5.0x | 15-35 clicks |
-| Ironhold | 30-45 | 10x | 20-45 clicks |
-| Emberfell | 45-60 | 20x | 25-55 clicks |
-| Frostpeak | 60-75 | 40x | 30-70 clicks |
-| Voidrift | 75-100 | 80x | 40-100 clicks |
+Calculated via "clicks budget" approach:
+- **Zone entry with prev boss weapon** = 12-15 clicks (weakest monster)
+- **Zone entry with prev boss weapon** = 25-38 clicks (strongest monster)
+- **With zone uncommon weapon** = 8-19 clicks (satisfying power spike)
 
-*With appropriate gear for zone
+```javascript
+const ZONE_HP_TARGETS = {
+  whisperwood: { baseHP: 75,    maxHP: 190,    avgGold: 15,   avgXP: 35 },
+  dustwind:    { baseHP: 630,   maxHP: 1575,   avgGold: 40,   avgXP: 100 },
+  shadowmire:  { baseHP: 1485,  maxHP: 3715,   avgGold: 100,  avgXP: 220 },
+  ironhold:    { baseHP: 3135,  maxHP: 7840,   avgGold: 250,  avgXP: 440 },
+  emberfell:   { baseHP: 6735,  maxHP: 16840,  avgGold: 580,  avgXP: 820 },
+  frostpeak:   { baseHP: 14460, maxHP: 36150,  avgGold: 1280, avgXP: 1660 },
+  voidrift:    { baseHP: 31185, maxHP: 77960,  avgGold: 3050, avgXP: 3400 }
+};
+```
 
-### Monster HP Reference
+### Monster HP Reference (Phase 9)
 
-| Zone | Common Monster | Elite Monster | Boss |
-|------|----------------|---------------|------|
-| Whisperwood | 20-70 HP | 50-100 HP | 500 HP |
-| Dustwind | 80-180 HP | 150-250 HP | 1,200 HP |
-| Shadowmire | 200-400 HP | 350-500 HP | 3,000 HP |
-| Ironhold | 450-800 HP | 700-1000 HP | 8,000 HP |
-| Emberfell | 750-1500 HP | 1300-2000 HP | 20,000 HP |
-| Frostpeak | 1400-2800 HP | 2500-3500 HP | 50,000 HP |
-| Voidrift | 2800-6000 HP | 5000-8000 HP | 150,000 HP |
+| Zone | Weakest Regular | Strongest Regular | Boss |
+|------|-----------------|-------------------|------|
+| Whisperwood | 75 HP | 190 HP | 750 HP |
+| Dustwind | 630 HP | 1,575 HP | 3,000 HP |
+| Shadowmire | 1,485 HP | 3,715 HP | 8,000 HP |
+| Ironhold | 3,135 HP | 7,840 HP | 22,000 HP |
+| Emberfell | 6,735 HP | 16,840 HP | 55,000 HP |
+| Frostpeak | 14,460 HP | 36,150 HP | 140,000 HP |
+| Voidrift | 31,185 HP | 77,960 HP | 400,000 HP |
 
 ---
 
-## Player Damage Scaling
+## Player Damage Scaling (Phase 9)
 
 ### Attack Growth Sources
 
 | Source | Contribution | Notes |
 |--------|--------------|-------|
 | Base stat | +1 per level | 5 + (level-1) = 5-104 |
-| Equipment | +4 to +2500 | Main damage source |
+| Equipment | +8 to +8,000 | Main damage source (Phase 9 retuned) |
 | Sharp Blades | +5% to +50% | Percentage multiplier |
 
-### Expected Attack by Level
+### Weapon Attack Progression (Phase 9)
 
-| Level | Base ATK | Gear ATK | Skills | Total ATK |
-|-------|----------|----------|--------|-----------|
-| 1 | 5 | 0 | 0% | 5 |
-| 5 | 9 | 8 | 5% | 18 |
-| 10 | 14 | 20 | 15% | 39 |
-| 20 | 24 | 50 | 25% | 93 |
-| 30 | 34 | 100 | 35% | 181 |
-| 45 | 49 | 200 | 45% | 361 |
-| 60 | 64 | 400 | 50% | 696 |
-| 75 | 79 | 800 | 50% | 1,319 |
-| 100 | 104 | 2000 | 50% | 3,156 |
+The "wave" pattern — each zone's weapons create satisfying power spikes:
 
-### Damage vs Monster HP Balance
+| Zone | Common Shop | Uncommon Shop | Boss Drop (Rare) |
+|------|------------|---------------|-------------------|
+| 1 | 8, 10 | 18 | 28 |
+| 2 | 35, 42 | 50 | 75 |
+| 3 | 85, 100 | 120 | 175 |
+| 4 | 200, 240 | 280 | 400 |
+| 5 | 450, 530 | 630 | 900 |
+| 6 | 1,000, 1,180 | 1,400 | 2,000 |
+| 7 | 2,200, 2,600 | 3,100 | 4,400 |
+
+### Expected Attack by Level (Phase 9)
+
+| Level | Base ATK | Gear ATK | Total ATK |
+|-------|----------|----------|-----------|
+| 1 | 5 | 0 | 5 |
+| 5 | 9 | 18 | 27 |
+| 10 | 14 | 28 | 42 |
+| 20 | 24 | 75 | 99 |
+| 30 | 34 | 175 | 209 |
+| 45 | 49 | 400 | 449 |
+| 60 | 64 | 900 | 964 |
+| 75 | 79 | 2,000 | 2,079 |
+| 100 | 104 | 4,400 | 4,504 |
+
+### Wave Pattern Example (Zone 3)
 
 ```
-Target: 20-50 clicks per monster (average)
+Entry (Lv 20, prev boss weapon 75): attack = 99
+  Weak monster 1,485 HP → 1485/99 = 15 clicks ← NICE ENTRY DIFFICULTY
+  Strong monster 3,715 HP → 3715/99 = 38 clicks ← VERY HARD
 
-At Level 10 in Whisperwood:
-- Player ATK: ~39
-- Monster HP: ~70-100
-- Clicks: 2-3 (player is strong for zone)
+Got Common weapon (85): attack = 24+85 = 109
+  Weak: 1485/109 = 14 clicks (marginal improvement)
+  Strong: 3715/109 = 34 clicks (still challenging)
 
-At Level 30 in Shadowmire:
-- Player ATK: ~181
-- Monster HP: ~300-400
-- Clicks: 2-3 (with crits: faster)
+Got Uncommon weapon (120): attack = 24+120 = 144
+  Weak: 1485/144 = 10 clicks ← POWER SPIKE!
+  Strong: 3715/144 = 26 clicks (manageable)
 
-At Level 75 in Voidrift:
-- Player ATK: ~1,319
-- Monster HP: ~4000-6000
-- Clicks: 3-5 (with crits/skills: faster)
+Boss drop weapon (175): attack = 24+175 = 199
+  Weak: 1485/199 = 7 clicks ← FEELING POWERFUL!
+  Strong Z3: 3715/199 = 19 clicks (comfortable farm)
+  Entry Z4 weak: 3135/199 = 16 clicks ← ZONE RESET, HARD AGAIN!
 ```
 
 ---
 
-## Gold Economy Curve
+## Gold Economy Curve (Phase 9)
 
 ### Monster Gold Scaling
 
+Gold/XP values are ~3x old values to maintain gold-per-minute parity
+with the ~3x increase in clicks-to-kill.
+
 | Zone | Gold/Kill (avg) | Gold/Minute* | Shop Item Range |
 |------|-----------------|--------------|-----------------|
-| Whisperwood | 5 | 30-60 | 50-300 |
-| Dustwind | 14 | 80-150 | 200-1,200 |
-| Shadowmire | 35 | 150-300 | 500-3,000 |
-| Ironhold | 85 | 300-600 | 1,500-9,000 |
-| Emberfell | 200 | 600-1,200 | 4,000-24,000 |
-| Frostpeak | 440 | 1,200-2,500 | 10,000-60,000 |
-| Voidrift | 1,050 | 2,500-6,000 | 25,000-150,000 |
+| Whisperwood | 15 | 30-60 | 150-900 |
+| Dustwind | 40 | 80-150 | 600-3,600 |
+| Shadowmire | 100 | 150-300 | 1,500-9,000 |
+| Ironhold | 250 | 300-600 | 4,500-27,000 |
+| Emberfell | 580 | 600-1,200 | 12,000-72,000 |
+| Frostpeak | 1,280 | 1,200-2,500 | 30,000-180,000 |
+| Voidrift | 3,050 | 2,500-6,000 | 75,000-450,000 |
 
-*With average click speed + auto-clicker
+*With average click speed
 
 ### Gold Sink Balance
 
 **Target: Upgrade every 30-50 kills**
 
 ```javascript
-// Verify balance
-const goldPerKill = 35;  // Shadowmire average
-const shopCost = 1250;   // Uncommon weapon
+// Verify balance (Phase 9)
+const goldPerKill = 100;   // Shadowmire average
+const shopCost = 3750;     // Uncommon weapon
 
 const killsNeeded = shopCost / goldPerKill;
-// = 35.7 kills (within target!)
+// = 37.5 kills (within target!)
 ```
 
-### Total Gold Requirements
+---
 
-| Milestone | Gold Needed | Approx. Kills |
-|-----------|-------------|---------------|
-| Whisperwood gear | ~500 | 100 |
-| Dustwind gear | ~2,500 | 250 |
-| Shadowmire gear | ~7,500 | 350 |
-| Ironhold gear | ~25,000 | 450 |
-| Emberfell gear | ~70,000 | 550 |
-| Frostpeak gear | ~180,000 | 650 |
-| Voidrift gear | ~500,000 | 750 |
-| All skills maxed | ~660,000 | 1,000 |
+## Monster Type Mechanic Scaling (Phase 9)
+
+### Armor Values
+
+Scaled proportionally to new attack values — armor reduces damage by ~15-25% of expected player attack at zone level.
+
+| Zone | Armor Range | % of Zone Entry Attack |
+|------|-------------|----------------------|
+| 4 | 40-50 | 19-24% |
+| 5 | 90 | 20% |
+| 6 | 180 | 19% |
+| 7 | 350-400 | 17-19% |
+
+### Regeneration Rates
+
+Reduced from 2-4.5% to 0.5-1.2% of maxHP/sec to compensate for larger HP pools.
+Target: regen heals ~30-40% of a single click's damage per second.
+
+| Zone | Regen Rate | Notes |
+|------|-----------|-------|
+| 3 | 0.008 | Bloated Toad, Swamp Hag |
+| 4 | 0.010 | Tunneler Worm |
+| 5 | 0.010-0.012 | Magma Slime, Fire Salamander, Flame Cultist |
+| 6 | 0.005-0.008 | Ice Wraith, Frost Banshee, Glacielle |
+| 7 | 0.004-0.006 | Entropy Leech, Dimensional Wraith, Void Titan, Xal'theron |
+
+### Swift Escape Timers
+
+Increased from 4-8.5s to 9-14s to account for higher HP (more clicks needed).
+Target: player needs to click at ~3-4 clicks/sec to beat the timer with zone-appropriate gear.
+
+| Zone | Timer Range | Notes |
+|------|------------|-------|
+| 2 | 13,000-14,000ms | Sidewinder, Dust Devil, Vulture, Plains Stalker |
+| 3 | 12,000ms | Will-o-Wisp, Giant Leech |
+| 4 | 11,000ms | Crystal Spider, Cave Bat Swarm |
+| 5 | 10,000ms | Hellhound |
+| 6 | 9,000ms | Frost Sprite, Dire Wolf |
+| 7 | 9,000-10,000ms | Phase Stalker, Chaos Imp, Entropy Leech |
+
+### Default Type Constants
+
+```javascript
+ARMOR_VALUE_DEFAULT = 40;     // (was 15)
+REGEN_RATE_DEFAULT = 0.008;   // (was 0.03)
+ESCAPE_TIMER_DEFAULT = 12000; // (was 8000)
+```
+
+---
+
+## Boss Timer System (Phase 9)
+
+### Design
+
+Bosses have an enrage timer (DPS check). If the player doesn't kill the boss within the timer:
+- Boss **resets** (HP back to full)
+- Player takes **no death penalty**
+- Toast: "Boss enraged! You need more power to defeat it."
+- Boss button remains available for retry
+
+### Boss Fight Targets (Phase 9)
+
+| Boss | HP | Timer | Target Clicks* | Min DPS @ 4 cps |
+|------|-----|-------|----------------|-----------------|
+| Mossback | 750 | 60s | ~50 clicks | ~4 atk/click |
+| Redfang | 3,000 | 90s | ~47 clicks | ~9 atk/click |
+| Mire Mother | 8,000 | 120s | ~56 clicks | ~17 atk/click |
+| Grimstone | 22,000 | 150s | ~70 clicks | ~37 atk/click |
+| Pyrax | 55,000 | 180s | ~81 clicks | ~77 atk/click |
+| Glacielle | 140,000 | 240s | ~96 clicks | ~146 atk/click |
+| Xal'theron | 400,000 | 300s | ~126 clicks | ~334 atk/click |
+
+*With zone-appropriate uncommon weapon
+
+### Boss Reward Scaling (Phase 9)
+
+| Boss | Gold | XP | Gear Drop |
+|------|------|-----|-----------|
+| Mossback | 300-450 | 600-750 | Rare weapon (28 atk) |
+| Redfang | 900-1,350 | 1,500-1,800 | Rare weapon (75 atk) |
+| Mire Mother | 2,100-3,000 | 3,600-4,500 | Rare weapon (175 atk) |
+| Grimstone | 4,500-6,600 | 9,000-11,400 | Rare weapon (400 atk) |
+| Pyrax | 10,500-15,000 | 22,500-28,500 | Rare weapon (900 atk) |
+| Glacielle | 24,000-36,000 | 54,000-69,000 | Rare weapon (2,000 atk) |
+| Xal'theron | 75,000-120,000 | 150,000-195,000 | Legendary weapon (8,000 atk) |
 
 ---
 
@@ -210,17 +311,6 @@ const killsNeeded = shopCost / goldPerKill;
 |------|------|--------------|-------------------|
 | Crit Chance | 5% | 25% | ~40-50% |
 | Crit Damage | 200% | 300% | ~400-500% |
-
-### Crit Probability Table
-
-| Crit Chance | Avg Hits for 1 Crit | DPS Increase |
-|-------------|---------------------|--------------|
-| 5% | 20 | +5% |
-| 10% | 10 | +10% |
-| 20% | 5 | +20% |
-| 30% | 3.3 | +30% |
-| 40% | 2.5 | +40% |
-| 50% | 2 | +50% |
 
 ### Crit Value Formula
 
@@ -244,23 +334,10 @@ function critDPSMultiplier(critChance, critDamage) {
 
 | Source | Energy Gained |
 |--------|---------------|
-| Click on monster | +5 (max every 200ms) |
-| Kill regular monster | +15 |
-| Kill boss | +50 |
-| Passive regen | +2/second |
-
-### Energy Economy
-
-```javascript
-// Average energy per monster kill:
-// ~10 clicks = 50 energy + 15 kill bonus = 65 energy
-
-// Power Strike costs 15 energy
-// Can use ~4x per monster kill cycle
-
-// Heal costs 20 energy
-// Can use ~3x per monster kill cycle
-```
+| Click on monster | +1 (max every 200ms) |
+| Kill regular monster | +5 |
+| Kill boss | +20 |
+| Passive regen | +0/second (base) |
 
 ### Skill DPS Impact
 
@@ -269,83 +346,6 @@ function critDPSMultiplier(critChance, critDamage) {
 | Power Strike | 15 | 3x one hit | ~+15% sustained |
 | Berserk | 30 | +50% for 10s | ~+40% during buff |
 | Execute | 25 | Instant kill <15% | Variable |
-
----
-
-## Skill Cost Curves
-
-### Passive Skill Upgrade Formula
-
-```javascript
-function passiveUpgradeCost(baseCost, level) {
-  // Roughly doubles every 2 levels
-  return Math.floor(baseCost * Math.pow(1.8, level - 1));
-}
-```
-
-### Active Skill Upgrade Formula
-
-```javascript
-function activeUpgradeCost(baseCost, level) {
-  // Roughly doubles every level
-  return Math.floor(baseCost * Math.pow(2, level - 1));
-}
-```
-
-### Recommended Skill Priorities
-
-Level 1: Power Strike (auto-unlocked, free). Then choose at milestones:
-
-| Level | Choice | Recommendation | Reasoning |
-|-------|--------|----------------|-----------|
-| 3 | Sharp Blades vs Killer Instinct | Sharp Blades | Passive DPS boost |
-| 5 | Heal vs Iron Skin | Heal | Active healing for survival |
-| 8 | Gold Rush vs XP Boost | Gold Rush | More gold for upgrades |
-| 10 | Execute vs Berserk Rage | Execute | Boss killing power |
-| 15 | Crit Surge vs Perfect Strike | Crit Surge | More crits = more damage |
-| 20 | Reflect vs Time Warp | Time Warp | Utility and burst potential |
-
-*Note: Unchosen skills can always be purchased later with gold*
-
----
-
-## Boss Scaling
-
-### Boss HP Formula
-
-```javascript
-function bossHP(zoneOrder) {
-  // Exponential scaling
-  const bases = [500, 1200, 3000, 8000, 20000, 50000, 150000];
-  return bases[zoneOrder - 1];
-}
-```
-
-### Boss Fight Targets
-
-| Boss | HP | Target Clicks* | Target Time |
-|------|-----|----------------|-------------|
-| Mossback | 500 | 100-150 | 1-2 min |
-| Redfang | 1,200 | 120-180 | 2-3 min |
-| Mire Mother | 3,000 | 150-200 | 3-5 min |
-| Grimstone | 8,000 | 180-250 | 4-6 min |
-| Pyrax | 20,000 | 200-300 | 5-8 min |
-| Glacielle | 50,000 | 250-350 | 7-10 min |
-| Xal'theron | 150,000 | 300-500 | 10-15 min |
-
-*With recommended gear for zone
-
-### Boss Reward Scaling
-
-| Boss | Gold | XP | Gear Drop |
-|------|------|-----|-----------|
-| Mossback | 100-150 | 200-250 | Rare weapon |
-| Redfang | 300-450 | 500-600 | Rare weapon |
-| Mire Mother | 700-1000 | 1.2K-1.5K | Rare weapon |
-| Grimstone | 1.5K-2.2K | 3K-3.8K | Rare weapon |
-| Pyrax | 3.5K-5K | 7.5K-9.5K | Rare weapon |
-| Glacielle | 8K-12K | 18K-23K | Rare weapon |
-| Xal'theron | 25K-40K | 50K-65K | Legendary weapon |
 
 ---
 
@@ -361,39 +361,26 @@ const RARITY_WEIGHTS = {
   epic: 1.8,
   legendary: 0.2
 };
-// Total: 100
-
-// Probabilities:
-// Common: 70%
-// Uncommon: 20%
-// Rare: 8%
-// Epic: 1.8%
-// Legendary: 0.2%
 ```
-
-### Drop Rate by Monster Type
-
-| Monster Type | Common | Uncommon | Rare | Epic | Legendary |
-|--------------|--------|----------|------|------|-----------|
-| Regular | 5-10% | 2-4% | 0.5-1% | 0.1% | 0.01% |
-| Elite | 10-15% | 5-8% | 1-2% | 0.3% | 0.05% |
-| Boss | 100%* | 25%* | 100%** | 10% | 5% |
-
-*Boss drops guaranteed specific rare
-**First kill only for guaranteed
 
 ---
 
-## Balance Verification Checklist
+## Balance Verification Checklist (Phase 9)
 
 When adding new content, verify:
 
-- [ ] Monster HP takes 15-50 clicks with zone-appropriate gear
+- [ ] Zone 1 entry (Lv 1, no gear): Weakest monster takes 15-20 clicks
+- [ ] Zone 1 with uncommon weapon: Weakest takes 5-8 clicks
+- [ ] Zone N entry with prev boss weapon: Weakest takes 12-18 clicks
+- [ ] Zone N with uncommon weapon: Weakest takes 8-12 clicks
+- [ ] Boss timers work (timeout resets boss, NO penalty)
+- [ ] Boss fights completable within timer with zone-appropriate uncommon gear
 - [ ] Gold drops allow upgrade every 30-50 kills
 - [ ] XP allows level up every 5-20 minutes (varies by level)
-- [ ] New items don't exceed stat ranges for their zone
-- [ ] Skill costs align with expected gold at unlock level
-- [ ] Boss fights take 5-15 minutes with appropriate gear
+- [ ] Armor reduces damage by ~15-25% at zone entry
+- [ ] Regen monsters killable with proper gear (out-DPS the regen)
+- [ ] Swift monsters killable within escape timers at ~3-4 clicks/sec
+- [ ] Wave pattern feels satisfying: hard → gear → easy → harder → gear → easy
 
 ---
 
@@ -409,17 +396,18 @@ hp = baseHealth + (healthPerLevel * (level - minLevel))
 // Gold drop
 gold = randInt(goldMin, goldMax) + (goldPerLevel * (level - minLevel))
 
+// Player attack
+attack = 5 + (level - 1) + weaponAttack
+
 // Crit DPS multiplier
 mult = 1 + (critChance * (critDamage - 1))
 
 // Skill effect value
 value = baseValue + (perLevel * (skillLevel - 1))
-
-// Item price
-price = zoneBasePrice * rarityMultiplier
 ```
 
 ---
 
 *This document is the source of truth for all balance-related numbers.*
+*Phase 9 overhaul: Feb 2026.*
 *References: _INDEX.md, all system docs, all data docs*

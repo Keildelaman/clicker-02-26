@@ -26,6 +26,17 @@
         <!-- Type Badge -->
         <div class="monster-type-badge" id="monster-type-badge" style="display: none;"></div>
 
+        <!-- Boss Timer (enrage countdown) -->
+        <div class="boss-timer" id="boss-timer" style="display: none;">
+          <div class="boss-timer__label">
+            <span class="boss-timer__icon">&#x23F1;&#xFE0F;</span>
+            <span class="boss-timer__text" id="boss-timer-text">0:00</span>
+          </div>
+          <div class="progress-bar progress-bar--sm">
+            <div class="progress-bar__fill boss-timer-fill" id="boss-timer-fill" style="width: 100%"></div>
+          </div>
+        </div>
+
         <!-- Escape Timer (swift) -->
         <div class="monster-escape-timer" id="monster-escape-timer" style="display: none;">
           <span class="monster-escape-timer__icon">&#x23F1;&#xFE0F;</span>
@@ -78,6 +89,12 @@
 
       <!-- Boss Challenge Button -->
       <div class="boss-challenge" id="boss-challenge" style="display: none;">
+        <div class="boss-kill-progress" id="boss-kill-progress" style="display: none;">
+          <div class="progress-bar progress-bar--sm">
+            <div class="progress-bar__fill boss-kill-progress__fill" style="width: 0%; background: var(--aggressive-color);"></div>
+          </div>
+          <div class="boss-kill-progress__text">0 / 0 kills</div>
+        </div>
         <button class="boss-challenge__btn" id="boss-challenge-btn">CHALLENGE BOSS</button>
       </div>
 

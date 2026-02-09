@@ -59,7 +59,13 @@ export function init() {
     showToast(`Found: ${item.emoji} ${item.name}!`, 'success', 3000);
     if (activeTab === 'inventory') renderInventory();
   });
+  on('item:equipFailed', ({ item, requiredLevel }) => {
+    showToast(`${item.emoji} ${item.name} requires Lv ${requiredLevel}!`, 'warning', 3000);
+  });
   on('gold:earned', updateGold);
+  on('player:levelUp', () => {
+    if (activeTab === 'inventory') renderInventory();
+  });
 
   // Live timer update (no full re-render)
   on('shop:timerTick', ({ timeLeft }) => {
@@ -204,8 +210,12 @@ function renderInventory() {
     if (!item) continue;
 
     const sellPrice = item.sellPrice || Math.floor(item.buyPrice * 0.25);
+    const meetsLevel = player.level >= item.requiredLevel;
     let actionsHtml = '';
-    actionsHtml += `<button class="item-card__btn item-card__btn--equip" data-equip="${itemId}">Equip</button>`;
+    if (!meetsLevel) {
+      actionsHtml += `<span class="item-card__level-req">Req. Lv ${item.requiredLevel}</span>`;
+    }
+    actionsHtml += `<button class="item-card__btn item-card__btn--equip" data-equip="${itemId}" ${meetsLevel ? '' : 'disabled'}>Equip</button>`;
     actionsHtml += `<button class="item-card__btn item-card__btn--sell" data-sell="${itemId}">Sell (${formatGold(sellPrice)}g)</button>`;
 
     html += createItemCardHTML(item, actionsHtml);

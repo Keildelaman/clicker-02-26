@@ -86,7 +86,7 @@ document.getElementById('monster-area').addEventListener('keydown', (e) => {
 });
 
 // 6. Wire game logic events (gold granting — XP handled by progression.js)
-on('combat:monsterKilled', ({ goldReward }) => {
+on('combat:monsterKilled', ({ goldReward, isBoss }) => {
   const p = state.player;
 
   // Apply goldFind bonus from equipment
@@ -97,6 +97,13 @@ on('combat:monsterKilled', ({ goldReward }) => {
   p.gold += finalGold;
   p.totalGoldEarned += finalGold;
   emit('gold:earned', { amount: finalGold, total: p.gold });
+
+  // Track zone kills (non-boss only) for boss kill gate
+  if (!isBoss) {
+    if (!p.zoneKills) p.zoneKills = {};
+    p.zoneKills[p.currentZone] = (p.zoneKills[p.currentZone] || 0) + 1;
+    emit('zone:killTracked', { zoneId: p.currentZone, kills: p.zoneKills[p.currentZone] });
+  }
 
   // Auto-save on kill milestones
   if (p.statistics.totalKills % 10 === 0) {

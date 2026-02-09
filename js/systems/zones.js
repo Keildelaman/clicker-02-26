@@ -53,8 +53,31 @@ export function travelToZone(zoneId) {
 }
 
 /**
+ * Check if the player has met the kill requirement for the current zone's boss.
+ * Already-defeated bosses skip the kill gate (rematches are free).
+ * @returns {{ met: boolean, current: number, required: number }}
+ */
+export function getBossKillProgress() {
+  const player = getPlayer();
+  if (!player) return { met: false, current: 0, required: 0 };
+
+  const zone = ZONES[player.currentZone];
+  if (!zone || !zone.bossId) return { met: true, current: 0, required: 0 };
+
+  // Already-defeated bosses can always be re-challenged
+  if (player.bossesDefeated.includes(zone.bossId)) {
+    return { met: true, current: zone.bossKillReq || 0, required: zone.bossKillReq || 0 };
+  }
+
+  const required = zone.bossKillReq || 0;
+  const current = (player.zoneKills && player.zoneKills[player.currentZone]) || 0;
+  return { met: current >= required, current, required };
+}
+
+/**
  * Start a boss challenge — show the intro modal.
  * Does NOT spawn the boss yet (the modal's "Begin Battle" does that).
+ * Gated behind zone kill requirement (skipped for re-challenges).
  */
 export function challengeBoss() {
   const player = getPlayer();
@@ -65,6 +88,13 @@ export function challengeBoss() {
 
   const boss = MONSTERS[zone.bossId];
   if (!boss) return;
+
+  // Check kill gate (re-challenges skip this)
+  const progress = getBossKillProgress();
+  if (!progress.met) {
+    emit('zone:bossLocked', { current: progress.current, required: progress.required, zone });
+    return;
+  }
 
   emit('zone:bossIntro', { boss, zone });
 }

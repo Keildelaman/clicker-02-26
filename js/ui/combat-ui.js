@@ -20,6 +20,7 @@ let monsterHPFill, monsterHPText, monsterHPBar;
 let damageContainer;
 let typeBadge, escapeTimerEl, escapeTimerText;
 let shieldContainer, shieldFill, shieldText;
+let bossTimerEl, bossTimerFill, bossTimerText;
 let playerBars, gameContainer;
 
 // Type badge labels
@@ -46,6 +47,9 @@ export function init() {
   shieldContainer = document.getElementById('monster-shield');
   shieldFill = document.getElementById('monster-shield-fill');
   shieldText = document.getElementById('monster-shield-text');
+  bossTimerEl = document.getElementById('boss-timer');
+  bossTimerFill = document.getElementById('boss-timer-fill');
+  bossTimerText = document.getElementById('boss-timer-text');
   playerBars = document.querySelector('.player-bars');
   gameContainer = document.querySelector('.game-container');
 
@@ -57,6 +61,9 @@ export function init() {
   on('combat:monsterEscaped', onMonsterEscaped);
   on('combat:escapeTimerTick', onEscapeTimerTick);
   on('combat:monsterRegenerated', onMonsterRegenerated);
+  on('combat:bossTimerStarted', onBossTimerStarted);
+  on('combat:bossTimerTick', onBossTimerTick);
+  on('combat:bossTimeout', onBossTimeout);
   on('player:damaged', onPlayerDamaged);
   on('player:died', onPlayerDied);
 }
@@ -71,6 +78,11 @@ function onMonsterSpawned({ monster }) {
   monsterLevel.textContent = `Lv. ${monster.level}`;
   monsterArea.classList.remove('monster-area--dead', 'monster-area--warning', 'monster-area--attacking', 'monster-area--regen-pulse');
   monsterArea.classList.add('monster-area--spawning');
+
+  // Hide boss timer for non-boss monsters (boss timer is shown via bossTimerStarted event)
+  if (!monster.isBoss && bossTimerEl) {
+    bossTimerEl.style.display = 'none';
+  }
 
   setTimeout(() => {
     monsterArea.classList.remove('monster-area--spawning');
@@ -98,6 +110,9 @@ function onMonsterKilled({ monster }) {
   monsterArea.classList.remove('monster-area--warning', 'monster-area--attacking', 'monster-area--regen-pulse');
   monsterEmoji.textContent = monster.deathEmoji;
   hideTypeIndicators();
+
+  // Hide boss timer on kill
+  if (bossTimerEl) bossTimerEl.style.display = 'none';
 }
 
 function onShieldBroken() {
@@ -146,6 +161,53 @@ function onMonsterRegenerated({ monsterHP, monsterMaxHP }) {
       monsterArea.classList.remove('monster-area--regen-pulse');
     }, 500);
   }
+}
+
+function onBossTimerStarted({ duration }) {
+  if (!bossTimerEl) return;
+  bossTimerEl.style.display = '';
+  bossTimerFill.style.width = '100%';
+  bossTimerFill.classList.remove('boss-timer-fill--caution', 'boss-timer-fill--critical');
+
+  const secs = Math.ceil(duration / 1000);
+  const min = Math.floor(secs / 60);
+  const sec = secs % 60;
+  bossTimerText.textContent = `${min}:${String(sec).padStart(2, '0')}`;
+}
+
+function onBossTimerTick({ remaining, duration }) {
+  if (!bossTimerEl) return;
+
+  const pct = Math.max(0, remaining / duration) * 100;
+  bossTimerFill.style.width = `${pct}%`;
+
+  const secs = Math.max(0, Math.ceil(remaining / 1000));
+  const min = Math.floor(secs / 60);
+  const sec = secs % 60;
+  bossTimerText.textContent = `${min}:${String(sec).padStart(2, '0')}`;
+
+  // Color transitions
+  bossTimerFill.classList.remove('boss-timer-fill--caution', 'boss-timer-fill--critical');
+  if (pct <= 15) {
+    bossTimerFill.classList.add('boss-timer-fill--critical');
+  } else if (pct <= 40) {
+    bossTimerFill.classList.add('boss-timer-fill--caution');
+  }
+}
+
+function onBossTimeout({ bossName }) {
+  if (bossTimerEl) {
+    bossTimerEl.style.display = 'none';
+  }
+
+  // Screen flash effect
+  if (gameContainer) {
+    gameContainer.classList.add('game-container--death-flash');
+    setTimeout(() => gameContainer.classList.remove('game-container--death-flash'), 500);
+  }
+
+  showToast(`${bossName} enraged! You need more power to defeat it.`, 'warning', 4000);
+  hideTypeIndicators();
 }
 
 function onPlayerDamaged({ damage, source }) {

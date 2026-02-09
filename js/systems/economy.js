@@ -180,6 +180,12 @@ export function equipItem(itemId) {
   const player = getPlayer();
   const slot = item.type; // 'weapon', 'armor', or 'accessory'
 
+  // Level check — items have requiredLevel that must be met
+  if (player.level < item.requiredLevel) {
+    emit('item:equipFailed', { itemId, item, reason: 'level', requiredLevel: item.requiredLevel });
+    return false;
+  }
+
   // Remove from inventory
   const idx = player.inventory.indexOf(itemId);
   if (idx === -1) return false;

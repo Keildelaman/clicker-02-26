@@ -169,6 +169,38 @@
   border: 1px solid var(--regen-color);
 }
 
+/* === Boss Timer (Enrage Countdown) === */
+.boss-timer {
+  width: 100%;
+  max-width: 280px;
+  margin: 0 auto var(--spacing-xs);
+}
+
+.boss-timer__label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+
+.boss-timer-fill {
+  background: var(--success-color);
+  transition: width 0.2s linear, background-color 0.5s ease;
+}
+
+.boss-timer-fill--caution {
+  background: var(--xp-color);
+}
+
+.boss-timer-fill--critical {
+  background: var(--hp-critical);
+  animation: pulse-bar 0.5s infinite;
+}
+
 /* === Monster Escape Timer (Swift) === */
 .monster-escape-timer {
   display: flex;
@@ -706,9 +738,26 @@
   transition: background var(--transition-fast), transform var(--transition-fast);
 }
 
-.boss-challenge__btn:active {
+.boss-challenge__btn:active:not(:disabled) {
   transform: scale(0.98);
   background: rgba(239, 83, 80, 0.25);
+}
+
+.boss-challenge__btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Boss Kill Progress */
+.boss-kill-progress {
+  margin-bottom: var(--spacing-xs);
+}
+
+.boss-kill-progress__text {
+  text-align: center;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-dim);
+  margin-top: 2px;
 }
 
 /* === Zone Cards === */
