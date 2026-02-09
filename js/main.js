@@ -23,6 +23,7 @@ import * as economy from './systems/economy.js';
 import * as loot from './systems/loot.js';
 import * as zones from './systems/zones.js';
 import * as skills from './systems/skills.js';
+import * as tutorial from './systems/tutorial.js';
 
 // Data
 import { ITEMS } from './data/items.data.js';
@@ -56,6 +57,7 @@ economy.init();
 loot.init();
 zones.init();
 skills.init({ getComputedStats: player.getComputedStats, damagePlayer: health.damagePlayer });
+tutorial.init();
 
 // 3. Initialize UI
 renderer.init();
@@ -125,6 +127,11 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
   });
 });
 
+// Event-driven navigation (used by tutorial modal buttons)
+on('nav:navigate', ({ screen }) => {
+  showScreen(screen);
+});
+
 // Zones back button
 document.getElementById('zones-back-btn').addEventListener('click', () => {
   showScreen('combat');
@@ -142,7 +149,12 @@ setupAutoSave();
 startLoop();
 monster.spawnNext();
 
-// 10. Debug tools (dev only)
+// 10. Tutorial: show welcome screen for new players
+if (!savedData) {
+  emit('tutorial:welcome');
+}
+
+// 11. Debug tools (dev only)
 window.DEBUG = {
   state: () => JSON.parse(JSON.stringify(state)),
   giveGold: (n) => {

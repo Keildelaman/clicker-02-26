@@ -16,6 +16,7 @@ import * as modals from './modals.js';
 import * as shopUI from './shop-ui.js';
 import * as zonesUI from './zones-ui.js';
 import * as skillsUI from './skills-ui.js';
+import * as tutorialUI from './tutorial-ui.js';
 
 let dirty = true;
 
@@ -33,6 +34,7 @@ export function init() {
   shopUI.init();
   zonesUI.init();
   skillsUI.init();
+  tutorialUI.init();
 
   // Mark dirty on state-changing events
   on('combat:click', markDirty);
@@ -69,6 +71,7 @@ export function init() {
   on('mastery:gained', markDirty);
   on('skill:directDamage', markDirty);
   on('skill:effectTriggered', markDirty);
+  on('tutorial:completed', markDirty);
 
   // Initial render
   statsUI.renderInitial();

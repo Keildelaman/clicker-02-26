@@ -120,6 +120,11 @@
   50% { box-shadow: 0 0 8px rgba(102, 187, 106, 0.4); }
 }
 
+@keyframes tutorial-pulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.2); }
+  50% { box-shadow: 0 0 25px rgba(255, 215, 0, 0.5); }
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

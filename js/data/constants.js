@@ -113,6 +113,18 @@ export const SHOP_RARITY_WEIGHTS = {
 export const SHOP_REFRESH_ESCALATION = 0.5; // +50% per manual refresh
 export const SHOP_REFRESH_MAX_MULT = 5.0;
 
+// Tutorial
+export const FIRST_KILL_BONUS_GOLD = 10;
+export const FIRST_SKILL_USE_BONUS_ENERGY = 25;
+export const FIRST_ITEM_BONUS_GOLD = 25;
+export const FIRST_BOSS_BONUS_MULTIPLIER = 1.5;
+export const MIN_TIME_BETWEEN_TIPS = 60000;
+export const MAX_TIPS_PER_SESSION = 10;
+export const TIP_DISPLAY_DURATION = 5000;
+export const TIPS_DISABLED_AFTER_LEVEL = 20;
+export const SHOP_SUGGEST_LEVEL = 3;
+export const SHOP_SUGGEST_GOLD = 50;
+
 // Rarity System
 export const RARITIES = {
   common:    { name: 'Common',    color: '#9d9d9d', weight: 70,  statMult: 1.0 },

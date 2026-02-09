@@ -16,7 +16,7 @@
 | 5 | Monster Types (all 6) | ✅ Complete | — |
 | 6 | Zones & Bosses | ✅ Complete | — |
 | 7 | Skills (all 25) | ✅ Complete | — |
-| 8 | Tutorial System | ⬜ Not Started | — |
+| 8 | Tutorial System | ✅ Complete | — |
 | 9 | Ascension & Vault | ⬜ Not Started | — |
 | 10 | Save/Load Hardening | ⬜ Not Started | — |
 | 11 | Polish & Accessibility | ⬜ Not Started | — |

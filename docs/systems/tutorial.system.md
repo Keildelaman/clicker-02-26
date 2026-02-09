@@ -499,4 +499,27 @@ const TUTORIAL_CONSTANTS = {
 
 ---
 
+---
+
+## Implementation Notes
+
+### Blocking Modals
+
+Key tutorial steps (first kill, skill bar intro, level-up, energy full, shop suggestion, first item, first aggressive, first death) use **blocking modals** with [CONTINUE] buttons instead of fleeting toast notifications. This ensures players actually see and absorb the information.
+
+Steps that stay as toasts (modal would be disruptive during flow):
+- First skill use — fires during combat
+- First zone travel — zone change UI already provides feedback
+- First boss kill — boss defeat modal already provides celebration
+
+### Modal Queue
+
+A queue system prevents competing modals from overlapping. If a modal is already visible when a new one is requested, it queues and shows 400ms after the current modal is dismissed.
+
+### Element Highlighting
+
+Highlighted elements receive `.tutorial-highlight` (z-index: 251), which renders them above the modal backdrop (z-index: 250), creating a spotlight effect that draws attention to the relevant UI element.
+
+---
+
 *The tutorial should feel like a helpful guide, not a roadblock. Players should learn by doing, with gentle nudges in the right direction.*

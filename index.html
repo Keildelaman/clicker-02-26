@@ -173,6 +173,11 @@
       <div class="boss-modal" id="boss-modal"></div>
     </div>
 
+    <!-- Tutorial Modal (blocking) -->
+    <div class="tutorial-modal-backdrop" id="tutorial-modal-backdrop" style="display: none;">
+      <div class="tutorial-modal" id="tutorial-modal"></div>
+    </div>
+
     <!-- Shared Navigation -->
     <nav class="game-nav">
       <button class="nav-btn nav-btn--active" data-screen="combat">
@@ -192,6 +197,15 @@
         <span>Zones</span>
       </button>
     </nav>
+
+    <!-- Tutorial Overlay -->
+    <div class="tutorial-overlay" id="tutorial-overlay" style="display: none;">
+      <div class="tutorial-welcome">
+        <div class="tutorial-welcome__title">Realms of Clickoria</div>
+        <div class="tutorial-welcome__subtitle">A world of monsters awaits...</div>
+        <div class="tutorial-welcome__prompt">Tap anywhere to begin</div>
+      </div>
+    </div>
 
     <!-- Toast Notifications -->
     <div class="toast-container" id="toast-container" aria-live="polite"></div>
