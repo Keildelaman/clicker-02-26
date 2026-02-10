@@ -9,6 +9,7 @@
 html {
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 body {
@@ -109,7 +110,6 @@ body {
   position: relative;
   min-height: 180px;
   transition: background-color var(--transition-fast);
-  touch-action: manipulation;
 }
 
 .monster-area:active {
