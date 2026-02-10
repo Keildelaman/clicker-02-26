@@ -713,6 +713,140 @@
   padding: var(--spacing-xl);
 }
 
+/* === Inventory Toolbar (Filter + Sort) === */
+.inv-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) 0;
+}
+
+.inv-toolbar__filters {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.inv-filter {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-dim);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-main);
+  font-weight: 600;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: 14px;
+  cursor: pointer;
+  min-height: 28px;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.inv-filter--active {
+  background: var(--zone-accent);
+  border-color: var(--zone-accent);
+  color: var(--color-bg);
+}
+
+.inv-toolbar__sort {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-main);
+  font-weight: 600;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: 6px;
+  cursor: pointer;
+  min-height: 28px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 24px;
+}
+
+/* === Inventory Bulk Sell === */
+.inv-bulk-toggle {
+  width: 100%;
+  background: transparent;
+  border: 1px dashed var(--color-border);
+  color: var(--color-text-dim);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-main);
+  font-weight: 600;
+  padding: var(--spacing-sm);
+  border-radius: 8px;
+  cursor: pointer;
+  min-height: 36px;
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.inv-bulk-toggle:active {
+  border-color: var(--zone-accent);
+  color: var(--zone-accent);
+}
+
+.inv-bulk-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.inv-bulk-btn {
+  width: 100%;
+  border: 1px solid;
+  font-size: var(--font-size-sm);
+  font-family: var(--font-main);
+  font-weight: 600;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: 6px;
+  cursor: pointer;
+  min-height: var(--touch-target-min);
+  transition: opacity var(--transition-fast), background var(--transition-fast);
+}
+
+.inv-bulk-btn:active {
+  opacity: 0.7;
+}
+
+.inv-bulk-btn--common {
+  background: rgba(157, 157, 157, 0.1);
+  border-color: #9d9d9d;
+  color: #9d9d9d;
+}
+
+.inv-bulk-btn--uncommon {
+  background: rgba(30, 255, 0, 0.08);
+  border-color: #1eff00;
+  color: #1eff00;
+}
+
+.inv-bulk-btn--rare {
+  background: rgba(0, 112, 221, 0.1);
+  border-color: #0070dd;
+  color: #0070dd;
+}
+
+.inv-bulk-btn--epic {
+  background: rgba(163, 53, 238, 0.1);
+  border-color: #a335ee;
+  color: #a335ee;
+}
+
+.inv-bulk-btn--legendary {
+  background: rgba(255, 128, 0, 0.1);
+  border-color: #ff8000;
+  color: #ff8000;
+}
+
+.inv-bulk-btn--confirming {
+  background: rgba(239, 83, 80, 0.2);
+  border-color: var(--hp-critical);
+  color: var(--hp-critical);
+  animation: pulse-bar 0.8s infinite;
+}
+
 /* === Boss Challenge Button === */
 .boss-challenge {
   flex-shrink: 0;

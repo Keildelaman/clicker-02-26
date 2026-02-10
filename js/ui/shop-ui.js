@@ -10,6 +10,7 @@
 import { on } from '../core/event-bus.js';
 import { getPlayer } from '../core/game-state.js';
 import { ITEMS } from '../data/items.data.js';
+import { RARITIES, SELL_PRICE_RATIO } from '../data/constants.js';
 import * as economy from '../systems/economy.js';
 import { showToast } from './toasts.js';
 
@@ -18,6 +19,11 @@ let inventoryContent;
 let shopGoldDisplay;
 let activeTab = 'shop';
 let refreshTimerEl = null;
+
+// Inventory filter/sort state (persists across re-renders)
+let activeFilter = 'all';   // 'all' | 'weapon' | 'armor' | 'accessory'
+let activeSort = 'rarity';  // 'rarity' | 'name' | 'level'
+let bulkPanelOpen = false;
 
 const STAT_LABELS = {
   attack: 'ATK',
@@ -31,6 +37,11 @@ const STAT_LABELS = {
   energyGain: 'Energy',
   armorPen: 'Armor Pen'
 };
+
+const RARITY_ORDER = { legendary: 0, epic: 1, rare: 2, uncommon: 3, common: 4 };
+
+// Track bulk sell confirmation timers
+let confirmTimers = {};
 
 export function init() {
   shopContent = document.getElementById('shop-content');
@@ -65,6 +76,11 @@ export function init() {
   on('gold:earned', updateGold);
   on('player:levelUp', () => {
     if (activeTab === 'inventory') renderInventory();
+  });
+  on('items:bulkSold', ({ rarity, count, totalGold }) => {
+    showToast(`Sold ${count} ${rarity} items for ${formatGold(totalGold)}g`, 'info');
+    renderInventory();
+    updateGold();
   });
 
   // Live timer update (no full re-render)
@@ -169,6 +185,110 @@ function createShopItemCard(item, player) {
   return createItemCardHTML(item, actionsHtml);
 }
 
+// --- Inventory Filter / Sort Helpers ---
+
+function getFilteredSortedItems(player) {
+  let items = player.inventory
+    .map(id => ({ id, item: ITEMS[id] }))
+    .filter(e => e.item);
+
+  // Filter by type
+  if (activeFilter !== 'all') {
+    items = items.filter(e => e.item.type === activeFilter);
+  }
+
+  // Sort
+  items.sort((a, b) => {
+    if (activeSort === 'rarity') {
+      const diff = (RARITY_ORDER[a.item.rarity] ?? 5) - (RARITY_ORDER[b.item.rarity] ?? 5);
+      if (diff !== 0) return diff;
+      return a.item.name.localeCompare(b.item.name);
+    }
+    if (activeSort === 'name') {
+      return a.item.name.localeCompare(b.item.name);
+    }
+    if (activeSort === 'level') {
+      const diff = b.item.requiredLevel - a.item.requiredLevel;
+      if (diff !== 0) return diff;
+      return a.item.name.localeCompare(b.item.name);
+    }
+    return 0;
+  });
+
+  return items;
+}
+
+function buildToolbarHTML() {
+  const filters = [
+    { key: 'all', label: 'All' },
+    { key: 'weapon', label: 'Wpn' },
+    { key: 'armor', label: 'Arm' },
+    { key: 'accessory', label: 'Acc' }
+  ];
+
+  const filterPills = filters.map(f =>
+    `<button class="inv-filter${activeFilter === f.key ? ' inv-filter--active' : ''}" data-filter="${f.key}">${f.label}</button>`
+  ).join('');
+
+  const sortOptions = [
+    { key: 'rarity', label: 'Rarity' },
+    { key: 'name', label: 'Name' },
+    { key: 'level', label: 'Level' }
+  ];
+
+  const sortSelect = sortOptions.map(s =>
+    `<option value="${s.key}"${activeSort === s.key ? ' selected' : ''}>${s.label}</option>`
+  ).join('');
+
+  return `<div class="inv-toolbar">
+    <div class="inv-toolbar__filters">${filterPills}</div>
+    <select class="inv-toolbar__sort" data-inv-sort>${sortSelect}</select>
+  </div>`;
+}
+
+function buildBulkSellHTML(player) {
+  // Count items per rarity in inventory (unequipped only — inventory doesn't include equipped)
+  const counts = {};
+  const totals = {};
+  for (const itemId of player.inventory) {
+    const item = ITEMS[itemId];
+    if (!item) continue;
+    if (activeFilter !== 'all' && item.type !== activeFilter) continue;
+    if (!counts[item.rarity]) {
+      counts[item.rarity] = 0;
+      totals[item.rarity] = 0;
+    }
+    counts[item.rarity]++;
+    totals[item.rarity] += item.sellPrice || Math.floor(item.buyPrice * SELL_PRICE_RATIO);
+  }
+
+  // Only show rarities that have items, ordered common-first (safest to sell first)
+  const order = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+  const available = order.filter(r => counts[r] > 0);
+
+  if (available.length === 0) return '';
+
+  const toggleText = bulkPanelOpen ? 'Hide Bulk Sell' : 'Sell All...';
+
+  let html = `<button class="inv-bulk-toggle" data-bulk-toggle>${toggleText}</button>`;
+
+  if (bulkPanelOpen) {
+    html += '<div class="inv-bulk-panel">';
+    for (const rarity of available) {
+      const rarityInfo = RARITIES[rarity];
+      const typeLabel = activeFilter !== 'all' ? ` ${activeFilter}s` : '';
+      const label = `Sell ${counts[rarity]} ${rarityInfo.name}${typeLabel}`;
+      const goldLabel = `${formatGold(totals[rarity])}g`;
+      html += `<button class="inv-bulk-btn inv-bulk-btn--${rarity}" data-bulk-sell="${rarity}">
+        ${label} &mdash; ${goldLabel}
+      </button>`;
+    }
+    html += '</div>';
+  }
+
+  return html;
+}
+
 // --- Inventory Rendering ---
 
 function renderInventory() {
@@ -198,31 +318,44 @@ function renderInventory() {
   }
   html += '</div>';
 
-  // Inventory list
+  // Inventory label
   html += '<div class="inventory-label">Inventory</div>';
 
+  // Toolbar (filter pills + sort)
+  html += buildToolbarHTML();
+
+  // Bulk sell
+  html += buildBulkSellHTML(player);
+
+  // Filtered + sorted items
   if (player.inventory.length === 0) {
     html += '<div class="inventory-empty">No items in inventory</div>';
-  }
+  } else {
+    const filtered = getFilteredSortedItems(player);
 
-  for (const itemId of player.inventory) {
-    const item = ITEMS[itemId];
-    if (!item) continue;
-
-    const sellPrice = item.sellPrice || Math.floor(item.buyPrice * 0.25);
-    const meetsLevel = player.level >= item.requiredLevel;
-    let actionsHtml = '';
-    if (!meetsLevel) {
-      actionsHtml += `<span class="item-card__level-req">Req. Lv ${item.requiredLevel}</span>`;
+    if (filtered.length === 0) {
+      html += '<div class="inventory-empty">No matching items</div>';
     }
-    actionsHtml += `<button class="item-card__btn item-card__btn--equip" data-equip="${itemId}" ${meetsLevel ? '' : 'disabled'}>Equip</button>`;
-    actionsHtml += `<button class="item-card__btn item-card__btn--sell" data-sell="${itemId}">Sell (${formatGold(sellPrice)}g)</button>`;
 
-    html += createItemCardHTML(item, actionsHtml);
+    for (const { id: itemId, item } of filtered) {
+      const sellPrice = item.sellPrice || Math.floor(item.buyPrice * SELL_PRICE_RATIO);
+      const meetsLevel = player.level >= item.requiredLevel;
+      let actionsHtml = '';
+      if (!meetsLevel) {
+        actionsHtml += `<span class="item-card__level-req">Req. Lv ${item.requiredLevel}</span>`;
+      }
+      actionsHtml += `<button class="item-card__btn item-card__btn--equip" data-equip="${itemId}" ${meetsLevel ? '' : 'disabled'}>Equip</button>`;
+      actionsHtml += `<button class="item-card__btn item-card__btn--sell" data-sell="${itemId}">Sell (${formatGold(sellPrice)}g)</button>`;
+
+      html += createItemCardHTML(item, actionsHtml);
+    }
   }
 
   inventoryContent.innerHTML = html;
+  wireInventoryHandlers();
+}
 
+function wireInventoryHandlers() {
   // Wire unequip
   inventoryContent.querySelectorAll('[data-unequip]').forEach(el => {
     el.addEventListener('click', () => {
@@ -254,6 +387,66 @@ function renderInventory() {
       }
     });
   });
+
+  // Wire filter pills
+  inventoryContent.querySelectorAll('[data-filter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeFilter = btn.dataset.filter;
+      renderInventory();
+    });
+  });
+
+  // Wire sort select
+  const sortEl = inventoryContent.querySelector('[data-inv-sort]');
+  if (sortEl) {
+    sortEl.addEventListener('change', () => {
+      activeSort = sortEl.value;
+      renderInventory();
+    });
+  }
+
+  // Wire bulk sell toggle
+  const toggleBtn = inventoryContent.querySelector('[data-bulk-toggle]');
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', () => {
+      bulkPanelOpen = !bulkPanelOpen;
+      renderInventory();
+    });
+  }
+
+  // Wire bulk sell buttons (two-tap confirm)
+  inventoryContent.querySelectorAll('[data-bulk-sell]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      handleBulkSell(btn, btn.dataset.bulkSell);
+    });
+  });
+}
+
+function handleBulkSell(btn, rarity) {
+  // If already confirming this rarity, execute the sell
+  if (btn.classList.contains('inv-bulk-btn--confirming')) {
+    clearTimeout(confirmTimers[rarity]);
+    delete confirmTimers[rarity];
+    const typeArg = activeFilter !== 'all' ? activeFilter : null;
+    economy.sellAllByRarity(rarity, typeArg);
+    // renderInventory is triggered by items:bulkSold event
+    return;
+  }
+
+  // Enter confirmation state
+  const originalText = btn.textContent;
+  btn.textContent = 'Confirm? Tap again';
+  btn.classList.add('inv-bulk-btn--confirming');
+
+  // Clear any existing timer for this rarity
+  if (confirmTimers[rarity]) clearTimeout(confirmTimers[rarity]);
+
+  // Auto-revert after 3 seconds
+  confirmTimers[rarity] = setTimeout(() => {
+    btn.textContent = originalText;
+    btn.classList.remove('inv-bulk-btn--confirming');
+    delete confirmTimers[rarity];
+  }, 3000);
 }
 
 // --- Shared Helpers ---

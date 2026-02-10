@@ -166,6 +166,41 @@ export function sellItem(itemId) {
   return true;
 }
 
+// --- Bulk Sell ---
+
+/**
+ * Sell all unequipped inventory items of a given rarity.
+ * @param {string} rarity - 'common', 'uncommon', 'rare', 'epic', 'legendary'
+ * @returns {{ count: number, totalGold: number } | false}
+ */
+export function sellAllByRarity(rarity, typeFilter = null) {
+  const player = getPlayer();
+  const toSell = [];
+
+  // Scan from end so splice indices stay valid
+  for (let i = player.inventory.length - 1; i >= 0; i--) {
+    const item = ITEMS[player.inventory[i]];
+    if (item && item.rarity === rarity && (!typeFilter || item.type === typeFilter)) {
+      toSell.push({ index: i, item });
+    }
+  }
+  if (toSell.length === 0) return false;
+
+  let totalGold = 0;
+  for (const { index, item } of toSell) {
+    const price = item.sellPrice || Math.floor(item.buyPrice * SELL_PRICE_RATIO);
+    totalGold += price;
+    player.inventory.splice(index, 1);
+  }
+  player.gold += totalGold;
+  player.totalGoldEarned += totalGold;
+
+  emit('items:bulkSold', { rarity, count: toSell.length, totalGold });
+  emit('gold:earned', { amount: totalGold, total: player.gold });
+  saveGame();
+  return { count: toSell.length, totalGold };
+}
+
 // --- Equip / Unequip ---
 
 /**
