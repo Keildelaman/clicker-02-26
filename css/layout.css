@@ -56,6 +56,7 @@ body {
   font-size: var(--font-size-sm);
   color: var(--zone-accent);
   font-weight: 600;
+  margin-left: auto;
 }
 
 /* Main Combat Area */

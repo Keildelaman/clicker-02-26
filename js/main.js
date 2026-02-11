@@ -151,19 +151,27 @@ document.getElementById('skills-back-btn').addEventListener('click', () => {
   showScreen('combat');
 });
 
-// 8. Set up auto-save
+// 8. Dev reset button
+document.getElementById('reset-btn').addEventListener('click', () => {
+  if (confirm('Reset ALL progress and start fresh?')) {
+    clearSave();
+    location.reload();
+  }
+});
+
+// 9. Set up auto-save
 setupAutoSave();
 
-// 9. Start the game
+// 10. Start the game
 startLoop();
 monster.spawnNext();
 
-// 10. Tutorial: show welcome screen for new players
+// 11. Tutorial: show welcome screen for new players
 if (!savedData) {
   emit('tutorial:welcome');
 }
 
-// 11. Debug tools (dev only)
+// 12. Debug tools (dev only)
 window.DEBUG = {
   state: () => JSON.parse(JSON.stringify(state)),
   giveGold: (n) => {
