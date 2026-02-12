@@ -11,6 +11,7 @@
 import { on } from '../core/event-bus.js';
 import { state } from '../core/game-state.js';
 import { DAMAGE_NUMBER_DURATION } from '../data/constants.js';
+import { SKILLS } from '../data/skills.data.js';
 import { showToast } from './toasts.js';
 import { formatNumber } from '../services/utils.js';
 
@@ -22,6 +23,8 @@ let typeBadge, escapeTimerEl, escapeTimerText;
 let shieldContainer, shieldFill, shieldText;
 let bossTimerEl, bossTimerFill, bossTimerText;
 let playerBars, gameContainer;
+let executeMarker = null;
+let buffRow = null;
 
 // Type badge labels
 const TYPE_LABELS = {
@@ -52,9 +55,11 @@ export function init() {
   bossTimerText = document.getElementById('boss-timer-text');
   playerBars = document.querySelector('.player-bars');
   gameContainer = document.querySelector('.game-container');
+  buffRow = document.getElementById('buff-row');
 
   on('combat:monsterSpawned', onMonsterSpawned);
   on('combat:click', onCombatClick);
+  on('combat:hit', onCombatHit);
   on('combat:monsterKilled', onMonsterKilled);
   on('combat:shieldBroken', onShieldBroken);
   on('combat:phaseChange', onPhaseChange);
@@ -66,6 +71,22 @@ export function init() {
   on('combat:bossTimeout', onBossTimeout);
   on('player:damaged', onPlayerDamaged);
   on('player:died', onPlayerDied);
+
+  // Skill UI events
+  on('skill:equipped', onSkillEquipChange);
+  on('skill:unequipped', onSkillEquipChange);
+  on('skill:buffApplied', renderBuffRow);
+  on('skill:buffExpired', renderBuffRow);
+  on('skill:toggleOn', renderBuffRow);
+  on('skill:toggleOff', renderBuffRow);
+  on('skill:hitModifierSet', renderBuffRow);
+  on('skill:effectEnded', renderBuffRow);
+  on('combat:hit', renderBuffRow);
+
+  // Buff timer refresh
+  setInterval(() => {
+    if (buffRow && buffRow.children.length > 0) renderBuffRow();
+  }, 250);
 }
 
 function hasType(monster, typeName) {
@@ -92,17 +113,25 @@ function onMonsterSpawned({ monster }) {
   updateTypeBadge(monster);
   updateShieldBar(monster);
   updateEscapeTimer(monster);
+  updateExecuteMarker();
 }
 
-function onCombatClick({ damage, isCrit, blocked }) {
+function onCombatClick({ blocked }) {
   const monster = state.currentMonster;
   if (monster) {
     updateHPBar(monster);
     if (hasType(monster, 'shielded')) updateShieldBar(monster);
   }
-  if (!blocked) {
-    showDamageNumber(damage, isCrit);
+  // Damage numbers now handled by combat:hit events
+}
+
+function onCombatHit({ damage, isCrit, isSkillDamage, skillId }) {
+  const monster = state.currentMonster;
+  if (monster) {
+    updateHPBar(monster);
+    if (hasType(monster, 'shielded')) updateShieldBar(monster);
   }
+  showDamageNumber(damage, isCrit, isSkillDamage, skillId);
 }
 
 function onMonsterKilled({ monster }) {
@@ -307,9 +336,22 @@ function hideTypeIndicators() {
   monsterArea.classList.remove('monster-area--warning', 'monster-area--attacking', 'monster-area--regen-pulse');
 }
 
-function showDamageNumber(damage, isCrit) {
+function showDamageNumber(damage, isCrit, isSkillDamage = false, skillId = null) {
   const el = document.createElement('div');
-  el.className = 'damage-number' + (isCrit ? ' damage-number--crit' : '');
+  let cls = 'damage-number';
+  if (isCrit) cls += ' damage-number--crit';
+
+  if (isSkillDamage && skillId) {
+    const skillDef = SKILLS[skillId];
+    if (skillDef) {
+      cls += ` damage-number--skill-${skillDef.category}`;
+      if (skillDef.mechanic === 'channel') {
+        cls += ' damage-number--skill-channel';
+      }
+    }
+  }
+
+  el.className = cls;
   el.textContent = isCrit ? `${damage}!` : damage;
 
   // Random horizontal offset for visual variety
@@ -321,4 +363,87 @@ function showDamageNumber(damage, isCrit) {
   setTimeout(() => {
     el.remove();
   }, DAMAGE_NUMBER_DURATION);
+}
+
+// --- Execute Threshold Marker ---
+
+function updateExecuteMarker() {
+  const player = state.player;
+  if (!player) return;
+
+  const hasExecute = player.equippedActive.includes('execute');
+  if (!hasExecute || !player.unlockedSkills['execute']) {
+    if (executeMarker) { executeMarker.remove(); executeMarker = null; }
+    return;
+  }
+
+  const level = player.unlockedSkills['execute'];
+  const skillData = SKILLS['execute']?.levels[level];
+  if (!skillData) return;
+
+  if (!executeMarker) {
+    executeMarker = document.createElement('div');
+    executeMarker.className = 'execute-marker';
+    monsterHPBar.appendChild(executeMarker);
+  }
+
+  executeMarker.style.left = `${skillData.threshold}%`;
+}
+
+function onSkillEquipChange() {
+  updateExecuteMarker();
+}
+
+// --- Buff Row Rendering ---
+
+function renderBuffRow() {
+  if (!buffRow) return;
+  let html = '';
+
+  // Hit modifier indicator (Power Strike, Execute, Shatter queued)
+  if (state.hitModifier) {
+    const skillDef = SKILLS[state.hitModifier.skillId];
+    if (skillDef) {
+      html += `<div class="buff-indicator buff-indicator--hit-mod">
+        <span class="buff-indicator__icon">${skillDef.icon}</span>
+        <span class="buff-indicator__timer">NEXT</span>
+      </div>`;
+    }
+  }
+
+  // Click modifiers (Precision charges)
+  for (const [id, mod] of Object.entries(state.clickModifiers || {})) {
+    const skillDef = SKILLS[id];
+    if (skillDef && mod.charges > 0) {
+      html += `<div class="buff-indicator buff-indicator--hit-mod">
+        <span class="buff-indicator__icon">${skillDef.icon}</span>
+        <span class="buff-indicator__timer">x${mod.charges}</span>
+      </div>`;
+    }
+  }
+
+  // Toggle states (Momentum ON)
+  for (const [id, toggle] of Object.entries(state.toggleStates || {})) {
+    if (!toggle.active) continue;
+    const skillDef = SKILLS[id];
+    if (skillDef) {
+      html += `<div class="buff-indicator buff-indicator--toggle">
+        <span class="buff-indicator__icon">${skillDef.icon}</span>
+        <span class="buff-indicator__timer">${toggle.stacks || 0}</span>
+      </div>`;
+    }
+  }
+
+  // Active buffs (timed — Adrenaline Rush, Flurry, Combo Artist, etc.)
+  for (const [id, buff] of Object.entries(state.activeBuffs || {})) {
+    const skillDef = SKILLS[id];
+    if (skillDef) {
+      html += `<div class="buff-indicator">
+        <span class="buff-indicator__icon">${skillDef.icon}</span>
+        <span class="buff-indicator__timer">${buff.remaining.toFixed(1)}s</span>
+      </div>`;
+    }
+  }
+
+  buffRow.innerHTML = html;
 }

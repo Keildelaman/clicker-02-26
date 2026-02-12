@@ -3,8 +3,8 @@
  *
  * Owns: Click handling, damage calculation, combat state machine,
  *       monster type mechanics (armored, shielded, aggressive, swift, regen).
- * Listens to: (click events wired by main.js)
- * Emits: combat:click, combat:monsterKilled, combat:dyingComplete,
+ * Listens to: (click events wired by main.js), skill:instantDamage
+ * Emits: combat:click, combat:hit, combat:monsterKilled, combat:dyingComplete,
  *        combat:shieldBroken, combat:phaseChange, combat:monsterEscaped,
  *        combat:monsterRegenerated
  *
@@ -17,6 +17,7 @@
 import { on, emit } from '../core/event-bus.js';
 import { state, getPlayer } from '../core/game-state.js';
 import { MIN_DAMAGE, DEATH_ANIMATION_DURATION, BOSS_TIMERS } from '../data/constants.js';
+import { SKILLS as SKILLS_REF } from '../data/skills.data.js';
 
 let dyingTimer = 0;
 let computeStats = null;    // Injected dependency
@@ -33,11 +34,68 @@ function hasType(monster, typeName) {
 }
 
 /**
+ * Apply damage to the current monster. Handles armor, shield, and kill detection.
+ * Used by handleClick (per-hit), skill:instantDamage, and overkill carry.
+ * @param {number} rawDamage
+ * @param {Object} opts - { isCrit, ignoreArmor, isSkillDamage, skillId }
+ * @returns {{ finalDamage: number, killed: boolean }}
+ */
+export function applyDamageToMonster(rawDamage, opts = {}) {
+  const monster = state.currentMonster;
+  if (!monster || state.combatState !== 'active') return { finalDamage: 0, killed: false };
+
+  let damage = Math.max(rawDamage, MIN_DAMAGE);
+
+  // Armored: flat damage reduction (skip if ignoreArmor)
+  if (!opts.ignoreArmor && hasType(monster, 'armored')) {
+    const stats = computeStats();
+    const effectiveArmor = Math.max(monster.armorValue - stats.armorPen, 0);
+    damage = Math.max(damage - effectiveArmor, MIN_DAMAGE);
+  }
+
+  // Shielded: absorb with DR, overflow to HP
+  if (hasType(monster, 'shielded') && monster.shield > 0) {
+    const reducedDamage = Math.max(Math.floor(damage * (1 - monster.shieldDR)), MIN_DAMAGE);
+    if (reducedDamage >= monster.shield) {
+      const overflow = reducedDamage - monster.shield;
+      monster.shield = 0;
+      monster.currentHealth -= overflow;
+      emit('combat:shieldBroken', { monster });
+    } else {
+      monster.shield -= reducedDamage;
+    }
+  } else {
+    monster.currentHealth -= damage;
+  }
+
+  // Emit per-hit event for UI damage numbers
+  emit('combat:hit', {
+    damage,
+    isCrit: !!opts.isCrit,
+    isSkillDamage: !!opts.isSkillDamage,
+    skillId: opts.skillId || null
+  });
+
+  let killed = false;
+  if (monster.currentHealth <= 0) {
+    monster.currentHealth = 0;
+    killed = true;
+  }
+
+  return { finalDamage: damage, killed };
+}
+
+/**
  * Handle a player click/tap on the monster area.
+ * Supports multi-hit (Flurry buff), hit modifiers (Power Strike, Execute, Shatter),
+ * click modifiers (Precision), and Adrenaline Rush crit scaling.
  */
 export function handleClick() {
   if (state.combatState !== 'active') return;
   if (!state.currentMonster) return;
+  if (state.channelState) return; // Clicks blocked during channel
+
+  state.lastClickTime = performance.now();
 
   const player = getPlayer();
   const stats = computeStats();
@@ -59,96 +117,126 @@ export function handleClick() {
     return;
   }
 
-  // Timing mode: random per-click outcome
-  let timingResult = null;
-  if (state.timingMode) {
-    const tm = state.timingMode.levels;
-    const roll = Math.random();
-    if (roll < 0.30) {
-      timingResult = { type: 'perfect', multiplier: tm.perfectMultiplier };
-    } else if (roll < 0.70) {
-      timingResult = { type: 'good', multiplier: tm.goodMultiplier };
-    } else {
-      timingResult = { type: 'miss', multiplier: tm.missMultiplier };
-      // Miss deals self-damage
-      const selfDmg = Math.floor(player.maxHP * tm.missDamage);
-      hurtPlayer(selfDmg, 'timing_miss');
+  // Determine hits per click (Flurry buff)
+  const flurryBuff = state.activeBuffs['flurry'];
+  const hitsPerClick = (flurryBuff && flurryBuff.effects.hitsPerClick) || 1;
+
+  // Check for Precision (click modifier — guaranteed crits)
+  const precisionMod = state.clickModifiers['precision'];
+  const hasPrecision = precisionMod && precisionMod.charges > 0;
+
+  // Passive damage multiplier (Click Mastery + Momentum)
+  let passiveMultiplier = 1.0;
+  const cmState = state.passiveStates['click_mastery'];
+  if (cmState && cmState.stacks > 0 && player.equippedPassive.includes('click_mastery')) {
+    const cmLevel = player.unlockedSkills['click_mastery'];
+    const cmData = SKILLS_REF['click_mastery']?.levels[cmLevel];
+    if (cmData) {
+      passiveMultiplier *= (1 + (cmState.stacks * cmData.dmgPerStack / 100));
     }
-    emit('skill:timingResult', timingResult);
+  }
+  const momState = state.toggleStates['momentum'];
+  if (momState && momState.active && momState.stacks > 0) {
+    passiveMultiplier *= (1 + (momState.stacks * momState.dmgPerStack / 100));
   }
 
-  // Calculate base damage
-  const isCrit = Math.random() < stats.critChance;
-  let damage = stats.attack;
-  if (isCrit) {
-    damage = Math.floor(damage * stats.critDamage);
-  }
-  damage = Math.max(damage, MIN_DAMAGE);
+  // Track if any hit was a crit (for statistics)
+  let anyKilled = false;
+  let totalDamage = 0;
+  let anyCrit = false;
 
-  // Apply timing mode multiplier
-  if (timingResult) {
-    damage = Math.floor(damage * timingResult.multiplier);
+  for (let i = 0; i < hitsPerClick; i++) {
+    // Roll crit
+    let critChance = stats.critChance;
+
+    // Adrenaline Rush: crit chance = max(base, energy%)
+    const adrenalineBuff = state.activeBuffs['adrenaline_rush'];
+    if (adrenalineBuff && adrenalineBuff.effects.critFromEnergy) {
+      critChance = Math.max(critChance, player.energy / player.maxEnergy);
+    }
+
+    let isCrit;
+    if (hasPrecision) {
+      isCrit = true;
+    } else {
+      isCrit = Math.random() < critChance;
+    }
+
+    if (isCrit) anyCrit = true;
+
+    // Compute damage
+    let damage = stats.attack;
+    if (isCrit) {
+      damage = Math.floor(damage * stats.critDamage);
+    }
     damage = Math.max(damage, MIN_DAMAGE);
-  }
 
-  // Apply nextAttackModifier (Power Strike, Execute)
-  if (state.nextAttackModifier) {
-    const mod = state.nextAttackModifier;
-    let shouldApply = true;
+    // PRIMARY hit only (i === 0): apply hitModifier
+    let shatterBonus = 0;
+    if (i === 0 && state.hitModifier) {
+      const mod = state.hitModifier;
 
-    if (mod.condition && mod.condition.type === 'hpBelow') {
-      const hpPercent = monster.currentHealth / monster.maxHealth;
-      shouldApply = hpPercent <= mod.condition.threshold;
-    }
+      if (mod.type === 'execute') {
+        const hpRatio = monster.currentHealth / monster.maxHealth;
+        const multiplier = hpRatio <= mod.threshold ? mod.strongMult : mod.weakMult;
+        damage = Math.floor(damage * multiplier);
+      } else if (mod.type === 'shatter') {
+        // Normal damage + bonus %maxHP (ignores armor)
+        shatterBonus = Math.floor(monster.maxHealth * mod.percentHP);
+      } else {
+        // Default (power_strike): flat multiplier
+        damage = Math.floor(damage * mod.multiplier);
+      }
 
-    if (shouldApply) {
-      damage = Math.floor(damage * mod.multiplier);
       emit('skill:effectTriggered', { skillId: mod.skillId, result: 'applied', damage });
-    } else {
-      emit('skill:effectTriggered', { skillId: mod.skillId, result: 'wasted' });
+      state.hitModifier = null;
+      emit('skill:effectEnded', { skillId: mod.skillId, type: 'hitModifier' });
     }
-    state.nextAttackModifier = null;
-  }
 
-  // Shield Breaker buff: bonus damage vs shielded monsters
-  if (stats.bonusDamage > 0 && monster.shield > 0) {
-    damage = Math.floor(damage * (1 + stats.bonusDamage));
-  }
+    // Apply passive damage bonuses (Click Mastery + Momentum)
+    damage = Math.floor(damage * passiveMultiplier);
 
-  // Armored: flat damage reduction
-  if (hasType(monster, 'armored')) {
-    const effectiveArmor = Math.max(monster.armorValue - stats.armorPen, 0);
-    damage = Math.max(damage - effectiveArmor, MIN_DAMAGE);
-  }
-
-  // Shielded: absorb into shield with DR, overflow to HP
-  if (hasType(monster, 'shielded') && monster.shield > 0) {
-    const reducedDamage = Math.max(Math.floor(damage * (1 - monster.shieldDR)), MIN_DAMAGE);
-
-    if (reducedDamage >= monster.shield) {
-      const overflow = reducedDamage - monster.shield;
-      monster.shield = 0;
-      monster.currentHealth -= overflow;
-      emit('combat:shieldBroken', { monster });
-    } else {
-      monster.shield -= reducedDamage;
+    // Shield Breaker equipment bonus: bonus damage vs shielded monsters
+    if (stats.bonusDamage > 0 && monster.shield > 0) {
+      damage = Math.floor(damage * (1 + stats.bonusDamage));
     }
-  } else {
-    // Normal HP damage (including armored after reduction)
-    monster.currentHealth -= damage;
+
+    // Apply main hit
+    const result = applyDamageToMonster(damage, { isCrit });
+    totalDamage += result.finalDamage;
+
+    // Apply Shatter bonus as separate hit (ignores armor)
+    if (shatterBonus > 0 && !result.killed) {
+      const shatterResult = applyDamageToMonster(shatterBonus, {
+        ignoreArmor: true, isCrit: false, isSkillDamage: true, skillId: 'shatter'
+      });
+      totalDamage += shatterResult.finalDamage;
+      if (shatterResult.killed) { anyKilled = true; break; }
+    }
+
+    if (result.killed) { anyKilled = true; break; }
+  }
+
+  // Precision: consume one charge after the click (all hits in this click benefit)
+  if (hasPrecision) {
+    precisionMod.charges--;
+    if (precisionMod.charges <= 0) {
+      delete state.clickModifiers['precision'];
+      emit('skill:effectEnded', { skillId: 'precision', type: 'clickModifier' });
+    }
   }
 
   // Update statistics
   player.statistics.totalClicks++;
-  if (isCrit) player.statistics.totalCriticals++;
-  if (damage > player.statistics.highestDamage) {
-    player.statistics.highestDamage = damage;
+  if (anyCrit) player.statistics.totalCriticals++;
+  if (totalDamage > player.statistics.highestDamage) {
+    player.statistics.highestDamage = totalDamage;
   }
 
-  // Emit click event (UI listens for damage numbers)
+  // Emit click event (for backwards compat with bars-ui, stats-ui, energy)
   emit('combat:click', {
-    damage,
-    isCrit,
+    damage: totalDamage,
+    isCrit: anyCrit,
     blocked: false,
     monsterHP: monster.currentHealth,
     monsterMaxHP: monster.maxHealth,
@@ -156,10 +244,42 @@ export function handleClick() {
     shieldMaxHP: monster.maxShield
   });
 
-  // Check for kill
-  if (monster.currentHealth <= 0) {
-    monster.currentHealth = 0;
+  if (anyKilled) {
     killMonster();
+  }
+}
+
+/**
+ * Handle instant skill damage (Barrage, Arcane Bolt, Chain Lightning, Shield Bash).
+ */
+function onInstantDamage({ hits, damagePerHit, skillId, overkillCarryPercent }) {
+  const monster = state.currentMonster;
+  if (!monster || state.combatState !== 'active') return;
+
+  const stats = computeStats();
+
+  for (let i = 0; i < hits; i++) {
+    const isCrit = Math.random() < stats.critChance;
+    let dmg = Math.floor(stats.attack * (damagePerHit / 100));
+    if (isCrit) dmg = Math.floor(dmg * stats.critDamage);
+    dmg = Math.max(dmg, MIN_DAMAGE);
+
+    // Record HP before hit for overkill calculation
+    const hpBefore = monster.currentHealth;
+
+    const result = applyDamageToMonster(dmg, { isCrit, isSkillDamage: true, skillId });
+
+    if (result.killed) {
+      // Overkill carry for Chain Lightning
+      if (overkillCarryPercent) {
+        const overkill = dmg - hpBefore;
+        if (overkill > 0) {
+          state.overkillCarry = Math.floor(overkill * (overkillCarryPercent / 100));
+        }
+      }
+      killMonster();
+      return;
+    }
   }
 }
 
@@ -212,11 +332,24 @@ function handleBossTimeout() {
 }
 
 /**
- * Handle boss spawn event — start the timer.
+ * Handle monster spawn event — start boss timer, apply overkill carry.
  */
 function onMonsterSpawned({ monster }) {
   if (monster.isBoss) {
     startBossTimer(monster);
+  }
+
+  // Apply overkill carry from Chain Lightning (skip bosses)
+  if (state.overkillCarry > 0 && !monster.isBoss) {
+    const carry = state.overkillCarry;
+    state.overkillCarry = 0;
+    // Use setTimeout(0) so monster is fully initialized
+    setTimeout(() => {
+      if (state.currentMonster && state.combatState === 'active') {
+        const result = applyDamageToMonster(carry, { isSkillDamage: true, skillId: 'chain_lightning' });
+        if (result.killed) killMonster();
+      }
+    }, 0);
   }
 }
 
@@ -263,7 +396,7 @@ function handleMonsterEscape(monster) {
 
 /**
  * Update aggressive monster phase cycling.
- * Cycle: safe → warning → attacking → safe (repeat)
+ * Cycle: safe -> warning -> attacking -> safe (repeat)
  */
 function updateAggressive(monster, dt) {
   const m = monster.mechanics;
@@ -345,6 +478,17 @@ function updateMonsterTypes(monster, dt) {
 }
 
 /**
+ * Handle channel release damage (Charge Up).
+ */
+function onChannelRelease({ damage, isCrit, skillId }) {
+  if (!state.currentMonster || state.combatState !== 'active') return;
+  const result = applyDamageToMonster(damage, {
+    isCrit, isSkillDamage: true, skillId
+  });
+  if (result.killed) killMonster();
+}
+
+/**
  * @param {Object} deps - Injected dependencies
  * @param {Function} deps.getComputedStats - Returns player computed stats
  * @param {Function} deps.damagePlayer - Deals damage to the player
@@ -354,6 +498,8 @@ export function init(deps = {}) {
   hurtPlayer = deps.damagePlayer;
 
   on('combat:monsterSpawned', onMonsterSpawned);
+  on('skill:instantDamage', onInstantDamage);
+  on('skill:channelRelease', onChannelRelease);
 }
 
 export function update(dt) {

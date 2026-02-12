@@ -68,9 +68,16 @@ export function init() {
   on('skill:unequipped', markDirty);
   on('skill:buffApplied', markDirty);
   on('skill:buffExpired', markDirty);
-  on('mastery:gained', markDirty);
+  on('sp:gained', markDirty);
+  on('combat:hit', markDirty);
+  on('skill:hitModifierSet', markDirty);
   on('skill:directDamage', markDirty);
   on('skill:effectTriggered', markDirty);
+  on('skill:toggleOn', markDirty);
+  on('skill:toggleOff', markDirty);
+  on('skill:channelStarted', markDirty);
+  on('skill:channelRelease', markDirty);
+  on('skill:effectEnded', markDirty);
   on('tutorial:completed', markDirty);
 
   // Initial render

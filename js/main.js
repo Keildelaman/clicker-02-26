@@ -233,20 +233,23 @@ window.DEBUG = {
     }
     console.log('All zones unlocked:', state.player.unlockedZones);
   },
-  giveMP: (n) => {
-    state.player.masteryPoints += n;
-    emit('mastery:gained', { amount: n, total: state.player.masteryPoints, source: 'debug' });
+  giveSP: (n) => {
+    state.player.skillPoints += n;
+    state.player.totalSPEarned += n;
+    emit('sp:gained', { amount: n, total: state.player.skillPoints, source: 'debug' });
   },
   useSkill: (id) => {
     return skills.useSkill(id);
   },
   unlockAllSkills: () => {
     for (const id of Object.keys(SKILLS)) {
-      if (!state.player.unlockedSkills.includes(id)) {
-        skills.unlockSkill(id);
+      if (state.player.unlockedSkills[id] === undefined) {
+        // Force-unlock regardless of level requirement
+        state.player.unlockedSkills[id] = 1;
       }
     }
-    console.log('All skills unlocked. Remaining MP:', state.player.masteryPoints);
+    emit('skill:unlocked', {});
+    console.log('All skills unlocked. Remaining SP:', state.player.skillPoints);
   },
   reset: () => {
     clearSave();

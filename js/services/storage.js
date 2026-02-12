@@ -11,7 +11,7 @@ import { SAVE_KEY, SAVE_VERSION, AUTO_SAVE_INTERVAL } from '../data/constants.js
 import { getPlayer } from '../core/game-state.js';
 import { emit } from '../core/event-bus.js';
 
-const PREVIOUS_SAVE_KEYS = ['clickoria_save_v2'];
+const PREVIOUS_SAVE_KEYS = ['clickoria_save_v3', 'clickoria_save_v2'];
 
 let autoSaveTimer = null;
 let savingDisabled = false;
@@ -78,6 +78,25 @@ export function loadGame() {
       data.zoneKills = {};
       data.saveVersion = 3;
       console.log('Migrated save v2 -> v3 (added zoneKills)');
+    }
+
+    // Migrate from v3 -> v4: skill system v2 (MP→SP, new skill schema)
+    if (data.saveVersion === 3) {
+      const earnedSP = Math.floor(data.level / 3);
+      data.skillPoints = earnedSP;
+      data.totalSPEarned = earnedSP;
+      data.respecCount = 0;
+      data.unlockedSkills = { 'power_strike': 1 };
+      data.equippedActive = ['power_strike', null, null, null];
+      data.equippedPassive = [null, null, null];
+      data.skillCooldowns = {};
+      delete data.masteryPoints;
+      delete data.masterySpent;
+      delete data.skills;
+      delete data.equippedActiveSkills;
+      delete data.equippedPassiveSkills;
+      data.saveVersion = 4;
+      console.log('Migrated save v3 -> v4 (skill system v2, SP:', earnedSP, ')');
     }
 
     if (data.saveVersion !== SAVE_VERSION) {

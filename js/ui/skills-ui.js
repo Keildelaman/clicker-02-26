@@ -1,25 +1,43 @@
 /**
- * skills-ui.js - Skills Screen & Skill Bar UI
+ * skills-ui.js - Skills Screen & Skill Bar UI (v2)
  *
  * Renders skills screen (full screen with tabs), skill bar (4 active slots on combat screen).
  * Calls skills.js for all state mutations.
  *
- * @see docs/systems/skill.system.md
- * @see docs/data/skills.data.md
+ * @see docs/design/skill-system-v2.md
  */
 
 import { on, emit } from '../core/event-bus.js';
 import { state, getPlayer } from '../core/game-state.js';
-import { SKILLS, SKILL_TIERS, TIER_ORDER, TIER_COLORS } from '../data/skills.data.js';
+import { SKILLS } from '../data/skills.data.js';
 import {
-  ACTIVE_SKILL_SLOTS, PASSIVE_SKILL_SLOTS, BASE_SKILL_MAX_LEVEL,
-  SKILL_UPGRADE_COSTS
+  ACTIVE_SKILL_SLOTS, PASSIVE_SKILL_SLOTS,
+  SP_UPGRADE_COST, RESPEC_COSTS
 } from '../data/constants.js';
 import * as skills from '../systems/skills.js';
 import { showToast } from './toasts.js';
 
+// Category grouping constants
+const CATEGORY_ORDER = ['speed', 'power', 'crit', 'mage', 'utility', 'sustain', 'combo', 'energy'];
+const CATEGORY_LABELS = {
+  speed: 'Speed', power: 'Power', crit: 'Critical',
+  mage: 'Magic', utility: 'Utility', sustain: 'Sustain',
+  combo: 'Combo', energy: 'Energy'
+};
+const CATEGORY_COLORS = {
+  speed: '#1eff00', power: '#ff8000', crit: '#a335ee',
+  mage: '#0070dd', utility: '#e6cc80', sustain: '#1eff00',
+  combo: '#ff8000', energy: '#ffdd00'
+};
+const MECHANIC_LABELS = {
+  next_click_hit: 'Hit Mod', next_click_click: 'Click Mod',
+  instant: 'Instant', buff: 'Buff', channel: 'Channel',
+  toggle: 'Toggle', cd_utility: 'Utility', hp_cost: 'HP Cost',
+  passive: 'Passive'
+};
+
 // DOM refs
-let mpDisplay;
+let spDisplay;
 let skillsList;
 let equippedContainer;
 let activeTab = 'active';
@@ -29,7 +47,7 @@ let cooldownIntervalId = null;
 // --- Initialization ---
 
 export function init() {
-  mpDisplay = document.getElementById('skills-mp-display');
+  spDisplay = document.getElementById('skills-sp-display');
   skillsList = document.getElementById('skills-list');
   equippedContainer = document.getElementById('skills-equipped');
 
@@ -43,23 +61,53 @@ export function init() {
     tab.addEventListener('click', () => switchTab(tab.dataset.tab));
   });
 
-  // Skill bar clicks
+  // Skill bar: pointerdown for channel, click-style for all others
   skillBarSlots.forEach((slot, i) => {
-    slot.addEventListener('click', () => {
+    slot.addEventListener('pointerdown', (e) => {
       const player = getPlayer();
       if (!player) return;
-      const skillId = player.equippedActiveSkills[i];
-      if (skillId) {
+      const skillId = player.equippedActive[i];
+      if (!skillId) return;
+
+      const skillDef = SKILLS[skillId];
+      if (skillDef && skillDef.mechanic === 'channel') {
+        e.preventDefault();
         const result = skills.useSkill(skillId);
-        if (!result) {
-          // Check why it failed for feedback
-          const remaining = skills.getSkillCooldownRemaining(skillId);
-          if (remaining > 0) {
-            // On cooldown — no toast, UI shows timer
-          } else if (player.energy < SKILLS[skillId].energyCost) {
+        if (result) {
+          slot.classList.add('skill-btn--channeling');
+        }
+        return;
+      }
+
+      // Non-channel: fire on pointerdown
+      const result = skills.useSkill(skillId);
+      if (!result) {
+        const remaining = skills.getSkillCooldownRemaining(skillId);
+        if (remaining > 0) {
+          // On cooldown — no toast, UI shows timer
+        } else {
+          const level = player.unlockedSkills[skillId];
+          const energyCost = skillDef && level ? (skillDef.levels[level]?.energyCost || 0) : 0;
+          if (player.energy < energyCost) {
             showToast('Not enough energy!', 'error', 1500);
           }
         }
+      }
+    });
+
+    // Release channel on pointerup
+    slot.addEventListener('pointerup', () => {
+      if (state.channelState) {
+        skills.releaseChannel();
+        slot.classList.remove('skill-btn--channeling');
+      }
+    });
+
+    // Cancel on pointer leave (finger moves off button)
+    slot.addEventListener('pointerleave', () => {
+      if (state.channelState) {
+        skills.cancelChannel();
+        slot.classList.remove('skill-btn--channeling');
       }
     });
   });
@@ -73,13 +121,19 @@ export function init() {
   on('skill:buffApplied', () => { renderSkillBar(); });
   on('skill:buffExpired', () => { renderSkillBar(); });
   on('skill:cooldownReady', () => { renderSkillBar(); });
-  on('mastery:gained', ({ amount, source }) => {
-    const label = source === 'boss' ? 'Boss defeated' : `Level milestone`;
-    showToast(`+${amount} Mastery Points! (${label})`, 'warning', 3000);
-    updateMP();
+  on('skill:respecced', () => { renderSkillsScreen(); renderSkillBar(); });
+  on('sp:gained', ({ amount, source }) => {
+    const label = source === 'level' ? 'Level up' : source;
+    showToast(`+${amount} Skill Points! (${label})`, 'warning', 3000);
+    updateSP();
   });
   on('energy:changed', () => { renderSkillBar(); });
   on('combat:monsterSpawned', () => { renderSkillBar(); });
+  on('skill:toggleOn', () => { renderSkillBar(); });
+  on('skill:toggleOff', () => { renderSkillBar(); });
+  on('skill:channelStarted', () => { renderSkillBar(); });
+  on('skill:channelCancelled', () => { renderSkillBar(); });
+  on('skill:effectEnded', () => { renderSkillBar(); });
 
   // Start cooldown timer update
   cooldownIntervalId = setInterval(updateCooldowns, 250);
@@ -91,7 +145,7 @@ export function init() {
 // --- Skills Screen ---
 
 export function onShow() {
-  updateMP();
+  updateSP();
   renderSkillsScreen();
 }
 
@@ -103,10 +157,10 @@ function switchTab(tab) {
   renderSkillsScreen();
 }
 
-function updateMP() {
+function updateSP() {
   const player = getPlayer();
-  if (mpDisplay && player) {
-    mpDisplay.textContent = `MP: ${player.masteryPoints}`;
+  if (spDisplay && player) {
+    spDisplay.textContent = `SP: ${player.skillPoints}`;
   }
 }
 
@@ -114,9 +168,10 @@ function renderSkillsScreen() {
   const player = getPlayer();
   if (!player || !skillsList) return;
 
-  updateMP();
+  updateSP();
   renderEquippedSlots();
   renderSkillCards();
+  renderRespecButton();
 }
 
 function renderEquippedSlots() {
@@ -124,7 +179,7 @@ function renderEquippedSlots() {
   if (!equippedContainer || !player) return;
 
   if (activeTab === 'active') {
-    const slots = player.equippedActiveSkills.map((skillId, i) => {
+    const slots = player.equippedActive.map((skillId, i) => {
       const skill = skillId ? SKILLS[skillId] : null;
       const filled = skill ? 'skills-slot--filled' : '';
       return `<div class="skills-slot ${filled}" data-slot="${i}" data-type="active">
@@ -134,7 +189,7 @@ function renderEquippedSlots() {
     }).join('');
     equippedContainer.innerHTML = slots;
   } else {
-    const slots = player.equippedPassiveSkills.map((skillId, i) => {
+    const slots = player.equippedPassive.map((skillId, i) => {
       const skill = skillId ? SKILLS[skillId] : null;
       const filled = skill ? 'skills-slot--filled' : '';
       return `<div class="skills-slot ${filled}" data-slot="${i}" data-type="passive">
@@ -167,16 +222,26 @@ function renderSkillCards() {
     activeTab === 'active' ? s.type === 'active' : s.type === 'passive'
   );
 
-  // Group by tier
+  // Group by category
+  const grouped = {};
+  for (const skill of filteredSkills) {
+    if (!grouped[skill.category]) grouped[skill.category] = [];
+    grouped[skill.category].push(skill);
+  }
+
+  // Sort within each group by unlockLevel
+  for (const cat of Object.keys(grouped)) {
+    grouped[cat].sort((a, b) => a.unlockLevel - b.unlockLevel);
+  }
+
   let html = '';
-  for (const tierName of TIER_ORDER) {
-    const tierSkills = filteredSkills.filter(s => s.tier === tierName);
-    if (tierSkills.length === 0) continue;
-
-    const tierColor = TIER_COLORS[tierName] || '#fff';
-    html += `<div class="skills-tier-header" style="color: ${tierColor}; border-color: ${tierColor};">${tierName.toUpperCase()}</div>`;
-
-    for (const skillDef of tierSkills) {
+  for (const cat of CATEGORY_ORDER) {
+    if (!grouped[cat] || grouped[cat].length === 0) continue;
+    const color = CATEGORY_COLORS[cat] || '#fff';
+    html += `<div class="skills-tier-header" style="border-color: ${color}; color: ${color};">
+      ${CATEGORY_LABELS[cat] || cat}
+    </div>`;
+    for (const skillDef of grouped[cat]) {
       html += renderSkillCard(skillDef, player);
     }
   }
@@ -189,15 +254,46 @@ function renderSkillCards() {
   });
 }
 
+function renderRespecButton() {
+  const player = getPlayer();
+  if (!player || !skillsList) return;
+
+  // Only show if player has skills beyond the default power_strike
+  const hasSkillsToRespec = Object.keys(player.unlockedSkills).length > 1;
+  if (!hasSkillsToRespec) return;
+
+  const costIndex = Math.min(player.respecCount, RESPEC_COSTS.length - 1);
+  const cost = RESPEC_COSTS[costIndex];
+  const canAfford = player.gold >= cost;
+
+  const section = document.createElement('div');
+  section.className = 'skill-respec-section';
+  section.innerHTML = `<button class="skill-card__btn skill-card__btn--respec"
+    ${!canAfford ? 'disabled' : ''}>
+    RESPEC ALL (${cost.toLocaleString()} gold)
+  </button>`;
+  skillsList.appendChild(section);
+
+  const btn = section.querySelector('button');
+  if (btn && canAfford) {
+    btn.addEventListener('click', () => {
+      if (confirm(`Reset ALL skills for ${cost.toLocaleString()} gold?\nYou'll get your SP back.`)) {
+        const ok = skills.respec();
+        if (ok) showToast('Skills reset! SP refunded.', 'success', 3000);
+      }
+    });
+  }
+}
+
 function renderSkillCard(skillDef, player) {
-  const isUnlocked = player.unlockedSkills.includes(skillDef.id);
-  const skillState = player.skills[skillDef.id];
-  const level = skillState ? skillState.level : 0;
-  const isMaxLevel = level >= BASE_SKILL_MAX_LEVEL;
+  const level = player.unlockedSkills[skillDef.id];
+  const isUnlocked = level !== undefined;
+  const isMaxLevel = isUnlocked && level >= skillDef.maxLevel;
+  const meetsLevelReq = player.level >= skillDef.unlockLevel;
 
   // Check if equipped
-  const isEquippedActive = player.equippedActiveSkills.includes(skillDef.id);
-  const isEquippedPassive = player.equippedPassiveSkills.includes(skillDef.id);
+  const isEquippedActive = player.equippedActive.includes(skillDef.id);
+  const isEquippedPassive = player.equippedPassive.includes(skillDef.id);
   const isEquipped = isEquippedActive || isEquippedPassive;
 
   const cardClass = [
@@ -206,62 +302,80 @@ function renderSkillCard(skillDef, player) {
     isEquipped ? 'skill-card--equipped' : ''
   ].filter(Boolean).join(' ');
 
-  const tierColor = TIER_COLORS[skillDef.tier] || '#fff';
+  const catColor = CATEGORY_COLORS[skillDef.category] || '#fff';
 
   // Description with current level values
   let desc = skillDef.description;
-  if (isUnlocked && skillDef.levels[level]) {
-    const data = skillDef.levels[level];
+  const displayLevel = isUnlocked ? level : 1;
+  const displayData = skillDef.levels[displayLevel];
+  if (displayData) {
     desc = desc.replace(/\{(\w+)\}/g, (_, key) => {
-      const val = data[key];
+      const val = displayData[key];
       if (val === undefined) return `{${key}}`;
-      if (typeof val === 'number' && val < 1 && val > 0) return `${Math.round(val * 100)}`;
-      if (typeof val === 'number' && key.includes('duration')) return `${val / 1000}`;
-      return val;
-    });
-  } else if (skillDef.levels[1]) {
-    const data = skillDef.levels[1];
-    desc = desc.replace(/\{(\w+)\}/g, (_, key) => {
-      const val = data[key];
-      if (val === undefined) return `{${key}}`;
-      if (typeof val === 'number' && val < 1 && val > 0) return `${Math.round(val * 100)}`;
-      if (typeof val === 'number' && key.includes('duration')) return `${val / 1000}`;
       return val;
     });
   }
 
   // Action button
   let actionBtn = '';
-  if (!isUnlocked) {
+  if (!isUnlocked && !meetsLevelReq) {
+    // Not at required level — show lock message
+    actionBtn = `<button class="skill-card__btn skill-card__btn--unlock" disabled>UNLOCKS AT LV.${skillDef.unlockLevel}</button>`;
+  } else if (!isUnlocked) {
     const cost = skillDef.unlockCost;
-    const canAfford = player.masteryPoints >= cost;
-    const costText = cost === 0 ? 'FREE' : `${cost} MP`;
+    const canAfford = player.skillPoints >= cost;
+    const costText = cost === 0 ? 'FREE' : `${cost} SP`;
     actionBtn = `<button class="skill-card__btn skill-card__btn--unlock" data-action="unlock" data-skill="${skillDef.id}" ${!canAfford ? 'disabled' : ''}>UNLOCK (${costText})</button>`;
   } else if (isEquipped) {
     const type = skillDef.type === 'active' ? 'active' : 'passive';
     actionBtn = `<button class="skill-card__btn skill-card__btn--unequip" data-action="unequip" data-skill="${skillDef.id}" data-type="${type}">UNEQUIP</button>`;
     if (!isMaxLevel) {
-      const upgradeCost = SKILL_UPGRADE_COSTS[level - 1];
-      const canUpgrade = player.masteryPoints >= upgradeCost;
-      actionBtn += ` <button class="skill-card__btn" data-action="upgrade" data-skill="${skillDef.id}" ${!canUpgrade ? 'disabled' : ''}>UPGRADE (${upgradeCost} MP)</button>`;
+      const canUpgrade = player.skillPoints >= SP_UPGRADE_COST;
+      actionBtn += ` <button class="skill-card__btn" data-action="upgrade" data-skill="${skillDef.id}" ${!canUpgrade ? 'disabled' : ''}>UPGRADE (${SP_UPGRADE_COST} SP)</button>`;
     }
   } else if (isMaxLevel) {
     actionBtn = `<button class="skill-card__btn" data-action="equip" data-skill="${skillDef.id}">EQUIP</button>`;
   } else {
     // Unlocked, not equipped, not max
-    const upgradeCost = SKILL_UPGRADE_COSTS[level - 1];
-    const canUpgrade = player.masteryPoints >= upgradeCost;
+    const canUpgrade = player.skillPoints >= SP_UPGRADE_COST;
     actionBtn = `<button class="skill-card__btn" data-action="equip" data-skill="${skillDef.id}">EQUIP</button>`;
-    actionBtn += ` <button class="skill-card__btn" data-action="upgrade" data-skill="${skillDef.id}" ${!canUpgrade ? 'disabled' : ''}>UPGRADE (${upgradeCost} MP)</button>`;
+    actionBtn += ` <button class="skill-card__btn" data-action="upgrade" data-skill="${skillDef.id}" ${!canUpgrade ? 'disabled' : ''}>UPGRADE (${SP_UPGRADE_COST} SP)</button>`;
   }
 
   // Info line for active skills
   let infoLine = '';
   if (skillDef.type === 'active') {
-    infoLine = `<div class="skill-card__info-line">
-      <span class="skill-card__energy">\u26A1 ${skillDef.energyCost}</span>
-      <span class="skill-card__cooldown">\u23F1 ${skillDef.cooldown / 1000}s</span>
-    </div>`;
+    const infoLevel = isUnlocked ? level : 1;
+    const infoData = skillDef.levels[infoLevel];
+    if (infoData) {
+      infoLine = `<div class="skill-card__info-line">
+        <span class="skill-card__energy">\u26A1 ${infoData.energyCost}</span>
+        <span class="skill-card__cooldown">\u23F1 ${infoData.cooldown}s</span>
+      </div>`;
+    }
+  }
+
+  // Next-level stat preview
+  let previewLine = '';
+  if (isUnlocked && !isMaxLevel) {
+    const nextLevel = level + 1;
+    const nextData = skillDef.levels[nextLevel];
+    const currentData = skillDef.levels[level];
+    if (nextData && currentData) {
+      const diffs = [];
+      for (const key of Object.keys(nextData)) {
+        if (key === 'cooldown' || key === 'energyCost') continue;
+        const curr = currentData[key];
+        const next = nextData[key];
+        if (typeof next === 'number' && curr !== next) {
+          const arrow = next > curr ? '\u2191' : '\u2193';
+          diffs.push(`${key}: ${curr} <span class="skill-card__preview-arrow">${arrow}</span> <span class="skill-card__preview-val">${next}</span>`);
+        }
+      }
+      if (diffs.length > 0) {
+        previewLine = `<div class="skill-card__preview">${diffs.join(' &middot; ')}</div>`;
+      }
+    }
   }
 
   return `<div class="${cardClass}">
@@ -269,12 +383,14 @@ function renderSkillCard(skillDef, player) {
       <span class="skill-card__icon">${skillDef.icon}</span>
       <div class="skill-card__title-area">
         <span class="skill-card__name">${skillDef.name}</span>
-        <span class="skill-card__tier" style="color: ${tierColor};">${skillDef.tier}</span>
+        <span class="skill-card__tier" style="color: ${catColor};">${skillDef.category}</span>
       </div>
-      <span class="skill-card__level">${isUnlocked ? (isMaxLevel ? 'MAX' : `Lv.${level}/${BASE_SKILL_MAX_LEVEL}`) : 'LOCKED'}</span>
+      <span class="skill-card__level">${isUnlocked ? (isMaxLevel ? 'MAX' : `Lv.${level}/${skillDef.maxLevel}`) : 'LOCKED'}</span>
+      <span class="skill-card__badge">${MECHANIC_LABELS[skillDef.mechanic] || ''}</span>
     </div>
     <div class="skill-card__desc">${desc}</div>
     ${infoLine}
+    ${previewLine}
     <div class="skill-card__actions">${actionBtn}</div>
   </div>`;
 }
@@ -298,7 +414,7 @@ function handleSkillAction(e) {
     case 'upgrade': {
       const ok = skills.upgradeSkill(skillId);
       if (ok) {
-        const newLvl = player.skills[skillId].level;
+        const newLvl = player.unlockedSkills[skillId];
         showToast(`${skillDef.icon} ${skillDef.name} \u2192 Lv.${newLvl}!`, 'success', 2000);
       }
       break;
@@ -306,11 +422,11 @@ function handleSkillAction(e) {
     case 'equip': {
       if (skillDef.type === 'active') {
         // Find first empty slot, or last slot
-        const emptyIdx = player.equippedActiveSkills.indexOf(null);
+        const emptyIdx = player.equippedActive.indexOf(null);
         const slot = emptyIdx !== -1 ? emptyIdx : ACTIVE_SKILL_SLOTS - 1;
         skills.equipActiveSkill(skillId, slot);
       } else {
-        const emptyIdx = player.equippedPassiveSkills.indexOf(null);
+        const emptyIdx = player.equippedPassive.indexOf(null);
         const slot = emptyIdx !== -1 ? emptyIdx : PASSIVE_SKILL_SLOTS - 1;
         skills.equipPassiveSkill(skillId, slot);
       }
@@ -318,10 +434,10 @@ function handleSkillAction(e) {
     }
     case 'unequip': {
       if (skillDef.type === 'active') {
-        const slot = player.equippedActiveSkills.indexOf(skillId);
+        const slot = player.equippedActive.indexOf(skillId);
         if (slot !== -1) skills.unequipActiveSkill(slot);
       } else {
-        const slot = player.equippedPassiveSkills.indexOf(skillId);
+        const slot = player.equippedPassive.indexOf(skillId);
         if (slot !== -1) skills.unequipPassiveSkill(slot);
       }
       break;
@@ -339,7 +455,7 @@ function renderSkillBar() {
     const el = skillBarSlots[i];
     if (!el) continue;
 
-    const skillId = player.equippedActiveSkills[i];
+    const skillId = player.equippedActive[i];
     if (!skillId) {
       el.className = 'skill-btn skill-btn--empty';
       el.innerHTML = '';
@@ -350,8 +466,35 @@ function renderSkillBar() {
     const skillDef = SKILLS[skillId];
     if (!skillDef) continue;
 
+    const level = player.unlockedSkills[skillId];
+    const levelData = skillDef.levels[level];
+    const energyCost = levelData ? levelData.energyCost : 0;
+
+    // Toggle active state (Momentum)
+    const toggleState = state.toggleStates[skillId];
+    if (toggleState && toggleState.active) {
+      el.className = 'skill-btn skill-btn--toggle-on';
+      el.title = `${skillDef.name} (ON)`;
+      const stackText = toggleState.stacks > 0
+        ? `<span class="skill-btn__stacks">${toggleState.stacks}</span>`
+        : '';
+      el.innerHTML = `<span class="skill-btn__icon">${skillDef.icon}</span>
+        <span class="skill-btn__cost">\u26A1ON</span>
+        ${stackText}`;
+      continue;
+    }
+
+    // Channel active state
+    if (state.channelState && state.channelState.skillId === skillId) {
+      el.className = 'skill-btn skill-btn--channeling';
+      el.title = `${skillDef.name} (Charging...)`;
+      el.innerHTML = `<span class="skill-btn__icon">${skillDef.icon}</span>
+        <span class="skill-btn__cost">HOLD</span>`;
+      continue;
+    }
+
     const remaining = skills.getSkillCooldownRemaining(skillId);
-    const noEnergy = player.energy < skillDef.energyCost;
+    const noEnergy = player.energy < energyCost;
     const onCooldown = remaining > 0;
 
     let cls = 'skill-btn';
@@ -359,15 +502,15 @@ function renderSkillBar() {
     else if (noEnergy) cls += ' skill-btn--no-energy';
 
     el.className = cls;
-    el.title = `${skillDef.name} (\u26A1${skillDef.energyCost})`;
+    el.title = `${skillDef.name} (\u26A1${energyCost})`;
 
     let timerText = '';
     if (onCooldown) {
-      timerText = `<span class="skill-btn__timer">${(remaining / 1000).toFixed(1)}s</span>`;
+      timerText = `<span class="skill-btn__timer">${remaining.toFixed(1)}s</span>`;
     }
 
     el.innerHTML = `<span class="skill-btn__icon">${skillDef.icon}</span>
-      <span class="skill-btn__cost">\u26A1${skillDef.energyCost}</span>
+      <span class="skill-btn__cost">\u26A1${energyCost}</span>
       ${timerText}`;
   }
 }
@@ -377,7 +520,7 @@ function updateCooldowns() {
   if (!player || state.currentScreen !== 'combat') return;
 
   let needsUpdate = false;
-  for (const skillId of player.equippedActiveSkills) {
+  for (const skillId of player.equippedActive) {
     if (!skillId) continue;
     if (skills.getSkillCooldownRemaining(skillId) > 0) {
       needsUpdate = true;

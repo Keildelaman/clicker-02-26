@@ -100,9 +100,13 @@ export function damagePlayer(amount, source) {
   // Undying: survive fatal blow
   if (player.hp <= 0 && stats.survivePercent > 0) {
     player.hp = Math.max(1, Math.floor(stats.maxHP * stats.survivePercent));
-    // Remove the undying buff (consumed)
-    state.activeBuffs = state.activeBuffs.filter(b => !b.effects.survivePercent);
-    emit('skill:buffExpired', { skillId: 'skill_undying' });
+    // Remove the undying buff (consumed) — activeBuffs is a map, not an array
+    for (const [id, buff] of Object.entries(state.activeBuffs)) {
+      if (buff.effects && buff.effects.survivePercent) {
+        delete state.activeBuffs[id];
+        emit('skill:buffExpired', { skillId: id });
+      }
+    }
     emitHPChanged();
     return;
   }

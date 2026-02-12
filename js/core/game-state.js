@@ -18,11 +18,16 @@ export const state = {
   // UI state
   currentScreen: 'combat',
 
-  // Skill runtime state (transient, not saved)
-  activeBuffs: [],          // [{ skillId, effects:{...}, expiresAt, startedAt }]
-  nextAttackModifier: null,  // { skillId, multiplier, condition? } — consumed on click
-  playerShield: null,        // { amount, maxAmount, expiresAt } — from Shield Wall
-  timingMode: null            // { skillId, expiresAt, levels:{...} } — from Perfect Strike
+  // Skill v2 runtime state (transient, not saved)
+  activeBuffs: {},          // { skillId: { remaining, effects:{...} } }
+  hitModifier: null,        // { skillId, multiplier, ... } — consumed on click
+  clickModifiers: {},       // { skillId: { charges } }
+  toggleStates: {},         // { skillId: { active, stacks, ... } }
+  channelState: null,       // { skillId, startTime, ... }
+  playerShield: null,       // { amount, maxAmount, remaining }
+  passiveStates: {},        // { skillId: { ... } }
+  lastClickTime: 0,          // performance.now() of last combat click
+  overkillCarry: 0            // Chain Lightning overkill damage for next spawn
 };
 
 export function getState() {

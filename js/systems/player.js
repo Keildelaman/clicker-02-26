@@ -48,23 +48,37 @@ function getEquipmentBonus(player, statName) {
 }
 
 /**
- * Get the bonus value from an equipped passive skill.
+ * Get the bonus value from equipped passive skills for a given stat.
+ * Stat-only passives: heavy_handed (damage), berserker (damage + critChance, conditional),
+ * efficient_casting (skillEnergyCost).
  * @param {Object} player
- * @param {string} statName - Skill stat field (e.g. 'damage', 'critChance')
- * @returns {number}
+ * @param {string} statName - 'damage', 'critChance', 'skillEnergyCost'
+ * @returns {number} Fractional bonus (e.g. 0.40 for 40%)
  */
 function getPassiveSkillBonus(player, statName) {
   let total = 0;
-  for (const skillId of player.equippedPassiveSkills) {
+  for (const skillId of player.equippedPassive) {
     if (!skillId) continue;
+    const level = player.unlockedSkills[skillId];
+    if (!level) continue;
     const skillDef = SKILLS[skillId];
-    if (!skillDef || skillDef.type !== 'passive') continue;
-    if (skillDef.stat !== statName) continue;
-    const skillState = player.skills[skillId];
-    if (!skillState) continue;
-    const levelData = skillDef.levels[skillState.level];
-    if (levelData && levelData.bonus !== undefined) {
-      total += levelData.bonus;
+    if (!skillDef) continue;
+    const data = skillDef.levels[level];
+    if (!data) continue;
+
+    switch (skillId) {
+      case 'heavy_handed':
+        if (statName === 'damage') total += data.dmgBonus / 100;
+        break;
+      case 'berserker':
+        if (player.hp / player.maxHP < data.hpThreshold / 100) {
+          if (statName === 'damage') total += data.dmgBonus / 100;
+          if (statName === 'critChance') total += data.critBonus / 100;
+        }
+        break;
+      case 'efficient_casting':
+        if (statName === 'skillEnergyCost') total += data.costReduction / 100;
+        break;
     }
   }
   return total;
@@ -88,7 +102,7 @@ function getBuffEffects() {
     bonusDamage: 0
   };
 
-  for (const buff of state.activeBuffs) {
+  for (const [, buff] of Object.entries(state.activeBuffs)) {
     const e = buff.effects;
     if (e.damageMultiplier) effects.damageMultiplier *= e.damageMultiplier;
     if (e.damageTakenMultiplier) effects.damageTakenMultiplier *= e.damageTakenMultiplier;
@@ -148,9 +162,11 @@ export function getComputedStats() {
 
   warningBonus += getPassiveSkillBonus(player, 'warningTime');
 
-  // Skill-enhancing stats from equipment
+  // Skill-enhancing stats from equipment + passive
   const skillCooldown = getEquipmentBonus(player, 'skillCooldown');
-  const skillEnergyCost = getEquipmentBonus(player, 'skillEnergyCost');
+  const skillEnergyCostEquip = getEquipmentBonus(player, 'skillEnergyCost');
+  const skillEnergyCostPassive = getPassiveSkillBonus(player, 'skillEnergyCost');
+  const skillEnergyCost = skillEnergyCostEquip + skillEnergyCostPassive;
   const skillBoost_power_strike = getEquipmentBonus(player, 'skillBoost_power_strike');
   const skillBoost_heal = getEquipmentBonus(player, 'skillBoost_heal');
   const skillBoost_execute = getEquipmentBonus(player, 'skillBoost_execute');
@@ -238,14 +254,13 @@ export function createNewPlayer() {
     equipment: { weapon: null, armor: null, accessory: null },
     inventory: [],
 
-    unlockedSkills: ['skill_power_strike'],
-    masteryPoints: 0,
-    masterySpent: 0,
-    skills: {
-      skill_power_strike: { level: 1, lastUsed: null }
-    },
-    equippedActiveSkills: ['skill_power_strike', null, null, null],
-    equippedPassiveSkills: [null, null, null],
+    skillPoints: 0,
+    totalSPEarned: 0,
+    respecCount: 0,
+    unlockedSkills: { 'power_strike': 1 },
+    equippedActive: ['power_strike', null, null, null],
+    equippedPassive: [null, null, null],
+    skillCooldowns: {},
 
     currentZone: 'whisperwood',
     unlockedZones: ['whisperwood'],
@@ -304,6 +319,7 @@ export function init() {
   on('skill:unequipped', invalidateStatCache);
   on('skill:buffApplied', invalidateStatCache);
   on('skill:buffExpired', invalidateStatCache);
+  on('player:hpChanged', invalidateStatCache);
 }
 
 export function update(dt) {

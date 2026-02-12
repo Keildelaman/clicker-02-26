@@ -16,24 +16,42 @@ import {
   ENERGY_GAIN_COOLDOWN
 } from '../data/constants.js';
 import { getComputedStats } from './player.js';
+import { SKILLS } from '../data/skills.data.js';
 
 // 200ms cooldown between click-based energy gains (in seconds)
 const COOLDOWN_SEC = ENERGY_GAIN_COOLDOWN / 1000;
 let timeSinceLastGain = COOLDOWN_SEC; // Start ready
+let lastClickTime = 0;
 
 export function init() {
   on('combat:click', onCombatClick);
   on('combat:monsterKilled', onMonsterKilled);
 }
 
+function getEnergyPerClick() {
+  const player = getPlayer();
+  if (!player) return ENERGY_PER_CLICK;
+  if (player.equippedPassive.includes('heavy_handed')) {
+    const level = player.unlockedSkills['heavy_handed'];
+    if (level) {
+      const data = SKILLS['heavy_handed']?.levels[level];
+      if (data?.energyPerClick !== undefined) return data.energyPerClick;
+    }
+  }
+  return ENERGY_PER_CLICK;
+}
+
 function onCombatClick() {
+  lastClickTime = performance.now();
+
   if (timeSinceLastGain < COOLDOWN_SEC) return;
 
   const player = getPlayer();
   if (player.energy >= MAX_ENERGY) return;
 
   const mult = getComputedStats().energyGainMult || 1.0;
-  player.energy = Math.min(player.energy + Math.floor(ENERGY_PER_CLICK * mult), MAX_ENERGY);
+  const baseEnergy = getEnergyPerClick();
+  player.energy = Math.min(player.energy + Math.floor(baseEnergy * mult), MAX_ENERGY);
   timeSinceLastGain = 0;
   emitChanged();
 }
@@ -57,6 +75,21 @@ export function update(dt) {
   if (player.energy < MAX_ENERGY) {
     player.energy = Math.min(player.energy + ENERGY_REGEN_PER_SECOND * dt, MAX_ENERGY);
     emitChanged();
+  }
+
+  // Focused Mind: extra regen when not clicking
+  if (player.equippedPassive.includes('focused_mind')) {
+    const idleTime = lastClickTime > 0 ? (performance.now() - lastClickTime) / 1000 : 999;
+    if (idleTime >= 0.5 && player.energy < MAX_ENERGY) {
+      const level = player.unlockedSkills['focused_mind'];
+      if (level) {
+        const data = SKILLS['focused_mind']?.levels[level];
+        if (data) {
+          player.energy = Math.min(player.energy + data.idleRegen * dt, MAX_ENERGY);
+          emitChanged();
+        }
+      }
+    }
   }
 }
 

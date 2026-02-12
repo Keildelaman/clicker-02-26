@@ -15,10 +15,8 @@
 | `docs/schemas/monster.schema.md` | Monster definition structure | ✅ |
 | `docs/schemas/item.schema.md` | Item/equipment structure | ✅ |
 | `docs/schemas/zone.schema.md` | Zone definition structure | ✅ |
-| `docs/schemas/skill.schema.md` | Skill definition structure | ✅ |
 | **Systems** | Game logic & formulas | |
 | `docs/systems/combat.system.md` | Combat mechanics, monster types, damage | ✅ |
-| `docs/systems/skill.system.md` | Skills, slots, unlocks, upgrades | ✅ |
 | `docs/systems/energy.system.md` | Energy resource system | ✅ |
 | `docs/systems/health.system.md` | Player HP, damage, healing, death | ✅ |
 | `docs/systems/loot.system.md` | Drop rates & reward calculation | ✅ |
@@ -30,11 +28,13 @@
 | **Architecture** | Code structure & standards | |
 | `docs/architecture/architecture.md` | System architecture | ✅ |
 | `docs/architecture/coding-standards.md` | Code conventions | ✅ |
+| `docs/architecture/skill-architecture.md` | Skill system implementation guide | ✅ |
 | **Data** | Actual game content | |
 | `docs/data/zones.data.md` | All zone definitions | ✅ |
 | `docs/data/monsters.data.md` | All monster definitions (with types) | ✅ |
 | `docs/data/items.data.md` | All item definitions (with new stats) | ✅ |
-| `docs/data/skills.data.md` | All skill definitions (active + passive) | ✅ |
+| **Design** | Game design specifications | |
+| `docs/design/skill-system-v2.md` | Skill system v2 design (canonical) | ✅ |
 | **Balance** | Tuning & curves | |
 | `docs/balance/curves.balance.md` | Scaling formulas & tables | ✅ |
 
@@ -80,10 +80,10 @@ HP_CRITICAL_THRESHOLD = 0.25    # Red bar below 25%
 ### Energy Defaults
 ```
 MAX_ENERGY = 100                # Base Energy cap
-ENERGY_PER_CLICK = 5            # Energy gained per click
-ENERGY_ON_KILL = 15             # Energy gained on monster kill
-ENERGY_ON_BOSS_KILL = 50        # Energy gained on boss kill
-ENERGY_REGEN_PER_SECOND = 2     # Passive Energy regen
+ENERGY_PER_CLICK = 3            # Energy gained per click (v2)
+ENERGY_ON_KILL = 10             # Energy gained on monster kill (v2)
+ENERGY_ON_BOSS_KILL = 25        # Energy gained on boss kill (v2)
+ENERGY_REGEN_PER_SECOND = 1     # Passive Energy regen (v2)
 ```
 
 ### Death Penalties
@@ -117,30 +117,17 @@ ACTIVE_SKILL_SLOTS = 4          # Max equipped active skills
 PASSIVE_SKILL_SLOTS = 3         # Max equipped passive skills
 BASE_SKILL_MAX_LEVEL = 5        # Max skill level (before ascension)
 ASCENDED_SKILL_MAX_LEVEL = 10   # Max skill level (with ascension)
-TOTAL_SKILLS = 25               # Total skills in the game (16 active + 9 passive)
+TOTAL_SKILLS = 25               # Total skills in the game (15 active + 10 passive)
 ```
 
-### Mastery Points System
+### Skill Points System (v2)
 ```
-# Earning MP
-MASTERY_PER_BOSS = 2            # MP earned per boss kill
-MASTERY_PER_ASCENSION = 3       # Bonus starting MP per ascension level
-# Level milestones: 5→3, 10→3, 15→3, 20→3, 30→4, 40→4, 50→5, 60→5, 75→5, 90→5
-# Base total: ~54 MP (40 from levels + 14 from 7 bosses)
-
-# Skill Unlock Costs (vary by power)
-UNLOCK_COST_BASIC = 3           # Heal, Sharp Blades, etc.
-UNLOCK_COST_UTILITY = 4         # Gold Rush, XP Boost, etc.
-UNLOCK_COST_COMBAT = 5          # Execute, Berserk Rage, etc.
-UNLOCK_COST_ADVANCED = 6        # Deep Pockets, Thick Skin, etc.
-UNLOCK_COST_ELITE = 8           # Undying, Soul Rend, etc.
-UNLOCK_COST_MASTER = 10         # Transcendence, Void Touch, etc.
-
-# Upgrade Costs (per level)
-UPGRADE_COST = [1, 2, 3, 4]     # Cost for level 2, 3, 4, 5
-UPGRADE_COST_EXTENDED = [5, 6, 7, 8, 10]  # Cost for levels 6-10
-# Total to max (Lv5): 10 MP
-# Total to max (Lv10): 46 MP
+SP_PER_LEVEL_INTERVAL = 3      # Gain 1 SP every 3 levels (3, 6, 9, ...)
+SP_UNLOCK_COST = 1              # 1 SP to unlock most skills (Power Strike is free)
+SP_UPGRADE_COST = 1             # 1 SP per upgrade level
+RESPEC_COSTS = [1000, 3000, 8000, 20000, 50000, 100000]
+SKILL_SWAP_COOLDOWN_PENALTY = 0.5  # 50% of base CD applied on equip
+# Max SP first run: ~33 (levels 3 to 99)
 ```
 
 ### Vault System
@@ -156,7 +143,7 @@ ASCENSION_DAMAGE_BONUS = 0.05   # +5% damage per ascension
 ASCENSION_GOLD_BONUS = 0.05     # +5% gold per ascension
 ASCENSION_XP_BONUS = 0.05       # +5% XP per ascension
 ASCENSION_HP_BONUS = 50         # +50 HP per ascension
-ASCENSION_MP_BONUS = 3          # +3 starting Mastery Points per ascension
+ASCENSION_SP_BONUS = 3          # +3 starting Skill Points per ascension
 ```
 
 ---
@@ -231,7 +218,7 @@ Consistent naming for all game entities.
 | Monster | `{zone}_{name}` | `whisperwood_sprite`, `dustwind_bandit` |
 | Boss | `boss_{name}` | `boss_mossback`, `boss_redfang` |
 | Item | `{type}_{zone}_{rarity}_{number}` | `weapon_whisperwood_common_01` |
-| Skill | `skill_{name}` | `skill_power_strike`, `skill_heal` |
+| Skill | `{name}` | `power_strike`, `execute`, `flurry` |
 
 ## Monster Types
 
@@ -286,12 +273,14 @@ totalXP = baseXP + bonusXP
 For future migration support.
 
 ```
-SAVE_VERSION = 2
+SAVE_VERSION = 4
 ```
 
 **Version History:**
 - v1: Initial release
 - v2: Added HP, Energy, skills, ascension, tutorial state
+- v3: Equipment system expansion
+- v4: Skill System v2 (SP replaces MP, new skill schema)
 
 Save structure defined in `schemas/player.schema.md`.
 

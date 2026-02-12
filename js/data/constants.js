@@ -36,10 +36,10 @@ export const HP_CRITICAL_THRESHOLD = 0.25;
 
 // Energy Defaults
 export const MAX_ENERGY = 100;
-export const ENERGY_PER_CLICK = 1;
-export const ENERGY_ON_KILL = 5;
-export const ENERGY_ON_BOSS_KILL = 20;
-export const ENERGY_REGEN_PER_SECOND = 0;
+export const ENERGY_PER_CLICK = 3;
+export const ENERGY_ON_KILL = 10;
+export const ENERGY_ON_BOSS_KILL = 25;
+export const ENERGY_REGEN_PER_SECOND = 1;
 
 // Death Penalties
 export const DEATH_GOLD_LOSS = 0.5;
@@ -83,15 +83,11 @@ export const ACTIVE_SKILL_SLOTS = 4;
 export const PASSIVE_SKILL_SLOTS = 3;
 export const BASE_SKILL_MAX_LEVEL = 5;
 
-// Mastery Points
-export const MASTERY_PER_BOSS = 2;
-export const MASTERY_MILESTONES = { 5:3, 10:3, 15:3, 20:3, 30:4, 40:4, 50:5, 60:5, 75:5, 90:5 };
-
-// Skill Unlock Costs by Tier
-export const SKILL_UNLOCK_COSTS = { starter:0, basic:3, utility:4, combat:5, advanced:6, elite:8, master:10 };
-
-// Upgrade Costs (index = levels gained, cost to reach level 2,3,4,5)
-export const SKILL_UPGRADE_COSTS = [1, 2, 3, 4];
+// Skill Points (v2)
+export const SP_PER_LEVEL_INTERVAL = 3;
+export const SP_UNLOCK_COST = 1;
+export const SP_UPGRADE_COST = 1;
+export const RESPEC_COSTS = [1000, 3000, 8000, 20000, 50000, 100000];
 
 // Swap cooldown penalty (50% of skill's cooldown applied on swap-in)
 export const SKILL_SWAP_COOLDOWN_PENALTY = 0.5;
@@ -101,15 +97,15 @@ export const ASCENSION_DAMAGE_BONUS = 0.05;
 export const ASCENSION_GOLD_BONUS = 0.05;
 export const ASCENSION_XP_BONUS = 0.05;
 export const ASCENSION_HP_BONUS = 50;
-export const ASCENSION_MP_BONUS = 3;
+export const ASCENSION_SP_BONUS = 3;
 
 // Vault
 export const VAULT_MAX_SLOTS = 8;
 export const VAULT_WITHDRAW_COST = 0.25;
 
 // Save
-export const SAVE_KEY = 'clickoria_save_v3';
-export const SAVE_VERSION = 3;
+export const SAVE_KEY = 'clickoria_save_v4';
+export const SAVE_VERSION = 4;
 
 // Shop / Economy
 export const SHOP_REFRESH_INTERVAL = 600000; // 10 minutes

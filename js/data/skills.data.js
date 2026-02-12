@@ -1,552 +1,594 @@
 /**
- * skills.data.js - Skill Definitions
+ * skills.data.js - Skill Definitions (v2)
  *
- * All 25 skills (16 active + 9 passive) with tier/level data.
+ * 25 skills: 15 active + 10 passive. New schema with per-level
+ * energyCost/cooldown (seconds), tags, mechanic, unlockLevel.
  * Pure data — no imports, no logic.
  *
- * @see docs/data/skills.data.md
+ * @see docs/design/skill-system-v2.md
  */
 
 export const SKILLS = {
-  // === Active - Offense ===
+  // ===========================
+  // ACTIVE SKILLS (15)
+  // ===========================
 
-  skill_power_strike: {
-    id: 'skill_power_strike',
+  power_strike: {
+    id: 'power_strike',
     name: 'Power Strike',
+    description: 'Next click deals {damage}% damage.',
+    category: 'power',
     type: 'active',
-    category: 'offense',
-    tier: 'starter',
-    unlockCost: 0,
-    energyCost: 15,
-    cooldown: 8000,
-    effectType: 'nextAttackMultiplier',
+    tags: ['power', 'attack'],
+    mechanic: 'next_click_hit',
     icon: '\u2694\uFE0F',
-    description: 'Next attack deals {multiplier}x damage',
+    unlockLevel: 1,
+    unlockCost: 0,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
     levels: {
-      1: { multiplier: 3.0 },
-      2: { multiplier: 3.5 },
-      3: { multiplier: 4.0 },
-      4: { multiplier: 4.5 },
-      5: { multiplier: 5.0 }
+      1: { damage: 1000, cooldown: 10, energyCost: 35 },
+      2: { damage: 1200, cooldown: 10, energyCost: 35 },
+      3: { damage: 1500, cooldown: 9,  energyCost: 33 },
+      4: { damage: 1800, cooldown: 9,  energyCost: 33 },
+      5: { damage: 2200, cooldown: 8,  energyCost: 30 }
     }
   },
 
-  skill_execute: {
-    id: 'skill_execute',
-    name: 'Execute',
+  barrage: {
+    id: 'barrage',
+    name: 'Barrage',
+    description: 'Unleash {hits} hits at {damagePerHit}% each ({totalDamage}% total).',
+    category: 'speed',
     type: 'active',
-    category: 'offense',
-    tier: 'combat',
-    unlockCost: 5,
-    energyCost: 25,
-    cooldown: 12000,
-    effectType: 'conditionalMultiplier',
-    condition: 'monsterHP < threshold',
-    icon: '\uD83D\uDC80',
-    description: 'Deal {multiplier}x damage to monsters below {threshold}% HP',
+    tags: ['speed', 'attack'],
+    mechanic: 'instant',
+    icon: '\uD83C\uDF2A\uFE0F',
+    unlockLevel: 3,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
     levels: {
-      1: { multiplier: 5.0, threshold: 0.30 },
-      2: { multiplier: 5.5, threshold: 0.32 },
-      3: { multiplier: 6.0, threshold: 0.34 },
-      4: { multiplier: 6.5, threshold: 0.36 },
-      5: { multiplier: 7.0, threshold: 0.40 }
+      1: { hits: 5,  damagePerHit: 60, totalDamage: 300, cooldown: 8, energyCost: 25 },
+      2: { hits: 6,  damagePerHit: 60, totalDamage: 360, cooldown: 8, energyCost: 25 },
+      3: { hits: 7,  damagePerHit: 65, totalDamage: 455, cooldown: 7, energyCost: 23 },
+      4: { hits: 8,  damagePerHit: 65, totalDamage: 520, cooldown: 7, energyCost: 23 },
+      5: { hits: 10, damagePerHit: 70, totalDamage: 700, cooldown: 6, energyCost: 20 }
     }
   },
 
-  skill_berserk_rage: {
-    id: 'skill_berserk_rage',
-    name: 'Berserk Rage',
+  precision: {
+    id: 'precision',
+    name: 'Precision',
+    description: 'Next {charges} clicks are guaranteed critical hits.',
+    category: 'crit',
     type: 'active',
-    category: 'offense',
-    tier: 'combat',
-    unlockCost: 5,
-    energyCost: 30,
-    cooldown: 45000,
-    effectType: 'buff',
-    icon: '\uD83D\uDD25',
-    description: 'Deal {damageMultiplier}x damage, take {damageTakenMultiplier}x damage for {duration}s',
-    levels: {
-      1: { damageMultiplier: 2.0, damageTakenMultiplier: 2.0, duration: 15000 },
-      2: { damageMultiplier: 2.2, damageTakenMultiplier: 1.8, duration: 15000 },
-      3: { damageMultiplier: 2.4, damageTakenMultiplier: 1.6, duration: 15000 },
-      4: { damageMultiplier: 2.6, damageTakenMultiplier: 1.4, duration: 15000 },
-      5: { damageMultiplier: 3.0, damageTakenMultiplier: 1.0, duration: 15000 }
-    }
-  },
-
-  skill_crit_surge: {
-    id: 'skill_crit_surge',
-    name: 'Crit Surge',
-    type: 'active',
-    category: 'offense',
-    tier: 'combat',
-    unlockCost: 5,
-    energyCost: 25,
-    cooldown: 30000,
-    effectType: 'buff',
-    icon: '\u2B50',
-    description: '+{critBonus}% crit chance for {duration}s',
-    levels: {
-      1: { critBonus: 0.50, duration: 10000 },
-      2: { critBonus: 0.55, duration: 11000 },
-      3: { critBonus: 0.60, duration: 12000 },
-      4: { critBonus: 0.65, duration: 13000 },
-      5: { critBonus: 0.75, duration: 15000 }
-    }
-  },
-
-  skill_soul_rend: {
-    id: 'skill_soul_rend',
-    name: 'Soul Rend',
-    type: 'active',
-    category: 'offense',
-    tier: 'elite',
-    unlockCost: 8,
-    energyCost: 35,
-    cooldown: 20000,
-    effectType: 'percentDamage',
-    icon: '\uD83D\uDC7B',
-    description: 'Deal {percent}% of monster\'s max HP as damage',
-    levels: {
-      1: { percent: 0.10, minMultiplier: 1, maxMultiplier: 10 },
-      2: { percent: 0.11, minMultiplier: 1, maxMultiplier: 10 },
-      3: { percent: 0.12, minMultiplier: 1, maxMultiplier: 10 },
-      4: { percent: 0.13, minMultiplier: 1, maxMultiplier: 10 },
-      5: { percent: 0.15, minMultiplier: 1, maxMultiplier: 10 }
-    }
-  },
-
-  // === Active - Defense ===
-
-  skill_heal: {
-    id: 'skill_heal',
-    name: 'Heal',
-    type: 'active',
-    category: 'defense',
-    tier: 'basic',
-    unlockCost: 3,
-    energyCost: 20,
-    cooldown: 15000,
-    effectType: 'instantHeal',
-    icon: '\uD83D\uDC9A',
-    description: 'Restore {healPercent}% of max HP',
-    levels: {
-      1: { healPercent: 0.25 },
-      2: { healPercent: 0.30 },
-      3: { healPercent: 0.35 },
-      4: { healPercent: 0.40 },
-      5: { healPercent: 0.50 }
-    }
-  },
-
-  skill_iron_skin: {
-    id: 'skill_iron_skin',
-    name: 'Iron Skin',
-    type: 'active',
-    category: 'defense',
-    tier: 'basic',
-    unlockCost: 3,
-    energyCost: 25,
-    cooldown: 30000,
-    effectType: 'buff',
-    icon: '\uD83D\uDEE1\uFE0F',
-    description: 'Reduce damage taken by {damageReduction}% for {duration}s',
-    levels: {
-      1: { damageReduction: 0.50, duration: 10000 },
-      2: { damageReduction: 0.55, duration: 11000 },
-      3: { damageReduction: 0.60, duration: 12000 },
-      4: { damageReduction: 0.65, duration: 13000 },
-      5: { damageReduction: 0.75, duration: 15000 }
-    }
-  },
-
-  skill_reflect: {
-    id: 'skill_reflect',
-    name: 'Reflect',
-    type: 'active',
-    category: 'defense',
-    tier: 'utility',
-    unlockCost: 4,
-    energyCost: 30,
-    cooldown: 25000,
-    effectType: 'buff',
-    icon: '\uD83D\uDD04',
-    description: 'Reflect damage at {reflectMultiplier}x for {duration}s',
-    levels: {
-      1: { reflectMultiplier: 1.0, duration: 30000 },
-      2: { reflectMultiplier: 1.25, duration: 30000 },
-      3: { reflectMultiplier: 1.50, duration: 30000 },
-      4: { reflectMultiplier: 1.75, duration: 30000 },
-      5: { reflectMultiplier: 2.00, duration: 30000 }
-    }
-  },
-
-  skill_undying: {
-    id: 'skill_undying',
-    name: 'Undying',
-    type: 'active',
-    category: 'defense',
-    tier: 'elite',
-    unlockCost: 8,
-    energyCost: 50,
-    cooldown: 180000,
-    effectType: 'buff',
-    icon: '\uD83D\uDCAB',
-    description: 'Survive fatal blow with {survivePercent}% HP',
-    levels: {
-      1: { survivePercent: 0.01, duration: 30000 },
-      2: { survivePercent: 0.05, duration: 30000 },
-      3: { survivePercent: 0.10, duration: 30000 },
-      4: { survivePercent: 0.15, duration: 30000 },
-      5: { survivePercent: 0.25, duration: 30000 }
-    }
-  },
-
-  skill_shield_wall: {
-    id: 'skill_shield_wall',
-    name: 'Shield Wall',
-    type: 'active',
-    category: 'defense',
-    tier: 'elite',
-    unlockCost: 8,
-    energyCost: 40,
-    cooldown: 60000,
-    effectType: 'grantShield',
-    icon: '\uD83D\uDD37',
-    description: 'Gain a shield equal to {shieldPercent}% of max HP for {duration}s',
-    levels: {
-      1: { shieldPercent: 0.20, duration: 20000 },
-      2: { shieldPercent: 0.22, duration: 22000 },
-      3: { shieldPercent: 0.25, duration: 25000 },
-      4: { shieldPercent: 0.28, duration: 28000 },
-      5: { shieldPercent: 0.30, duration: 30000 }
-    }
-  },
-
-  // === Active - Utility ===
-
-  skill_gold_rush: {
-    id: 'skill_gold_rush',
-    name: 'Gold Rush',
-    type: 'active',
-    category: 'utility',
-    tier: 'utility',
-    unlockCost: 4,
-    energyCost: 20,
-    cooldown: 60000,
-    effectType: 'buff',
-    icon: '\uD83E\uDE99',
-    description: '+{goldBonus}% gold for {duration}s',
-    levels: {
-      1: { goldBonus: 1.00, duration: 30000 },
-      2: { goldBonus: 1.20, duration: 32000 },
-      3: { goldBonus: 1.40, duration: 34000 },
-      4: { goldBonus: 1.60, duration: 36000 },
-      5: { goldBonus: 2.00, duration: 45000 }
-    }
-  },
-
-  skill_xp_boost: {
-    id: 'skill_xp_boost',
-    name: 'XP Boost',
-    type: 'active',
-    category: 'utility',
-    tier: 'utility',
-    unlockCost: 4,
-    energyCost: 20,
-    cooldown: 60000,
-    effectType: 'buff',
-    icon: '\uD83D\uDCC8',
-    description: '+{xpBonus}% XP for {duration}s',
-    levels: {
-      1: { xpBonus: 1.00, duration: 30000 },
-      2: { xpBonus: 1.20, duration: 32000 },
-      3: { xpBonus: 1.40, duration: 34000 },
-      4: { xpBonus: 1.60, duration: 36000 },
-      5: { xpBonus: 2.00, duration: 45000 }
-    }
-  },
-
-  skill_perfect_strike: {
-    id: 'skill_perfect_strike',
-    name: 'Perfect Strike',
-    type: 'active',
-    category: 'utility',
-    tier: 'combat',
-    unlockCost: 5,
-    energyCost: 30,
-    cooldown: 30000,
-    effectType: 'timingMode',
+    tags: ['crit', 'buff'],
+    mechanic: 'next_click_click',
     icon: '\uD83C\uDFAF',
-    description: 'Timing mode: Good={goodMultiplier}x, Perfect={perfectMultiplier}x for {duration}s',
+    unlockLevel: 8,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
     levels: {
-      1: { duration: 5000, goodMultiplier: 2.0, perfectMultiplier: 4.0, missMultiplier: 0.5, missDamage: 0.03 },
-      2: { duration: 6000, goodMultiplier: 2.2, perfectMultiplier: 4.4, missMultiplier: 0.5, missDamage: 0.03 },
-      3: { duration: 7000, goodMultiplier: 2.4, perfectMultiplier: 4.8, missMultiplier: 0.5, missDamage: 0.03 },
-      4: { duration: 8000, goodMultiplier: 2.6, perfectMultiplier: 5.2, missMultiplier: 0.5, missDamage: 0.03 },
-      5: { duration: 10000, goodMultiplier: 3.0, perfectMultiplier: 6.0, missMultiplier: 0.5, missDamage: 0.03 }
+      1: { charges: 3, cooldown: 12, energyCost: 25 },
+      2: { charges: 4, cooldown: 12, energyCost: 25 },
+      3: { charges: 5, cooldown: 11, energyCost: 23 },
+      4: { charges: 6, cooldown: 10, energyCost: 23 },
+      5: { charges: 8, cooldown: 9,  energyCost: 20 }
     }
   },
 
-  skill_time_warp: {
-    id: 'skill_time_warp',
-    name: 'Time Warp',
+  execute: {
+    id: 'execute',
+    name: 'Execute',
+    description: 'Next click: {strongMult}% if monster <{threshold}% HP, else {weakMult}%.',
+    category: 'crit',
     type: 'active',
-    category: 'utility',
-    tier: 'utility',
-    unlockCost: 4,
-    energyCost: 40,
-    cooldown: 90000,
-    effectType: 'monsterFreeze',
-    icon: '\u231B',
-    description: 'Freeze monster for {duration}s',
+    tags: ['crit', 'attack'],
+    mechanic: 'next_click_hit',
+    icon: '\uD83D\uDC80',
+    unlockLevel: 12,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
     levels: {
-      1: { duration: 5000 },
-      2: { duration: 6000 },
-      3: { duration: 7000 },
-      4: { duration: 8000 },
-      5: { duration: 10000 }
+      1: { threshold: 30, strongMult: 800,  weakMult: 150, cooldown: 8, energyCost: 20 },
+      2: { threshold: 33, strongMult: 1000, weakMult: 150, cooldown: 8, energyCost: 20 },
+      3: { threshold: 35, strongMult: 1200, weakMult: 150, cooldown: 7, energyCost: 18 },
+      4: { threshold: 38, strongMult: 1500, weakMult: 180, cooldown: 7, energyCost: 18 },
+      5: { threshold: 40, strongMult: 1800, weakMult: 200, cooldown: 6, energyCost: 15 }
     }
   },
 
-  skill_shield_breaker: {
-    id: 'skill_shield_breaker',
-    name: 'Shield Breaker',
+  energy_surge: {
+    id: 'energy_surge',
+    name: 'Energy Surge',
+    description: 'Instantly restore {energyGained} energy.',
+    category: 'utility',
     type: 'active',
-    category: 'utility',
-    tier: 'elite',
-    unlockCost: 8,
-    energyCost: 25,
-    cooldown: 15000,
-    effectType: 'shieldBreak',
-    icon: '\uD83D\uDCA5',
-    description: 'Break shields, +{bonusDamage}% vs shielded for {duration}s',
-    levels: {
-      1: { bonusDamage: 0.50, duration: 10000 },
-      2: { bonusDamage: 0.55, duration: 11000 },
-      3: { bonusDamage: 0.60, duration: 12000 },
-      4: { bonusDamage: 0.65, duration: 13000 },
-      5: { bonusDamage: 0.75, duration: 15000 }
-    }
-  },
-
-  skill_transcendence: {
-    id: 'skill_transcendence',
-    name: 'Transcendence',
-    type: 'active',
-    category: 'utility',
-    tier: 'master',
-    unlockCost: 10,
-    energyCost: 100,
-    cooldown: 300000,
-    effectType: 'buff',
-    icon: '\u2728',
-    description: 'Invulnerable, +{damageBonus}% damage/gold/XP for {duration}s',
-    levels: {
-      1: { invulnerable: true, damageBonus: 1.0, goldBonus: 1.0, xpBonus: 1.0, duration: 30000 },
-      2: { invulnerable: true, damageBonus: 1.1, goldBonus: 1.1, xpBonus: 1.1, duration: 32000 },
-      3: { invulnerable: true, damageBonus: 1.2, goldBonus: 1.2, xpBonus: 1.2, duration: 34000 },
-      4: { invulnerable: true, damageBonus: 1.3, goldBonus: 1.3, xpBonus: 1.3, duration: 36000 },
-      5: { invulnerable: true, damageBonus: 1.5, goldBonus: 1.5, xpBonus: 1.5, duration: 45000 }
-    }
-  },
-
-  // === Passive - Offense ===
-
-  skill_sharp_blades: {
-    id: 'skill_sharp_blades',
-    name: 'Sharp Blades',
-    type: 'passive',
-    category: 'offense',
-    tier: 'basic',
-    unlockCost: 3,
-    stat: 'damage',
-    icon: '\uD83D\uDDE1\uFE0F',
-    description: '+{bonus}% damage',
-    levels: {
-      1: { bonus: 0.05 },
-      2: { bonus: 0.10 },
-      3: { bonus: 0.15 },
-      4: { bonus: 0.20 },
-      5: { bonus: 0.25 }
-    }
-  },
-
-  skill_killer_instinct: {
-    id: 'skill_killer_instinct',
-    name: 'Killer Instinct',
-    type: 'passive',
-    category: 'offense',
-    tier: 'basic',
-    unlockCost: 3,
-    stat: 'critChance',
-    icon: '\uD83C\uDFB2',
-    description: '+{bonus}% crit chance',
-    levels: {
-      1: { bonus: 0.03 },
-      2: { bonus: 0.06 },
-      3: { bonus: 0.09 },
-      4: { bonus: 0.12 },
-      5: { bonus: 0.15 }
-    }
-  },
-
-  skill_void_touch: {
-    id: 'skill_void_touch',
-    name: 'Void Touch',
-    type: 'passive',
-    category: 'offense',
-    tier: 'master',
-    unlockCost: 10,
-    stat: 'armorPen',
-    icon: '\uD83C\uDF00',
-    description: 'Ignore {bonus} points of monster armor',
-    levels: {
-      1: { bonus: 10 },
-      2: { bonus: 20 },
-      3: { bonus: 30 },
-      4: { bonus: 40 },
-      5: { bonus: 50 }
-    }
-  },
-
-  // === Passive - Defense ===
-
-  skill_thick_skin: {
-    id: 'skill_thick_skin',
-    name: 'Thick Skin',
-    type: 'passive',
-    category: 'defense',
-    tier: 'advanced',
-    unlockCost: 6,
-    stat: 'maxHP',
-    icon: '\uD83D\uDCAA',
-    description: '+{bonus}% max HP',
-    levels: {
-      1: { bonus: 0.10 },
-      2: { bonus: 0.20 },
-      3: { bonus: 0.30 },
-      4: { bonus: 0.40 },
-      5: { bonus: 0.50 }
-    }
-  },
-
-  skill_regeneration: {
-    id: 'skill_regeneration',
-    name: 'Regeneration',
-    type: 'passive',
-    category: 'defense',
-    tier: 'advanced',
-    unlockCost: 6,
-    stat: 'hpRegen',
-    icon: '\uD83D\uDC9A',
-    description: '+{bonus}% HP per second',
-    levels: {
-      1: { bonus: 0.005 },
-      2: { bonus: 0.010 },
-      3: { bonus: 0.015 },
-      4: { bonus: 0.020 },
-      5: { bonus: 0.030 }
-    }
-  },
-
-  skill_quick_reflexes: {
-    id: 'skill_quick_reflexes',
-    name: 'Quick Reflexes',
-    type: 'passive',
-    category: 'defense',
-    tier: 'master',
-    unlockCost: 10,
-    stat: 'warningTime',
-    icon: '\uD83D\uDC41\uFE0F',
-    description: '+{bonus}ms attack warning time',
-    levels: {
-      1: { bonus: 200 },
-      2: { bonus: 400 },
-      3: { bonus: 600 },
-      4: { bonus: 800 },
-      5: { bonus: 1000 }
-    }
-  },
-
-  // === Passive - Utility ===
-
-  skill_deep_pockets: {
-    id: 'skill_deep_pockets',
-    name: 'Deep Pockets',
-    type: 'passive',
-    category: 'utility',
-    tier: 'advanced',
-    unlockCost: 6,
-    stat: 'goldFind',
-    icon: '\uD83D\uDCB0',
-    description: '+{bonus}% gold',
-    levels: {
-      1: { bonus: 0.05 },
-      2: { bonus: 0.10 },
-      3: { bonus: 0.15 },
-      4: { bonus: 0.20 },
-      5: { bonus: 0.25 }
-    }
-  },
-
-  skill_fast_learner: {
-    id: 'skill_fast_learner',
-    name: 'Fast Learner',
-    type: 'passive',
-    category: 'utility',
-    tier: 'advanced',
-    unlockCost: 6,
-    stat: 'xpBonus',
-    icon: '\uD83D\uDCDA',
-    description: '+{bonus}% XP',
-    levels: {
-      1: { bonus: 0.05 },
-      2: { bonus: 0.10 },
-      3: { bonus: 0.15 },
-      4: { bonus: 0.20 },
-      5: { bonus: 0.25 }
-    }
-  },
-
-  skill_energy_flow: {
-    id: 'skill_energy_flow',
-    name: 'Energy Flow',
-    type: 'passive',
-    category: 'utility',
-    tier: 'elite',
-    unlockCost: 8,
-    stat: 'energyGain',
+    tags: ['utility', 'energy'],
+    mechanic: 'instant',
     icon: '\u26A1',
-    description: '+{bonus}% Energy gain',
+    unlockLevel: 14,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
     levels: {
-      1: { bonus: 0.10 },
-      2: { bonus: 0.20 },
-      3: { bonus: 0.30 },
-      4: { bonus: 0.40 },
-      5: { bonus: 0.50 }
+      1: { energyGained: 35, cooldown: 22, energyCost: 0 },
+      2: { energyGained: 40, cooldown: 20, energyCost: 0 },
+      3: { energyGained: 45, cooldown: 18, energyCost: 0 },
+      4: { energyGained: 55, cooldown: 16, energyCost: 0 },
+      5: { energyGained: 65, cooldown: 14, energyCost: 0 }
+    }
+  },
+
+  arcane_bolt: {
+    id: 'arcane_bolt',
+    name: 'Arcane Bolt',
+    description: 'Fire a bolt dealing {damage}% ATK damage.',
+    category: 'mage',
+    type: 'active',
+    tags: ['spell', 'attack'],
+    mechanic: 'instant',
+    icon: '\uD83D\uDD2E',
+    unlockLevel: 16,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { damage: 400,  cooldown: 6, energyCost: 20 },
+      2: { damage: 500,  cooldown: 6, energyCost: 20 },
+      3: { damage: 650,  cooldown: 5, energyCost: 18 },
+      4: { damage: 800,  cooldown: 5, energyCost: 18 },
+      5: { damage: 1000, cooldown: 4, energyCost: 15 }
+    }
+  },
+
+  shield_bash: {
+    id: 'shield_bash',
+    name: 'Shield Bash',
+    description: 'Deal {damage}% damage and gain a {shieldPercent}% HP shield for {shieldDuration}s.',
+    category: 'utility',
+    type: 'active',
+    tags: ['utility', 'attack', 'defensive'],
+    mechanic: 'instant',
+    icon: '\uD83D\uDEE1\uFE0F',
+    unlockLevel: 20,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { damage: 200, shieldPercent: 12, shieldDuration: 6,  cooldown: 15, energyCost: 30 },
+      2: { damage: 250, shieldPercent: 14, shieldDuration: 7,  cooldown: 14, energyCost: 30 },
+      3: { damage: 300, shieldPercent: 16, shieldDuration: 8,  cooldown: 13, energyCost: 28 },
+      4: { damage: 350, shieldPercent: 18, shieldDuration: 9,  cooldown: 12, energyCost: 26 },
+      5: { damage: 450, shieldPercent: 22, shieldDuration: 10, cooldown: 10, energyCost: 25 }
+    }
+  },
+
+  flurry: {
+    id: 'flurry',
+    name: 'Flurry',
+    description: 'For {duration}s, every click strikes {hitsPerClick} times.',
+    category: 'speed',
+    type: 'active',
+    tags: ['speed', 'buff'],
+    mechanic: 'buff',
+    icon: '\uD83C\uDF00',
+    unlockLevel: 22,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { hitsPerClick: 2, duration: 4, cooldown: 14, energyCost: 30 },
+      2: { hitsPerClick: 2, duration: 5, cooldown: 13, energyCost: 30 },
+      3: { hitsPerClick: 2, duration: 5, cooldown: 12, energyCost: 28 },
+      4: { hitsPerClick: 3, duration: 5, cooldown: 12, energyCost: 28 },
+      5: { hitsPerClick: 3, duration: 6, cooldown: 10, energyCost: 25 }
+    }
+  },
+
+  adrenaline_rush: {
+    id: 'adrenaline_rush',
+    name: 'Adrenaline Rush',
+    description: 'For {duration}s, crit chance = energy%. Energy drains at {drainRate}/s.',
+    category: 'crit',
+    type: 'active',
+    tags: ['crit', 'buff'],
+    mechanic: 'buff',
+    icon: '\uD83D\uDCA5',
+    unlockLevel: 30,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { duration: 4, drainRate: 12, cooldown: 20, energyCost: 0 },
+      2: { duration: 5, drainRate: 11, cooldown: 19, energyCost: 0 },
+      3: { duration: 5, drainRate: 10, cooldown: 18, energyCost: 0 },
+      4: { duration: 6, drainRate: 9,  cooldown: 17, energyCost: 0 },
+      5: { duration: 7, drainRate: 8,  cooldown: 15, energyCost: 0 }
+    }
+  },
+
+  chain_lightning: {
+    id: 'chain_lightning',
+    name: 'Chain Lightning',
+    description: 'Deal {damage}% damage. Overkill chains {overkillCarry}% to next spawn.',
+    category: 'mage',
+    type: 'active',
+    tags: ['spell', 'attack'],
+    mechanic: 'instant',
+    icon: '\u26A1',
+    unlockLevel: 36,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { damage: 600,  overkillCarry: 40, cooldown: 12, energyCost: 30 },
+      2: { damage: 750,  overkillCarry: 45, cooldown: 11, energyCost: 30 },
+      3: { damage: 900,  overkillCarry: 50, cooldown: 10, energyCost: 28 },
+      4: { damage: 1100, overkillCarry: 55, cooldown: 9,  energyCost: 26 },
+      5: { damage: 1400, overkillCarry: 60, cooldown: 8,  energyCost: 25 }
+    }
+  },
+
+  charge_up: {
+    id: 'charge_up',
+    name: 'Charge Up',
+    description: 'Hold to charge ({channelMin}-{channelMax}s). Release: {minMult}-{maxMult}% damage.',
+    category: 'power',
+    type: 'active',
+    tags: ['power', 'attack', 'channel'],
+    mechanic: 'channel',
+    icon: '\uD83D\uDD0B',
+    unlockLevel: 39,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { minMult: 500,  maxMult: 1500, channelMin: 1, channelMax: 3,   cooldown: 16, energyCost: 40 },
+      2: { minMult: 600,  maxMult: 1800, channelMin: 1, channelMax: 3,   cooldown: 15, energyCost: 40 },
+      3: { minMult: 700,  maxMult: 2200, channelMin: 1, channelMax: 3,   cooldown: 14, energyCost: 38 },
+      4: { minMult: 900,  maxMult: 2800, channelMin: 0.8, channelMax: 2.5, cooldown: 13, energyCost: 35 },
+      5: { minMult: 1000, maxMult: 3500, channelMin: 0.8, channelMax: 2.5, cooldown: 12, energyCost: 33 }
+    }
+  },
+
+  momentum: {
+    id: 'momentum',
+    name: 'Momentum',
+    description: 'Toggle: +{dmgPerStack}%/stack (max {maxStacks}). Drains {drainPerSec}/s.',
+    category: 'speed',
+    type: 'active',
+    tags: ['speed', 'buff', 'toggle'],
+    mechanic: 'toggle',
+    icon: '\uD83C\uDF1F',
+    unlockLevel: 45,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { dmgPerStack: 6,  maxStacks: 8,  maxBonus: 48,  decayTimer: 1.5, drainPerSec: 2,   cooldown: 0, energyCost: 0 },
+      2: { dmgPerStack: 7,  maxStacks: 9,  maxBonus: 63,  decayTimer: 1.6, drainPerSec: 2,   cooldown: 0, energyCost: 0 },
+      3: { dmgPerStack: 8,  maxStacks: 10, maxBonus: 80,  decayTimer: 1.8, drainPerSec: 1.8, cooldown: 0, energyCost: 0 },
+      4: { dmgPerStack: 9,  maxStacks: 11, maxBonus: 99,  decayTimer: 1.9, drainPerSec: 1.5, cooldown: 0, energyCost: 0 },
+      5: { dmgPerStack: 10, maxStacks: 12, maxBonus: 120, decayTimer: 2.0, drainPerSec: 1.2, cooldown: 0, energyCost: 0 }
+    }
+  },
+
+  overcharge: {
+    id: 'overcharge',
+    name: 'Overcharge',
+    description: 'Reduce all other skill cooldowns by {cdrAmount}s.',
+    category: 'mage',
+    type: 'active',
+    tags: ['spell', 'utility'],
+    mechanic: 'cd_utility',
+    icon: '\u2728',
+    unlockLevel: 52,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { cdrAmount: 3,   cooldown: 16, energyCost: 25 },
+      2: { cdrAmount: 3.5, cooldown: 15, energyCost: 25 },
+      3: { cdrAmount: 4,   cooldown: 14, energyCost: 23 },
+      4: { cdrAmount: 4.5, cooldown: 13, energyCost: 21 },
+      5: { cdrAmount: 5,   cooldown: 12, energyCost: 20 }
+    }
+  },
+
+  shatter: {
+    id: 'shatter',
+    name: 'Shatter',
+    description: 'Next click deals bonus {percentHP}% of monster max HP (ignores armor).',
+    category: 'power',
+    type: 'active',
+    tags: ['power', 'attack'],
+    mechanic: 'next_click_hit',
+    icon: '\uD83D\uDCA2',
+    unlockLevel: 60,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { percentHP: 8,  cooldown: 12, energyCost: 30 },
+      2: { percentHP: 10, cooldown: 12, energyCost: 30 },
+      3: { percentHP: 13, cooldown: 11, energyCost: 28 },
+      4: { percentHP: 16, cooldown: 10, energyCost: 26 },
+      5: { percentHP: 20, cooldown: 9,  energyCost: 25 }
+    }
+  },
+
+  life_tap: {
+    id: 'life_tap',
+    name: 'Life Tap',
+    description: 'Sacrifice {hpCostPercent}% current HP to gain {energyGained} energy.',
+    category: 'utility',
+    type: 'active',
+    tags: ['utility', 'energy'],
+    mechanic: 'hp_cost',
+    icon: '\uD83E\uDE78',
+    unlockLevel: 65,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { hpCostPercent: 20, energyGained: 25, cooldown: 12, energyCost: 0 },
+      2: { hpCostPercent: 20, energyGained: 30, cooldown: 11, energyCost: 0 },
+      3: { hpCostPercent: 18, energyGained: 35, cooldown: 10, energyCost: 0 },
+      4: { hpCostPercent: 15, energyGained: 40, cooldown: 9,  energyCost: 0 },
+      5: { hpCostPercent: 12, energyGained: 50, cooldown: 8,  energyCost: 0 }
+    }
+  },
+
+  // ===========================
+  // PASSIVE SKILLS (10)
+  // ===========================
+
+  click_mastery: {
+    id: 'click_mastery',
+    name: 'Click Mastery',
+    description: 'Fast clicks build +{dmgPerStack}%/stack (max {maxStacks}, window {clickWindow}s).',
+    category: 'speed',
+    type: 'passive',
+    tags: ['speed'],
+    mechanic: 'passive',
+    icon: '\uD83D\uDC4A',
+    unlockLevel: 5,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { dmgPerStack: 4,  maxStacks: 8,  clickWindow: 0.50, maxBonus: 32 },
+      2: { dmgPerStack: 5,  maxStacks: 9,  clickWindow: 0.55, maxBonus: 45 },
+      3: { dmgPerStack: 6,  maxStacks: 10, clickWindow: 0.60, maxBonus: 60 },
+      4: { dmgPerStack: 7,  maxStacks: 11, clickWindow: 0.65, maxBonus: 77 },
+      5: { dmgPerStack: 8,  maxStacks: 12, clickWindow: 0.70, maxBonus: 96 }
+    }
+  },
+
+  vampiric_strikes: {
+    id: 'vampiric_strikes',
+    name: 'Vampiric Strikes',
+    description: 'Clicks heal for {healPercent}% of damage dealt.',
+    category: 'sustain',
+    type: 'passive',
+    tags: ['sustain'],
+    mechanic: 'passive',
+    icon: '\uD83E\uDDDB',
+    unlockLevel: 10,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { healPercent: 3 },
+      2: { healPercent: 4 },
+      3: { healPercent: 5 },
+      4: { healPercent: 7 },
+      5: { healPercent: 10 }
+    }
+  },
+
+  critical_flow: {
+    id: 'critical_flow',
+    name: 'Critical Flow',
+    description: 'Critical hits restore {energyPerCrit} energy.',
+    category: 'crit',
+    type: 'passive',
+    tags: ['crit', 'energy'],
+    mechanic: 'passive',
+    icon: '\uD83D\uDCA7',
+    unlockLevel: 18,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { energyPerCrit: 5 },
+      2: { energyPerCrit: 7 },
+      3: { energyPerCrit: 9 },
+      4: { energyPerCrit: 12 },
+      5: { energyPerCrit: 15 }
+    }
+  },
+
+  heavy_handed: {
+    id: 'heavy_handed',
+    name: 'Heavy Handed',
+    description: 'Clicks deal +{dmgBonus}% damage but generate only {energyPerClick} energy/click.',
+    category: 'power',
+    type: 'passive',
+    tags: ['power'],
+    mechanic: 'passive',
+    icon: '\uD83D\uDD28',
+    unlockLevel: 24,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { dmgBonus: 40, energyPerClick: 1.5 },
+      2: { dmgBonus: 50, energyPerClick: 1.5 },
+      3: { dmgBonus: 60, energyPerClick: 1.8 },
+      4: { dmgBonus: 70, energyPerClick: 2.0 },
+      5: { dmgBonus: 80, energyPerClick: 2.0 }
+    }
+  },
+
+  combo_artist: {
+    id: 'combo_artist',
+    name: 'Combo Artist',
+    description: 'Use 2 skills within {triggerWindow}s for +{dmgBonus}% damage ({buffDuration}s).',
+    category: 'combo',
+    type: 'passive',
+    tags: ['combo'],
+    mechanic: 'passive',
+    icon: '\uD83C\uDFB5',
+    unlockLevel: 26,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { dmgBonus: 30, buffDuration: 4.0, triggerWindow: 3.0 },
+      2: { dmgBonus: 35, buffDuration: 4.5, triggerWindow: 3.0 },
+      3: { dmgBonus: 40, buffDuration: 5.0, triggerWindow: 3.5 },
+      4: { dmgBonus: 45, buffDuration: 5.5, triggerWindow: 3.5 },
+      5: { dmgBonus: 50, buffDuration: 6.0, triggerWindow: 4.0 }
+    }
+  },
+
+  berserker: {
+    id: 'berserker',
+    name: 'Berserker',
+    description: 'Below {hpThreshold}% HP: +{dmgBonus}% damage, +{critBonus}% crit.',
+    category: 'power',
+    type: 'passive',
+    tags: ['power', 'crit'],
+    mechanic: 'passive',
+    icon: '\uD83D\uDD25',
+    unlockLevel: 28,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { hpThreshold: 50, dmgBonus: 20, critBonus: 10 },
+      2: { hpThreshold: 50, dmgBonus: 25, critBonus: 12 },
+      3: { hpThreshold: 55, dmgBonus: 30, critBonus: 15 },
+      4: { hpThreshold: 55, dmgBonus: 35, critBonus: 18 },
+      5: { hpThreshold: 60, dmgBonus: 40, critBonus: 20 }
+    }
+  },
+
+  efficient_casting: {
+    id: 'efficient_casting',
+    name: 'Efficient Casting',
+    description: 'All skill energy costs reduced by {costReduction}%.',
+    category: 'mage',
+    type: 'passive',
+    tags: ['spell', 'energy'],
+    mechanic: 'passive',
+    icon: '\uD83D\uDCDA',
+    unlockLevel: 33,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { costReduction: 15 },
+      2: { costReduction: 20 },
+      3: { costReduction: 25 },
+      4: { costReduction: 30 },
+      5: { costReduction: 35 }
+    }
+  },
+
+  spell_weaver: {
+    id: 'spell_weaver',
+    name: 'Spell Weaver',
+    description: 'Using any skill reduces all other cooldowns by {cdrPerUse}s.',
+    category: 'mage',
+    type: 'passive',
+    tags: ['spell'],
+    mechanic: 'passive',
+    icon: '\uD83E\uDDD9',
+    unlockLevel: 42,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { cdrPerUse: 0.8 },
+      2: { cdrPerUse: 1.0 },
+      3: { cdrPerUse: 1.2 },
+      4: { cdrPerUse: 1.4 },
+      5: { cdrPerUse: 1.5 }
+    }
+  },
+
+  residual_energy: {
+    id: 'residual_energy',
+    name: 'Residual Energy',
+    description: 'When a skill effect ends, gain {energyOnEnd} energy.',
+    category: 'energy',
+    type: 'passive',
+    tags: ['energy'],
+    mechanic: 'passive',
+    icon: '\uD83D\uDD0B',
+    unlockLevel: 48,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { energyOnEnd: 8 },
+      2: { energyOnEnd: 10 },
+      3: { energyOnEnd: 12 },
+      4: { energyOnEnd: 15 },
+      5: { energyOnEnd: 18 }
+    }
+  },
+
+  focused_mind: {
+    id: 'focused_mind',
+    name: 'Focused Mind',
+    description: 'While not clicking, gain +{idleRegen} energy/sec.',
+    category: 'power',
+    type: 'passive',
+    tags: ['energy', 'power'],
+    mechanic: 'passive',
+    icon: '\uD83E\uDDD8',
+    unlockLevel: 52,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { idleRegen: 3 },
+      2: { idleRegen: 4 },
+      3: { idleRegen: 5 },
+      4: { idleRegen: 6 },
+      5: { idleRegen: 8 }
     }
   }
-};
-
-export const SKILL_TIERS = {
-  starter:  { cost: 0,  skills: ['skill_power_strike'] },
-  basic:    { cost: 3,  skills: ['skill_heal', 'skill_iron_skin', 'skill_sharp_blades', 'skill_killer_instinct'] },
-  utility:  { cost: 4,  skills: ['skill_gold_rush', 'skill_xp_boost', 'skill_reflect', 'skill_time_warp'] },
-  combat:   { cost: 5,  skills: ['skill_execute', 'skill_berserk_rage', 'skill_crit_surge', 'skill_perfect_strike'] },
-  advanced: { cost: 6,  skills: ['skill_deep_pockets', 'skill_fast_learner', 'skill_thick_skin', 'skill_regeneration'] },
-  elite:    { cost: 8,  skills: ['skill_undying', 'skill_soul_rend', 'skill_shield_breaker', 'skill_energy_flow', 'skill_shield_wall'] },
-  master:   { cost: 10, skills: ['skill_transcendence', 'skill_void_touch', 'skill_quick_reflexes'] }
-};
-
-export const TIER_ORDER = ['starter', 'basic', 'utility', 'combat', 'advanced', 'elite', 'master'];
-
-export const TIER_COLORS = {
-  starter:  '#9d9d9d',
-  basic:    '#1eff00',
-  utility:  '#0070dd',
-  combat:   '#a335ee',
-  advanced: '#ff8000',
-  elite:    '#e6cc80',
-  master:   '#ff4444'
 };

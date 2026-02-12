@@ -125,6 +125,31 @@
   50% { box-shadow: 0 0 25px rgba(255, 215, 0, 0.5); }
 }
 
+/* Toggle glow pulse (Momentum ON) */
+@keyframes toggle-glow {
+  0%, 100% { box-shadow: 0 0 6px rgba(255, 200, 0, 0.4); }
+  50% { box-shadow: 0 0 14px rgba(255, 200, 0, 0.8); }
+}
+
+/* Channel charge fill (Charge Up hold) */
+@keyframes channel-fill {
+  0% { background-size: 100% 0%; }
+  100% { background-size: 100% 100%; }
+}
+
+/* Buff indicator pulse on apply */
+@keyframes buff-apply {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+/* Skill damage float (distinct from normal/crit) */
+@keyframes float-up-skill {
+  0% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.1); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-90px) scale(1); }
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
