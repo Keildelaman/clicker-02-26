@@ -182,6 +182,16 @@ export function scheduleSpawn() {
 }
 
 /**
+ * Immediately spawn the next monster with no delay.
+ * Used for non-boss kills to eliminate downtime.
+ */
+export function spawnImmediate() {
+  waitingToSpawn = false;
+  spawnTimer = 0;
+  spawnNext();
+}
+
+/**
  * Handle boss start event from the UI modal.
  * Despawns current monster and spawns the boss.
  */
@@ -193,6 +203,7 @@ function handleBossStart({ bossId }) {
 
 export function init() {
   on('combat:dyingComplete', scheduleSpawn);
+  on('combat:requestImmediateSpawn', spawnImmediate);
   on('player:respawned', scheduleSpawn);
   on('zone:changed', scheduleSpawn);
   on('zone:bossStart', handleBossStart);

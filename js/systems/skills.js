@@ -94,13 +94,12 @@ const EFFECT_HANDLERS = {
     });
   },
 
-  // Instant damage with overkill carry to next spawn
+  // Instant damage (overkill carry now handled generically by combat system)
   chain_lightning(skillDef, levelData) {
     emit('skill:instantDamage', {
       hits: 1,
       damagePerHit: levelData.damage,
-      skillId: 'chain_lightning',
-      overkillCarryPercent: levelData.overkillCarry
+      skillId: 'chain_lightning'
     });
   },
 

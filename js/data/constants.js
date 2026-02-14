@@ -21,6 +21,10 @@ export const ENERGY_GAIN_COOLDOWN = 200;
 export const SPAWN_ANIMATION_DURATION = 200;
 export const DEATH_ANIMATION_DURATION = 300;
 
+// Overkill & Instant Spawn
+export const OVERKILL_CARRY_PERCENT = 100;  // % of overkill damage that carries to next monster
+export const OVERKILL_CHAIN_MAX = 3;        // Max consecutive overkill chains to prevent infinite loops
+
 // Combat Defaults
 export const BASE_PLAYER_ATTACK = 5;
 export const BASE_CRIT_CHANCE = 0.05;
