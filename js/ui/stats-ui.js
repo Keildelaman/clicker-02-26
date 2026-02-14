@@ -9,9 +9,10 @@
 
 import { on } from '../core/event-bus.js';
 import { getPlayer } from '../core/game-state.js';
-import { getComputedStats } from '../systems/player.js';
+import { getComputedStats } from '../systems/player.js'; // Phase B: will move to state read
 import { formatNumber } from '../services/utils.js';
 import { ZONES } from '../data/zones.data.js';
+import { showToast } from './toasts.js';
 
 let attackDisplay, goldDisplay, levelDisplay, xpFill, xpText, zoneNameDisplay;
 
@@ -31,6 +32,7 @@ export function init() {
   on('item:equipped', renderAll);
   on('item:unequipped', renderAll);
   on('zone:changed', renderZoneName);
+  on('progression:milestone', ({ message }) => showToast(message, 'warning', 4000));
 }
 
 function renderAll() {

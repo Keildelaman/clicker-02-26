@@ -25,11 +25,10 @@ import {
   SP_PER_LEVEL_INTERVAL, SP_UPGRADE_COST, RESPEC_COSTS,
   SKILL_SWAP_COOLDOWN_PENALTY
 } from '../data/constants.js';
-import { invalidateStatCache } from './player.js';
-
 // Dependency injection — set during init()
 let computeStats = null;
 let hurtPlayer = null;
+let invalidateStats = null; // Injected: player.invalidateStatCache
 
 // Track cooldown-ready notifications to avoid spam
 const cooldownReadyNotified = new Set();
@@ -204,7 +203,7 @@ const EFFECT_HANDLERS = {
     const toggle = state.toggleStates['momentum'];
     if (toggle && toggle.active) {
       state.toggleStates['momentum'] = { active: false, stacks: 0, lastClickTime: 0 };
-      invalidateStatCache();
+      invalidateStats();
       emit('skill:toggleOff', { skillId: 'momentum' });
       emit('skill:effectEnded', { skillId: 'momentum', type: 'toggle' });
     } else {
@@ -326,7 +325,7 @@ export function upgradeSkill(skillId) {
 
   // If skill is equipped, invalidate stat cache
   if (player.equippedPassive.includes(skillId) || player.equippedActive.includes(skillId)) {
-    invalidateStatCache();
+    invalidateStats();
   }
 
   emit('skill:upgraded', { skillId, newLevel: level + 1, spRemaining: player.skillPoints });
@@ -436,7 +435,7 @@ export function equipPassiveSkill(skillId, slotIndex) {
     handler.onEquip(skillId, player.unlockedSkills[skillId]);
   }
 
-  invalidateStatCache();
+  invalidateStats();
   emit('skill:equipped', { skillId, slot: slotIndex, type: 'passive' });
   emit('player:statsChanged', {});
   return true;
@@ -461,7 +460,7 @@ export function unequipPassiveSkill(slotIndex) {
   if (handler?.onUnequip) handler.onUnequip(skillId);
 
   player.equippedPassive[slotIndex] = null;
-  invalidateStatCache();
+  invalidateStats();
   emit('skill:unequipped', { skillId, slot: slotIndex, type: 'passive' });
   emit('player:statsChanged', {});
   return true;
@@ -590,7 +589,7 @@ export function respec() {
 
   player.respecCount++;
 
-  invalidateStatCache();
+  invalidateStats();
   emit('skill:respecced', { refundedSP, cost, respecCount: player.respecCount });
   emit('player:statsChanged', {});
   return true;
@@ -684,7 +683,7 @@ const PASSIVE_HANDLERS = {
             remaining: data.buffDuration,
             effects: { damageBonus: data.dmgBonus / 100 }
           };
-          invalidateStatCache();
+          invalidateStats();
           emit('skill:buffApplied', { skillId: 'combo_artist', duration: data.buffDuration });
         }
         ps.lastSkillId = usedSkillId;
@@ -697,7 +696,7 @@ const PASSIVE_HANDLERS = {
       cleanupPassive(skillId);
       delete state.passiveStates['combo_artist'];
       delete state.activeBuffs['combo_artist'];
-      invalidateStatCache();
+      invalidateStats();
     }
   },
 
@@ -853,7 +852,7 @@ function onPlayerDied() {
     state.passiveStates['combo_artist'].lastSkillTime = 0;
   }
 
-  invalidateStatCache();
+  invalidateStats();
 }
 
 function onLevelUp({ newLevel }) {
@@ -900,7 +899,7 @@ export function update(dt) {
     buff.remaining -= dt;
     if (buff.remaining <= 0) {
       delete state.activeBuffs[skillId];
-      invalidateStatCache();
+      invalidateStats();
       emit('skill:buffExpired', { skillId });
       emit('skill:effectEnded', { skillId, type: 'buff' });
     }
@@ -935,7 +934,7 @@ export function update(dt) {
 
     if (player.energy <= 0) {
       state.toggleStates['momentum'] = { active: false, stacks: 0, lastClickTime: 0 };
-      invalidateStatCache();
+      invalidateStats();
       emit('skill:toggleOff', { skillId: 'momentum' });
       emit('skill:effectEnded', { skillId: 'momentum', type: 'toggle' });
     } else {
@@ -944,7 +943,7 @@ export function update(dt) {
         const gap = (now - momentum.lastClickTime) / 1000;
         if (gap > momentum.decayTimer && momentum.stacks > 0) {
           momentum.stacks = 0;
-          invalidateStatCache();
+          invalidateStats();
           emit('skill:effectTriggered', { effect: 'momentumDecay' });
         }
       }
@@ -958,10 +957,12 @@ export function update(dt) {
  * @param {Object} deps
  * @param {Function} deps.getComputedStats
  * @param {Function} deps.damagePlayer
+ * @param {Function} deps.invalidateStatCache
  */
 export function init(deps = {}) {
   computeStats = deps.getComputedStats;
   hurtPlayer = deps.damagePlayer;
+  invalidateStats = deps.invalidateStatCache;
 
   on('player:levelUp', onLevelUp);
   on('player:died', onPlayerDied);

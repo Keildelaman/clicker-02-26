@@ -50,13 +50,13 @@ if (savedData) {
 player.init();
 monster.init();
 combat.init({ getComputedStats: player.getComputedStats, damagePlayer: health.damagePlayer });
-health.init();
-energy.init();
-progression.init();
+health.init({ getComputedStats: player.getComputedStats });
+energy.init({ getComputedStats: player.getComputedStats });
+progression.init({ getComputedStats: player.getComputedStats, invalidateStatCache: player.invalidateStatCache });
 economy.init();
 loot.init();
 zones.init();
-skills.init({ getComputedStats: player.getComputedStats, damagePlayer: health.damagePlayer });
+skills.init({ getComputedStats: player.getComputedStats, damagePlayer: health.damagePlayer, invalidateStatCache: player.invalidateStatCache });
 tutorial.init();
 
 // 3. Initialize UI

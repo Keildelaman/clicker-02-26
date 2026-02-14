@@ -14,8 +14,9 @@ import { getPlayer } from '../core/game-state.js';
 import { xpToNextLevel } from '../data/balance.js';
 import { MAX_PLAYER_LEVEL } from '../data/constants.js';
 import { saveGame } from '../services/storage.js';
-import { showToast } from '../ui/toasts.js';
-import { getComputedStats, invalidateStatCache } from './player.js';
+
+let computeStats = null;    // Injected: player.getComputedStats
+let invalidateStats = null;  // Injected: player.invalidateStatCache
 
 const MILESTONES = {
   25: 'Quarter Century! You are a seasoned warrior.',
@@ -55,10 +56,10 @@ function levelUp() {
   p.xpToNextLevel = xpToNextLevel(p.level);
 
   // Invalidate stat cache so computed stats reflect new level
-  invalidateStatCache();
+  invalidateStats();
 
   // Update max HP (includes equipment bonuses) and full heal
-  const stats = getComputedStats();
+  const stats = computeStats();
   p.maxHP = stats.maxHP;
   p.hp = p.maxHP;
 
@@ -72,21 +73,29 @@ function levelUp() {
 }
 
 /**
- * Show a special toast at milestone levels.
+ * Emit a milestone event at special levels (UI layer handles display).
  */
 function checkMilestones(level) {
   const message = MILESTONES[level];
   if (message) {
-    showToast(message, 'warning', 4000);
+    emit('progression:milestone', { level, message });
   }
 }
 
 // --- System Contract ---
 
-export function init() {
+/**
+ * @param {Object} deps - Injected dependencies
+ * @param {Function} deps.getComputedStats - Returns player computed stats
+ * @param {Function} deps.invalidateStatCache - Invalidates the stat cache
+ */
+export function init(deps = {}) {
+  computeStats = deps.getComputedStats;
+  invalidateStats = deps.invalidateStatCache;
+
   on('combat:monsterKilled', ({ xpReward }) => {
     // Apply xpBonus from equipment + passive skills + buffs
-    const stats = getComputedStats();
+    const stats = computeStats();
     const finalXP = Math.floor(xpReward * (1 + (stats.xpBonus || 0)));
     grantXP(finalXP);
   });
