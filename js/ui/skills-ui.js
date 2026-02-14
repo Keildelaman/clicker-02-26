@@ -61,7 +61,7 @@ export function init() {
     tab.addEventListener('click', () => switchTab(tab.dataset.tab));
   });
 
-  // Skill bar: pointerdown for channel, click-style for all others
+  // Skill bar: all skills fire on pointerdown (channel queues, others fire immediately)
   skillBarSlots.forEach((slot, i) => {
     slot.addEventListener('pointerdown', (e) => {
       const player = getPlayer();
@@ -69,19 +69,9 @@ export function init() {
       const skillId = player.equippedActive[i];
       if (!skillId) return;
 
-      const skillDef = SKILLS[skillId];
-      if (skillDef && skillDef.mechanic === 'channel') {
-        e.preventDefault();
-        const result = skills.useSkill(skillId);
-        if (result) {
-          slot.classList.add('skill-btn--channeling');
-        }
-        return;
-      }
-
-      // Non-channel: fire on pointerdown
       const result = skills.useSkill(skillId);
       if (!result) {
+        const skillDef = SKILLS[skillId];
         const remaining = skills.getSkillCooldownRemaining(skillId);
         if (remaining > 0) {
           // On cooldown — no toast, UI shows timer
@@ -92,22 +82,6 @@ export function init() {
             showToast('Not enough energy!', 'error', 1500);
           }
         }
-      }
-    });
-
-    // Release channel on pointerup
-    slot.addEventListener('pointerup', () => {
-      if (state.channelState) {
-        skills.releaseChannel();
-        slot.classList.remove('skill-btn--channeling');
-      }
-    });
-
-    // Release on pointer leave (finger moves off button) — fires with current charge
-    slot.addEventListener('pointerleave', () => {
-      if (state.channelState) {
-        skills.releaseChannel();
-        slot.classList.remove('skill-btn--channeling');
       }
     });
   });
@@ -132,15 +106,9 @@ export function init() {
   on('skill:toggleOn', () => { renderSkillBar(); });
   on('skill:toggleOff', () => { renderSkillBar(); });
   on('skill:channelStarted', () => { renderSkillBar(); });
-  on('skill:channelRelease', () => {
-    // Remove channeling class from all slots (handles auto-fire case)
-    skillBarSlots.forEach(s => s.classList.remove('skill-btn--channeling'));
-    renderSkillBar();
-  });
-  on('skill:channelCancelled', () => {
-    skillBarSlots.forEach(s => s.classList.remove('skill-btn--channeling'));
-    renderSkillBar();
-  });
+  on('skill:channelCharging', () => { renderSkillBar(); });
+  on('skill:channelRelease', () => { renderSkillBar(); });
+  on('skill:channelCancelled', () => { renderSkillBar(); });
   on('skill:effectEnded', () => { renderSkillBar(); });
 
   // Start cooldown timer update
@@ -492,15 +460,24 @@ function renderSkillBar() {
       continue;
     }
 
-    // Channel active state — show charge percentage
+    // Channel state — queued or charging
     if (state.channelState && state.channelState.skillId === skillId) {
-      const elapsed = (performance.now() - state.channelState.startTime) / 1000;
-      const pct = Math.min(100, Math.floor((elapsed / state.channelState.channelMax) * 100));
-      el.className = 'skill-btn skill-btn--channeling';
-      el.title = `${skillDef.name} (Charging ${pct}%)`;
-      el.innerHTML = `<span class="skill-btn__icon">${skillDef.icon}</span>
-        <span class="skill-btn__cost">${pct}%</span>
-        <span class="skill-btn__charge-fill" style="height:${pct}%"></span>`;
+      if (state.channelState.phase === 'queued') {
+        // Queued: show "CHARGE" like Power Strike shows "NEXT" indicator
+        el.className = 'skill-btn skill-btn--channel-queued';
+        el.title = `${skillDef.name} (Tap monster to charge!)`;
+        el.innerHTML = `<span class="skill-btn__icon">${skillDef.icon}</span>
+          <span class="skill-btn__cost">CHARGE</span>`;
+      } else {
+        // Charging: show live percentage with fill bar
+        const elapsed = (performance.now() - state.channelState.startTime) / 1000;
+        const pct = Math.min(100, Math.floor((elapsed / state.channelState.channelMax) * 100));
+        el.className = 'skill-btn skill-btn--channeling';
+        el.title = `${skillDef.name} (Charging ${pct}%)`;
+        el.innerHTML = `<span class="skill-btn__icon">${skillDef.icon}</span>
+          <span class="skill-btn__cost">${pct}%</span>
+          <span class="skill-btn__charge-fill" style="height:${pct}%"></span>`;
+      }
       continue;
     }
 
