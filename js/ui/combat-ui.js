@@ -82,11 +82,14 @@ export function init() {
   on('skill:hitModifierSet', renderBuffRow);
   on('skill:effectEnded', renderBuffRow);
   on('combat:hit', renderBuffRow);
+  on('skill:channelStarted', renderBuffRow);
+  on('skill:channelRelease', renderBuffRow);
+  on('skill:channelCancelled', renderBuffRow);
 
-  // Buff timer refresh
+  // Buff timer refresh (also updates channel charge indicator)
   setInterval(() => {
-    if (buffRow && buffRow.children.length > 0) renderBuffRow();
-  }, 250);
+    if (buffRow && (buffRow.children.length > 0 || state.channelState)) renderBuffRow();
+  }, 100);
 }
 
 function hasType(monster, typeName) {
@@ -427,6 +430,24 @@ function renderBuffRow() {
       html += `<div class="buff-indicator buff-indicator--hit-mod">
         <span class="buff-indicator__icon">${skillDef.icon}</span>
         <span class="buff-indicator__timer">NEXT</span>
+      </div>`;
+    }
+  }
+
+  // Channel indicator (Charge Up charging)
+  if (state.channelState) {
+    const skillDef = SKILLS[state.channelState.skillId];
+    if (skillDef) {
+      const elapsed = (performance.now() - state.channelState.startTime) / 1000;
+      const pct = Math.min(100, Math.floor((elapsed / state.channelState.channelMax) * 100));
+      // Intensity class: low (0-33%), mid (34-66%), high (67-100%)
+      let intensity = 'low';
+      if (pct >= 67) intensity = 'high';
+      else if (pct >= 34) intensity = 'mid';
+      html += `<div class="buff-indicator buff-indicator--channel buff-indicator--charge-${intensity}">
+        <span class="buff-indicator__icon">${skillDef.icon}</span>
+        <span class="buff-indicator__timer">${pct}%</span>
+        <span class="buff-indicator__charge-bar" style="width:${pct}%"></span>
       </div>`;
     }
   }

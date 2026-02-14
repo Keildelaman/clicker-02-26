@@ -131,10 +131,10 @@
   50% { box-shadow: 0 0 14px rgba(255, 200, 0, 0.8); }
 }
 
-/* Channel charge fill (Charge Up hold) */
-@keyframes channel-fill {
-  0% { background-size: 100% 0%; }
-  100% { background-size: 100% 100%; }
+/* Channel charge pulse (Charge Up buff indicator at high charge) */
+@keyframes charge-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.85; }
 }
 
 /* Buff indicator pulse on apply */
