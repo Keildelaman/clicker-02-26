@@ -3,7 +3,7 @@
 **Date:** 2026-02-14
 **Scope:** Full codebase review (~14,600 lines across 40 files)
 **Focus:** Separation of concerns, coupling, cohesion, DRY, SOLID, clean code, maintainability
-**Last Updated:** 2026-02-14 (post Phase A+B+C refactor)
+**Last Updated:** 2026-02-14 (post Phase A+B+C+D+E refactor — all critical/high priority items resolved)
 
 ---
 
@@ -13,13 +13,14 @@
 |---------|----------|--------|--------|
 | C1. System-to-system imports | CRITICAL | **RESOLVED** | Phase A — DI via `init(deps)` |
 | C2. UI-to-system mutation calls | CRITICAL | **RESOLVED** | Phase B — Intent events + state reads |
-| C3. `main.js` business logic | CRITICAL | Open | — |
+| C3. `main.js` business logic | CRITICAL | **RESOLVED** | Phase D — gold reward → economy.js, zone kills → zones.js, DEBUG → debug.js |
 | C4. Unguarded state | CRITICAL | Open | — |
 | H1. `skills.js` God Object | HIGH | **RESOLVED** | Phase C — extracted to skill-effects.js + skill-passives.js |
 | H2. `handleClick()` mega-function | HIGH | Open | — |
 | H3. Hardcoded skill IDs | HIGH | Open | — |
 | H4. innerHTML rendering | HIGH | Open | — |
-| H5. Tutorial state mutation + UI import | HIGH | Open (tutorial.js → toasts.js import remains) | — |
+| H5. Tutorial state mutation + UI import | HIGH | **RESOLVED** | Phase E — showToast → tutorial:tip event, mutations → intent events |
+| L3. DEBUG tools in main.js | LOW | **RESOLVED** | Phase D — extracted to js/debug.js |
 | L5. shop-ui DOM click hack | LOW | **RESOLVED** | Phase B — uses `emit('nav:navigate')` |
 
 ---
@@ -302,7 +303,7 @@ While `EventBus.emit()` wraps handlers in try/catch (good), system methods calle
 
 ## Dependency Graph
 
-### Current (Post Phase A+B)
+### Current (Post Phase A+B+C+D+E)
 
 ```
 Systems ──emit──> EventBus ──notify──> UI (reads state + emits intents)
@@ -311,7 +312,7 @@ Systems ──emit──> EventBus ──notify──> UI (reads state + emits i
    └──DI via init()───┘                 └──reads──> state (central store)
 ```
 
-**Remaining violation:** `tutorial.js` → `ui/toasts.js` (system imports UI — tracked under H5)
+**No remaining cross-layer violations.** All 7 audit checks PASS.
 
 ### Original (Pre-refactor)
 
@@ -339,7 +340,7 @@ ACTUAL:       Systems ◄──import──► Systems  (health→player, energy
 |----------|-------|--------|--------|
 | 1 | **C1+C2**: Establish consistent DI or mediator pattern for cross-system deps | Prevents dependency graph from worsening | **DONE** |
 | 2 | **H1**: Extract skill effect handlers to per-skill modules or a registry | Unblocks skill content addition | **DONE** |
-| 3 | **C3+H5**: Move business logic out of `main.js` and `tutorial.js` | Restores separation of concerns to core architecture | Open |
+| 3 | **C3+H5**: Move business logic out of `main.js` and `tutorial.js` | Restores separation of concerns to core architecture | **DONE** |
 | 4 | **H3**: Centralize skill ID references; make passives data-driven | Reduces shotgun surgery for new skills | Open |
 | 5 | **H2**: Decompose `handleClick()` into a damage pipeline | Reduces bug surface in core combat loop | Open |
 | 6 | **C4**: Add structured mutation API to game-state | Enables debugging, undo, and state validation | Open |

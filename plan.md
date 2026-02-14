@@ -354,9 +354,9 @@ The `update()` function (lines 871-952) handles momentum toggle ticks, buff expi
 
 ---
 
-## Priority 3: Fix C3+H5 — Move Business Logic Out of `main.js` and `tutorial.js`
+## Priority 3: Fix C3+H5 — Move Business Logic Out of `main.js` and `tutorial.js` [COMPLETED]
 
-**Status:** PLANNED
+**Status:** DONE (Phase D+E committed)
 
 **Goal:** Restore `main.js` to pure orchestration (import, init, wire). Fix `tutorial.js` System→UI import and direct state mutations.
 
