@@ -99,13 +99,19 @@ export function challengeBoss() {
 }
 
 /**
- * Handle a monster kill — check if it's a boss and process unlock.
+ * Handle a monster kill — track zone kills and process boss unlocks.
  */
 function handleMonsterKilled(data) {
-  if (!data.isBoss) return;
-
   const player = getPlayer();
   if (!player) return;
+
+  // Track zone kills (non-boss only) for boss kill gate
+  if (!data.isBoss) {
+    if (!player.zoneKills) player.zoneKills = {};
+    player.zoneKills[player.currentZone] = (player.zoneKills[player.currentZone] || 0) + 1;
+    emit('zone:killTracked', { zoneId: player.currentZone, kills: player.zoneKills[player.currentZone] });
+    return;
+  }
 
   const bossId = data.definitionId;
   const isFirstKill = !player.bossesDefeated.includes(bossId);

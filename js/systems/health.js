@@ -29,6 +29,13 @@ export function init(deps = {}) {
   on('player:levelUp', onLevelUp);
   on('item:equipped', syncMaxHP);
   on('item:unequipped', syncMaxHP);
+
+  // Tutorial full heal (first zone travel)
+  on('tutorial:fullHeal', () => {
+    const player = getPlayer();
+    player.hp = player.maxHP;
+    emitHPChanged();
+  });
 }
 
 function onLevelUp() {

@@ -32,6 +32,13 @@ export function init(deps = {}) {
 
   on('combat:click', onCombatClick);
   on('combat:monsterKilled', onMonsterKilled);
+
+  // Tutorial full heal (first zone travel)
+  on('tutorial:fullHeal', () => {
+    const player = getPlayer();
+    player.energy = Math.min(player.energy + MAX_ENERGY, MAX_ENERGY);
+    emitChanged();
+  });
 }
 
 function getEnergyPerClick() {

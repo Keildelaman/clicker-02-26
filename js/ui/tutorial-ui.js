@@ -9,6 +9,7 @@
  */
 
 import { on, emit } from '../core/event-bus.js';
+import { showToast } from './toasts.js';
 
 let overlay;
 let backdrop;
@@ -23,6 +24,7 @@ export function init() {
 
   on('tutorial:welcome', showWelcome);
   on('tutorial:showModal', showTutorialModal);
+  on('tutorial:tip', ({ message, type, duration }) => showToast(message, type, duration));
   on('tutorial:highlight', ({ target }) => highlightElement(target));
   on('tutorial:clearHighlight', clearHighlight);
 }

@@ -43,6 +43,17 @@ export function init() {
     if (refreshShop(true)) syncShopState();
   });
 
+  // Reward handler (gold granting on monster kill)
+  on('combat:monsterKilled', handleMonsterReward);
+
+  // Tutorial bonus gold grants
+  on('tutorial:grantGold', ({ amount }) => {
+    const p = getPlayer();
+    p.gold += amount;
+    p.totalGoldEarned += amount;
+    emit('gold:earned', { amount, total: p.gold });
+  });
+
   refreshShop(false);
 }
 
@@ -63,6 +74,28 @@ export function update(dt) {
     tickAccumulator -= 1;
     state.shopRefreshCost = getRefreshCost();
     emit('shop:timerTick', { timeLeft: state.shopRefreshTimer });
+  }
+}
+
+// --- Monster Reward ---
+
+/**
+ * Grant gold on monster kill (applies goldFind bonus + auto-save).
+ */
+function handleMonsterReward({ goldReward }) {
+  const p = getPlayer();
+
+  // Apply goldFind bonus from equipment/buffs
+  const stats = state.computedStats || {};
+  const finalGold = Math.floor(goldReward * (1 + (stats.goldFind || 0)));
+
+  p.gold += finalGold;
+  p.totalGoldEarned += finalGold;
+  emit('gold:earned', { amount: finalGold, total: p.gold });
+
+  // Auto-save on kill milestones
+  if (p.statistics.totalKills % 10 === 0) {
+    saveGame();
   }
 }
 
