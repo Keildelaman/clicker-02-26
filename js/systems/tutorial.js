@@ -198,7 +198,12 @@ function onPlayerDied({ goldLost }) {
     showModal({
       icon: '\uD83D\uDC80',
       title: 'DEFEATED!',
-      body: `Normally you lose <strong>half your gold</strong> on death.<div class="tutorial-tip">Mercy! Refunded this time. Watch your HP!</div>`,
+      body: `<strong>Death penalties:</strong><br>` +
+        `\u2022 Lose <strong>50% of your gold</strong><br>` +
+        `\u2022 <strong>XP progress</strong> to next level is lost<br>` +
+        `\u2022 Energy resets to 0<br><br>` +
+        `You keep your <strong>level</strong>, equipment, skills, and zone unlocks.` +
+        `<div class="tutorial-tip">Mercy! Gold refunded this time. Watch your HP!</div>`,
       buttons: [{ label: "I'LL BE BACK!", primary: true }]
     });
   }
