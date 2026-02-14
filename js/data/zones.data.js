@@ -50,12 +50,12 @@ export const ZONES = {
     monsters: ['dustwind_dog', 'dustwind_devil', 'dustwind_bandit', 'dustwind_stalker', 'dustwind_scorpion', 'dustwind_snake', 'dustwind_vulture', 'dustwind_raider', 'dustwind_coyote'],
     bossId: 'boss_redfang',
     theme: {
-      primary: '#c2a366',
-      secondary: '#8b7355',
+      primary: '#6b5530',
+      secondary: '#4a3a20',
       accent: '#FFD700'
     },
     emoji: '\u{1F33E}',
-    backgroundCSS: 'linear-gradient(180deg, #c2a366 0%, #8b7355 100%)',
+    backgroundCSS: 'linear-gradient(180deg, #6b5530 0%, #4a3a20 100%)',
     shopRefreshBase: 225,
     shopItems: [
       'weapon_dustwind_common_01',
@@ -114,7 +114,7 @@ export const ZONES = {
     theme: {
       primary: '#5a5a5a',
       secondary: '#3d3d3d',
-      accent: '#87CEEB'
+      accent: '#A4DCF0'
     },
     emoji: '\u26F0\uFE0F',
     backgroundCSS: 'linear-gradient(180deg, #5a5a5a 0%, #3d3d3d 100%)',
@@ -146,7 +146,7 @@ export const ZONES = {
     theme: {
       primary: '#8b2500',
       secondary: '#4a1200',
-      accent: '#ff4500'
+      accent: '#FF8C42'
     },
     emoji: '\u{1F30B}',
     backgroundCSS: 'linear-gradient(180deg, #8b2500 0%, #4a1200 100%)',
@@ -174,12 +174,12 @@ export const ZONES = {
     monsters: ['frostpeak_sprite', 'frostpeak_prowler', 'frostpeak_wraith', 'frostpeak_giant', 'frostpeak_yeti', 'frostpeak_elemental', 'frostpeak_wolf', 'frostpeak_banshee', 'frostpeak_wyrm'],
     bossId: 'boss_glacielle',
     theme: {
-      primary: '#a5c7d3',
-      secondary: '#7ba3b3',
+      primary: '#3a6575',
+      secondary: '#2a4f5c',
       accent: '#00BFFF'
     },
     emoji: '\u2744\uFE0F',
-    backgroundCSS: 'linear-gradient(180deg, #a5c7d3 0%, #7ba3b3 100%)',
+    backgroundCSS: 'linear-gradient(180deg, #3a6575 0%, #2a4f5c 100%)',
     shopRefreshBase: 12000,
     shopItems: [
       'weapon_frostpeak_common_01',
@@ -207,7 +207,7 @@ export const ZONES = {
     theme: {
       primary: '#2d1b4e',
       secondary: '#1a0f2e',
-      accent: '#9370DB'
+      accent: '#A88BE8'
     },
     emoji: '\u{1F300}',
     backgroundCSS: 'linear-gradient(180deg, #2d1b4e 0%, #1a0f2e 100%)',
