@@ -420,15 +420,21 @@ function onSkillEquipChange() {
 
 // --- Buff Row Rendering ---
 
+// Track which buff keys were present last render so we only animate new ones
+let previousBuffKeys = new Set();
+
 function renderBuffRow() {
   if (!buffRow) return;
   let html = '';
+  const currentKeys = new Set();
 
   // Hit modifier indicator (Power Strike, Execute, Shatter queued)
   if (state.hitModifier) {
     const skillDef = SKILLS[state.hitModifier.skillId];
     if (skillDef) {
-      html += `<div class="buff-indicator buff-indicator--hit-mod">
+      const key = `hit-${state.hitModifier.skillId}`;
+      currentKeys.add(key);
+      html += `<div class="buff-indicator buff-indicator--hit-mod" data-buff-key="${key}">
         <span class="buff-indicator__icon">${skillDef.icon}</span>
         <span class="buff-indicator__timer">NEXT</span>
       </div>`;
@@ -439,9 +445,11 @@ function renderBuffRow() {
   if (state.channelState) {
     const skillDef = SKILLS[state.channelState.skillId];
     if (skillDef) {
+      const key = `channel-${state.channelState.skillId}`;
+      currentKeys.add(key);
       if (state.channelState.phase === 'queued') {
         // Queued: show "CHARGE" token like Power Strike's "NEXT"
-        html += `<div class="buff-indicator buff-indicator--channel">
+        html += `<div class="buff-indicator buff-indicator--channel" data-buff-key="${key}">
           <span class="buff-indicator__icon">${skillDef.icon}</span>
           <span class="buff-indicator__timer">CHARGE</span>
         </div>`;
@@ -452,7 +460,7 @@ function renderBuffRow() {
         let intensity = 'low';
         if (pct >= 67) intensity = 'high';
         else if (pct >= 34) intensity = 'mid';
-        html += `<div class="buff-indicator buff-indicator--channel buff-indicator--charge-${intensity}">
+        html += `<div class="buff-indicator buff-indicator--channel buff-indicator--charge-${intensity}" data-buff-key="${key}">
           <span class="buff-indicator__icon">${skillDef.icon}</span>
           <span class="buff-indicator__timer">${pct}%</span>
           <span class="buff-indicator__charge-bar" style="width:${pct}%"></span>
@@ -477,7 +485,9 @@ function renderBuffRow() {
   for (const [id, mod] of Object.entries(state.clickModifiers || {})) {
     const skillDef = SKILLS[id];
     if (skillDef && mod.charges > 0) {
-      html += `<div class="buff-indicator buff-indicator--hit-mod">
+      const key = `click-${id}`;
+      currentKeys.add(key);
+      html += `<div class="buff-indicator buff-indicator--hit-mod" data-buff-key="${key}">
         <span class="buff-indicator__icon">${skillDef.icon}</span>
         <span class="buff-indicator__timer">x${mod.charges}</span>
       </div>`;
@@ -489,7 +499,9 @@ function renderBuffRow() {
     if (!toggle.active) continue;
     const skillDef = SKILLS[id];
     if (skillDef) {
-      html += `<div class="buff-indicator buff-indicator--toggle">
+      const key = `toggle-${id}`;
+      currentKeys.add(key);
+      html += `<div class="buff-indicator buff-indicator--toggle" data-buff-key="${key}">
         <span class="buff-indicator__icon">${skillDef.icon}</span>
         <span class="buff-indicator__timer">${toggle.stacks || 0}</span>
       </div>`;
@@ -500,7 +512,9 @@ function renderBuffRow() {
   for (const [id, buff] of Object.entries(state.activeBuffs || {})) {
     const skillDef = SKILLS[id];
     if (skillDef) {
-      html += `<div class="buff-indicator">
+      const key = `buff-${id}`;
+      currentKeys.add(key);
+      html += `<div class="buff-indicator" data-buff-key="${key}">
         <span class="buff-indicator__icon">${skillDef.icon}</span>
         <span class="buff-indicator__timer">${buff.remaining.toFixed(1)}s</span>
       </div>`;
@@ -508,4 +522,14 @@ function renderBuffRow() {
   }
 
   buffRow.innerHTML = html;
+
+  // Only play entry animation on newly-appeared indicators
+  for (const el of buffRow.children) {
+    const key = el.dataset.buffKey;
+    if (key && !previousBuffKeys.has(key)) {
+      el.classList.add('buff-indicator--entering');
+    }
+  }
+
+  previousBuffKeys = currentKeys;
 }
