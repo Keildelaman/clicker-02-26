@@ -1,6 +1,17 @@
-# Plan: Fix C1+C2 — Consistent Dependency Pattern for Cross-System/Cross-Layer Communication
+# Refactoring Plan — Realms of Clickoria
 
-## Goal
+## Priority 1: Fix C1+C2 — Consistent Dependency Pattern [COMPLETED]
+
+**Status:** DONE (Phase A + Phase B committed)
+
+**Goal:** Eliminate all direct cross-layer imports so the dependency graph matches the documented architecture.
+
+**Result:** Zero `js/systems/ → js/systems/` imports. Zero `js/ui/ → js/systems/` imports.
+
+<details>
+<summary>Original Plan (click to expand)</summary>
+
+### Goal
 
 Eliminate all direct cross-layer imports so the dependency graph matches the documented architecture:
 ```
@@ -196,3 +207,219 @@ Wire all the new deps in the boot sequence. The init order already handles depen
 - H1 (skills.js God Object) — separate concern, separate PR
 - H3 (hardcoded skill IDs) — needs data-driven passive system first
 - C4 (unguarded state) — deeper refactor, separate PR
+
+</details>
+
+---
+
+## Priority 2: Fix H1 — Extract Skill Effect/Passive Handlers from God Object
+
+**Status:** PLANNED
+
+**Goal:** Break `skills.js` (1,001 lines, 13+ responsibilities) into focused modules. Extract the 15 active effect handlers and 10 passive handlers into separate files so that adding a new skill doesn't require modifying the core skill system.
+
+### Problem
+
+`skills.js` currently handles:
+1. SP tracking, level-up SP grants
+2. Skill unlock/upgrade logic
+3. Active skill equip/unequip
+4. Passive skill equip/unequip with lifecycle hooks
+5. **15 individual `EFFECT_HANDLERS`** (one per active skill) — 184 lines
+6. **10 `PASSIVE_HANDLERS`** with event subscription management — 169 lines
+7. Cooldown tick management
+8. Buff expiry and drain logic
+9. Channel mechanic (start/release/cancel)
+10. Toggle mechanic (momentum with stack decay)
+11. Shield expiry
+12. Respec logic
+13. Death cleanup
+
+Every new skill requires modifying this file. At 25 skills it's 1,001 lines. At 50 it would be unmanageable.
+
+### Approach
+
+Split into 3 files:
+
+| File | Responsibility | Est. Lines |
+|------|---------------|------------|
+| `skills.js` | Core skill engine (unlock, upgrade, equip, cooldowns, respec, ticks) | ~550 |
+| `skill-effects.js` | Active skill effect handlers (EFFECT_HANDLERS map) | ~220 |
+| `skill-passives.js` | Passive skill handlers (PASSIVE_HANDLERS map) | ~200 |
+
+### Phase C: Extract Active Effect Handlers
+
+#### Step 1: Create `js/systems/skill-effects.js`
+
+Extract the `EFFECT_HANDLERS` map (15 handlers) into a new file.
+
+**Dependencies the handlers need (passed via a context object):**
+- `emit()` — from event-bus (imported directly)
+- `state` — from game-state (imported directly)
+- `getPlayer()` — from game-state (imported directly)
+- `invalidateStats()` — module-level DI var (passed via registration context)
+
+**New file structure:**
+```javascript
+// skill-effects.js
+import { emit } from '../core/event-bus.js';
+import { state, getPlayer } from '../core/game-state.js';
+
+let invalidateStats = null;
+
+export function initEffects(deps) {
+  invalidateStats = deps.invalidateStatCache;
+}
+
+export const EFFECT_HANDLERS = {
+  power_strike(skillDef, levelData) { ... },
+  execute(skillDef, levelData) { ... },
+  // ... all 15 handlers
+};
+```
+
+**Skills.js changes:**
+- Remove `EFFECT_HANDLERS` map definition (lines 39-222)
+- Add: `import { EFFECT_HANDLERS, initEffects } from './skill-effects.js';`
+- In `init()`: call `initEffects({ invalidateStatCache: deps.invalidateStatCache })`
+- `useSkill()` dispatch remains unchanged (already uses `EFFECT_HANDLERS[skillId]`)
+
+#### Step 2: Create `js/systems/skill-passives.js`
+
+Extract `PASSIVE_HANDLERS`, `passiveHandlerRefs`, `cleanupPassive()`, and `initPassives()`.
+
+**Dependencies:**
+- `emit()`, `on()`, `off()` — from event-bus
+- `state`, `getPlayer()` — from game-state
+- `SKILLS` — from skills.data.js
+- `invalidateStats()` — DI via init
+- `cooldownReadyNotified` — shared Set (pass via context or import)
+
+**New file structure:**
+```javascript
+// skill-passives.js
+import { on, off, emit } from '../core/event-bus.js';
+import { state, getPlayer } from '../core/game-state.js';
+import { SKILLS } from '../data/skills.data.js';
+
+let invalidateStats = null;
+let cooldownReadyNotified = null;
+const passiveHandlerRefs = {};
+
+export function initPassives(deps) {
+  invalidateStats = deps.invalidateStatCache;
+  cooldownReadyNotified = deps.cooldownReadyNotified;
+  // Re-subscribe on game load
+  resubscribePassives();
+}
+
+export const PASSIVE_HANDLERS = { ... };
+export function cleanupPassive(skillId) { ... }
+export function resubscribePassives() { ... }
+```
+
+**Skills.js changes:**
+- Remove `PASSIVE_HANDLERS`, `passiveHandlerRefs`, `cleanupPassive()`, `initPassives()` (lines 598-793)
+- Add: `import { PASSIVE_HANDLERS, initPassives, cleanupPassive } from './skill-passives.js';`
+- In `init()`: call `initPassives({ invalidateStatCache: deps.invalidateStatCache, cooldownReadyNotified })`
+- Equip/unequip/respec dispatch remains unchanged (already uses `PASSIVE_HANDLERS[skillId]`)
+
+#### Step 3: Extract `onCombatClickMomentum()` and channel/toggle tick logic
+
+The `update()` function (lines 871-952) handles momentum toggle ticks, buff expiry, channel auto-fire, and shield expiry. These are tightly coupled to the core tick loop, so they stay in `skills.js`. However, the momentum click handler (`onCombatClickMomentum`, lines 797-808) is momentum-specific and could move to `skill-effects.js`.
+
+**Decision:** Keep `update()` in `skills.js` (it's the tick coordinator) but move `onCombatClickMomentum` alongside the `momentum` effect handler in `skill-effects.js`.
+
+#### Step 4: Update `main.js` — no changes needed
+
+`main.js` only calls `skills.init(deps)`. The internal split is transparent to the bootstrap.
+
+#### Step 5: Update `CLAUDE.md` — add new files to project structure
+
+### Files Changed
+
+| File | Changes |
+|------|---------|
+| `js/systems/skill-effects.js` | NEW — 15 active effect handlers |
+| `js/systems/skill-passives.js` | NEW — 10 passive handlers + lifecycle |
+| `js/systems/skills.js` | MODIFIED — import from new files, remove extracted code |
+| `CLAUDE.md` | MODIFIED — update project structure |
+
+### Risk Assessment
+
+- **Low risk**: Pure extraction, no behavior changes
+- **Key invariant**: `EFFECT_HANDLERS[skillId](skillDef, levelData)` dispatch signature unchanged
+- **Key invariant**: `PASSIVE_HANDLERS[skillId].onEquip/onUnequip` lifecycle unchanged
+- **Test**: Use every active skill, equip/unequip every passive, respec, and verify behavior matches
+
+---
+
+## Priority 3: Fix C3+H5 — Move Business Logic Out of `main.js` and `tutorial.js`
+
+**Status:** PLANNED
+
+**Goal:** Restore `main.js` to pure orchestration (import, init, wire). Fix `tutorial.js` System→UI import and direct state mutations.
+
+### Problems
+
+1. **main.js:91-114** — gold reward calculation, zone kill tracking, auto-save logic (belongs in economy/rewards system)
+2. **main.js:175-257** — 12 DEBUG functions that directly mutate state (belongs in separate debug module)
+3. **tutorial.js:14** — imports `showToast` from `ui/toasts.js` (System→UI violation, same pattern as the C1 `progression→toasts` fix)
+4. **tutorial.js** — 10 direct player state mutations (gold, hp, energy) that should be intent events
+
+### Phase D: Clean up `main.js`
+
+#### Step 1: Move gold/reward logic to `economy.js`
+
+Move the `combat:monsterKilled` gold handler (lines 91-114) into `economy.js`:
+- `economy.js` already has access to `state` and can compute `goldFind` via `state.computedStats`
+- Add event listener in `economy.init()`: `on('combat:monsterKilled', handleRewards)`
+- Zone kill tracking (`zoneKills`) moves here too, or to a dedicated function in `zones.js`
+- Auto-save on milestone stays in `main.js` (that's orchestration)
+
+#### Step 2: Extract DEBUG to `js/debug.js`
+
+Create `js/debug.js` with the 12 debug functions.
+- Import systems via EventBus (emit intent events) rather than direct state mutation
+- Wire up in `main.js`: `import './debug.js'` (side-effect import)
+- `main.js` shrinks by ~85 lines
+
+### Phase E: Fix `tutorial.js` architecture
+
+#### Step 3: Replace `showToast` import with event emission
+
+- Remove: `import { showToast } from '../ui/toasts.js'`
+- Replace all 3 `showToast()` calls with `emit('tutorial:tip', { message, type, duration })`
+- Add listener in `tutorial-ui.js`: `on('tutorial:tip', ({ message, type, duration }) => showToast(message, type, duration))`
+
+#### Step 4: Replace direct state mutations with intent events
+
+Replace 10 direct mutations with intent events:
+
+| Current Mutation | Replace With |
+|-----------------|--------------|
+| `p.gold += amount; p.totalGoldEarned += amount; emit('gold:earned')` | `emit('tutorial:grantGold', { amount, reason })` |
+| `p.hp = p.maxHP; p.energy = p.maxEnergy` | `emit('tutorial:fullHeal')` |
+
+- `economy.js` listens for `tutorial:grantGold` → handles gold mutation + emits `gold:earned`
+- `health.js` listens for `tutorial:fullHeal` → heals to max + emits `player:hpChanged`
+- `energy.js` listens for `tutorial:fullHeal` → fills energy + emits `energy:changed`
+
+### Files Changed
+
+| File | Changes |
+|------|---------|
+| `js/systems/economy.js` | Add reward handler from main.js, add tutorial:grantGold listener |
+| `js/systems/health.js` | Add tutorial:fullHeal listener |
+| `js/systems/energy.js` | Add tutorial:fullHeal listener |
+| `js/systems/tutorial.js` | Remove showToast import, replace mutations with intents |
+| `js/ui/tutorial-ui.js` | Add tutorial:tip listener |
+| `js/debug.js` | NEW — extracted debug tools |
+| `js/main.js` | Remove business logic, import debug.js |
+| `CLAUDE.md` | Update project structure |
+
+### Risk Assessment
+
+- **Phase D**: Low risk — moving existing logic between files
+- **Phase E**: Medium risk — tutorial mutations are event-driven and need careful ordering
+- **Mitigation**: Test full tutorial flow (first kill bonus, first boss bonus, death recovery, zone change heal)

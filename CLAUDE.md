@@ -182,13 +182,14 @@ export function giveGold(amount) { }
 
 ### Architecture Rules
 
-1. **Event-driven communication** - Systems talk via EventBus, never import each other
-2. **UI layer never modifies game state** - Only reads and displays
-3. **Game state is the single source of truth** - Central GameState store
-4. **No circular dependencies** - Systems → EventBus → UI (one-way)
-5. **DOM is touched only in ui/ folder** - Separation of concerns
-6. **Tick-based game loop** - All time-dependent mechanics via single rAF loop
-7. **Systems own their domain** - 12 isolated systems (combat, player, skills, etc.)
+1. **Event-driven communication** - Systems talk via EventBus, never import each other. Cross-system access uses dependency injection via `init(deps)` (e.g., `health.init({ getComputedStats: player.getComputedStats })`)
+2. **UI emits intent events, never calls system functions** - UI triggers actions via `emit('shop:requestPurchase', { itemId })` style events. Systems listen for intents and emit result events.
+3. **UI reads from state, never imports systems** - Transient data (shop items, computed stats) is exposed on the central `state` object. UI reads `state.computedStats`, `state.shopItems`, etc.
+4. **Game state is the single source of truth** - Central GameState store
+5. **No circular dependencies** - Systems → EventBus → UI (one-way for data). UI → EventBus → Systems (one-way for intents).
+6. **DOM is touched only in ui/ folder** - Separation of concerns
+7. **Tick-based game loop** - All time-dependent mechanics via single rAF loop
+8. **Systems own their domain** - 12 isolated systems (combat, player, skills, etc.)
 
 ---
 
