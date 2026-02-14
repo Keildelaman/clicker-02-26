@@ -153,8 +153,12 @@ export const EFFECT_HANDLERS = {
         const eLevel = player.unlockedSkills[equippedId];
         const baseCd = eDef?.levels[eLevel]?.cooldown || 0;
         const floor = baseCd * 0.5;
-        const reduced = Math.max(player.skillCooldowns[equippedId] - levelData.cdrAmount, floor);
-        player.skillCooldowns[equippedId] = Math.min(player.skillCooldowns[equippedId], reduced);
+        const currentCd = player.skillCooldowns[equippedId];
+        if (currentCd > floor) {
+          player.skillCooldowns[equippedId] = Math.max(currentCd - levelData.cdrAmount, floor);
+        } else {
+          player.skillCooldowns[equippedId] = Math.max(currentCd - levelData.cdrAmount, 0);
+        }
         if (player.skillCooldowns[equippedId] <= 0) {
           player.skillCooldowns[equippedId] = 0;
           if (!cooldownReadyNotified.has(equippedId)) {

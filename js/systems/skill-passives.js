@@ -148,8 +148,12 @@ export const PASSIVE_HANDLERS = {
             const eLevel = player.unlockedSkills[equippedId];
             const baseCd = eDef?.levels[eLevel]?.cooldown || 0;
             const floor = baseCd * 0.5;
-            const reduced = Math.max(player.skillCooldowns[equippedId] - data.cdrPerUse, floor);
-            player.skillCooldowns[equippedId] = Math.min(player.skillCooldowns[equippedId], reduced);
+            const currentCd = player.skillCooldowns[equippedId];
+            if (currentCd > floor) {
+              player.skillCooldowns[equippedId] = Math.max(currentCd - data.cdrPerUse, floor);
+            } else {
+              player.skillCooldowns[equippedId] = Math.max(currentCd - data.cdrPerUse, 0);
+            }
             if (player.skillCooldowns[equippedId] <= 0) {
               player.skillCooldowns[equippedId] = 0;
               if (!cooldownReadyNotified.has(equippedId)) {
