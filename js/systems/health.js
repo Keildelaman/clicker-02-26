@@ -11,7 +11,7 @@
 import { on, emit } from '../core/event-bus.js';
 import { state, getPlayer } from '../core/game-state.js';
 import {
-  DEATH_GOLD_LOSS, DEATH_LEVEL_MILESTONE, DEATH_RESPAWN_DELAY
+  DEATH_GOLD_LOSS, DEATH_RESPAWN_DELAY
 } from '../data/constants.js';
 import { xpToNextLevel } from '../data/balance.js';
 /* Note: state.activeBuffs and state.playerShield accessed for skill interactions */
@@ -141,7 +141,7 @@ export function damagePlayer(amount, source) {
 }
 
 /**
- * Handle player death: gold penalty, level reset, respawn.
+ * Handle player death: gold penalty, XP reset, respawn.
  */
 function handleDeath() {
   const player = getPlayer();
@@ -153,11 +153,7 @@ function handleDeath() {
   const goldLost = Math.floor(player.gold * DEATH_GOLD_LOSS);
   player.gold -= goldLost;
 
-  // Reset to last milestone level
-  const milestone = Math.floor(player.level / DEATH_LEVEL_MILESTONE) * DEATH_LEVEL_MILESTONE;
-  const newLevel = Math.max(milestone, 1);
-  const levelsLost = player.level - newLevel;
-  player.level = newLevel;
+  // Reset XP progress (keep current level)
   player.xp = 0;
   player.xpToNextLevel = xpToNextLevel(player.level);
 
@@ -168,7 +164,7 @@ function handleDeath() {
   state.currentMonster = null;
   state.combatState = 'dead';
 
-  emit('player:died', { goldLost, levelsLost, newLevel });
+  emit('player:died', { goldLost });
   emit('energy:changed', { energy: player.energy, maxEnergy: player.maxEnergy });
 
   // Schedule respawn
@@ -183,7 +179,7 @@ function completeRespawn() {
   const player = getPlayer();
   const stats = computeStats();
 
-  // Recalc maxHP for potentially lower level
+  // Recalc maxHP (equipment may have changed)
   player.maxHP = stats.maxHP;
   player.hp = player.maxHP;
 

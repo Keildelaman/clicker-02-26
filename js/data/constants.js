@@ -47,7 +47,6 @@ export const ENERGY_REGEN_PER_SECOND = 1;
 
 // Death Penalties
 export const DEATH_GOLD_LOSS = 0.5;
-export const DEATH_LEVEL_MILESTONE = 10;
 export const DEATH_RESPAWN_DELAY = 1500; // ms before respawn after death
 
 // Monster Type Defaults

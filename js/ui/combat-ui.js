@@ -275,7 +275,7 @@ function onPlayerDamaged({ damage, source }) {
   showToast(`-${damage} HP`, 'error', 1500);
 }
 
-function onPlayerDied({ goldLost, levelsLost, newLevel }) {
+function onPlayerDied({ goldLost }) {
   // Death flash on game container
   if (gameContainer) {
     gameContainer.classList.add('game-container--death-flash');
@@ -283,11 +283,7 @@ function onPlayerDied({ goldLost, levelsLost, newLevel }) {
   }
 
   const goldStr = formatNumber(goldLost);
-  let msg = `You have fallen! Lost ${goldStr} gold.`;
-  if (levelsLost > 0) {
-    msg += ` Level reset to ${newLevel}.`;
-  }
-  showToast(msg, 'error', 4000);
+  showToast(`You have fallen! Lost ${goldStr} gold and XP progress.`, 'error', 4000);
 }
 
 function updateHPBar(monster) {
