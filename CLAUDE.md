@@ -89,7 +89,9 @@ clicker-02-26/
 │   │   ├── combat.js           # Click handling, damage calc, monster type behavior
 │   │   ├── player.js           # Stat computation, derived stats, equipment
 │   │   ├── monster.js          # Spawning, selection, instance creation, type init
-│   │   ├── skills.js           # Unlock, upgrade, MP, cooldowns, effects, buffs
+│   │   ├── skills.js           # Core engine: unlock, upgrade, cooldowns, equip, respec
+│   │   ├── skill-effects.js    # Active skill effect handlers (15 handlers)
+│   │   ├── skill-passives.js   # Passive skill handlers (10 handlers)
 │   │   ├── health.js           # HP regen, damage taken, death, shield absorption
 │   │   ├── energy.js           # Energy gain/spend, regen
 │   │   ├── loot.js             # Drop rolls, item granting, boss loot
