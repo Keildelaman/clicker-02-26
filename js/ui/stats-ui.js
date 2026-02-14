@@ -8,8 +8,7 @@
  */
 
 import { on } from '../core/event-bus.js';
-import { getPlayer } from '../core/game-state.js';
-import { getComputedStats } from '../systems/player.js'; // Phase B: will move to state read
+import { state, getPlayer } from '../core/game-state.js';
 import { formatNumber } from '../services/utils.js';
 import { ZONES } from '../data/zones.data.js';
 import { showToast } from './toasts.js';
@@ -43,8 +42,8 @@ function renderAll() {
 }
 
 function renderAttack() {
-  const stats = getComputedStats();
-  if (attackDisplay) attackDisplay.textContent = stats.attack;
+  const stats = state.computedStats || {};
+  if (attackDisplay) attackDisplay.textContent = stats.attack || 0;
 }
 
 export function renderGold() {

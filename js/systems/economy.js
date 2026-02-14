@@ -9,7 +9,7 @@
  */
 
 import { on, emit } from '../core/event-bus.js';
-import { getPlayer } from '../core/game-state.js';
+import { state, getPlayer } from '../core/game-state.js';
 import { ITEMS } from '../data/items.data.js';
 import { ZONES } from '../data/zones.data.js';
 import { saveGame } from '../services/storage.js';
@@ -32,6 +32,17 @@ export function init() {
     shopRefreshCount = 0;
     refreshShop(false);
   });
+
+  // Intent events from UI
+  on('shop:requestPurchase', ({ itemId }) => purchaseItem(itemId));
+  on('shop:requestSell', ({ itemId }) => sellItem(itemId));
+  on('shop:requestBulkSell', ({ rarity, typeFilter }) => sellAllByRarity(rarity, typeFilter));
+  on('shop:requestEquip', ({ itemId }) => equipItem(itemId));
+  on('shop:requestUnequip', ({ slot }) => unequipItem(slot));
+  on('shop:requestRefresh', () => {
+    if (refreshShop(true)) syncShopState();
+  });
+
   refreshShop(false);
 }
 
@@ -45,11 +56,13 @@ export function update(dt) {
     refreshShop(false);
   }
 
-  // Emit timer tick once per second for live UI updates
+  // Sync timer to state + emit tick once per second for live UI updates
+  state.shopRefreshTimer = Math.max(0, shopRefreshTimer);
   tickAccumulator += dt;
   if (tickAccumulator >= 1) {
     tickAccumulator -= 1;
-    emit('shop:timerTick', { timeLeft: Math.max(0, shopRefreshTimer) });
+    state.shopRefreshCost = getRefreshCost();
+    emit('shop:timerTick', { timeLeft: state.shopRefreshTimer });
   }
 }
 
@@ -86,6 +99,7 @@ export function refreshShop(manual) {
     if (picked) currentShopItems.push(picked);
   }
 
+  syncShopState();
   emit('shop:refreshed', { items: currentShopItems, manual });
   return true;
 }
@@ -259,6 +273,15 @@ export function unequipItem(slot) {
   emit('player:statsChanged', {});
   saveGame();
   return true;
+}
+
+/**
+ * Sync transient shop data to state so UI can read without importing economy.
+ */
+function syncShopState() {
+  state.shopItems = currentShopItems;
+  state.shopRefreshCost = getRefreshCost();
+  state.shopRefreshTimer = Math.max(0, shopRefreshTimer);
 }
 
 // --- Getters ---

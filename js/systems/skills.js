@@ -968,6 +968,27 @@ export function init(deps = {}) {
   on('player:died', onPlayerDied);
   on('combat:click', onCombatClickMomentum);
 
+  // Intent events from UI
+  on('skill:requestUse', ({ skillId }) => {
+    if (!useSkill(skillId)) {
+      const player = getPlayer();
+      const remaining = getSkillCooldownRemaining(skillId);
+      if (remaining > 0) {
+        emit('skill:useFailed', { skillId, reason: 'cooldown' });
+      } else {
+        emit('skill:useFailed', { skillId, reason: 'energy' });
+      }
+    }
+  });
+  on('skill:requestUnlock', ({ skillId }) => unlockSkill(skillId));
+  on('skill:requestUpgrade', ({ skillId }) => upgradeSkill(skillId));
+  on('skill:requestEquipActive', ({ skillId, slot }) => equipActiveSkill(skillId, slot));
+  on('skill:requestUnequipActive', ({ slot }) => unequipActiveSkill(slot));
+  on('skill:requestEquipPassive', ({ skillId, slot }) => equipPassiveSkill(skillId, slot));
+  on('skill:requestUnequipPassive', ({ slot }) => unequipPassiveSkill(slot));
+  on('skill:requestReleaseChannel', () => releaseChannel());
+  on('skill:requestRespec', () => respec());
+
   // Cancel channel on tab hide (performance.now() would inflate elapsed time)
   document.addEventListener('visibilitychange', () => {
     if (document.hidden && state.channelState) {

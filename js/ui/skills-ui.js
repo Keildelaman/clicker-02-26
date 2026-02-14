@@ -2,7 +2,7 @@
  * skills-ui.js - Skills Screen & Skill Bar UI (v2)
  *
  * Renders skills screen (full screen with tabs), skill bar (4 active slots on combat screen).
- * Calls skills.js for all state mutations.
+ * Emits intent events for all state mutations; reads state directly.
  *
  * @see docs/design/skill-system-v2.md
  */
@@ -14,7 +14,6 @@ import {
   ACTIVE_SKILL_SLOTS, PASSIVE_SKILL_SLOTS,
   SP_UPGRADE_COST, RESPEC_COSTS
 } from '../data/constants.js';
-import * as skills from '../systems/skills.js';
 import { showToast } from './toasts.js';
 
 // Category grouping constants
@@ -72,33 +71,16 @@ export function init() {
       const skillDef = SKILLS[skillId];
       if (skillDef && skillDef.mechanic === 'channel') {
         e.preventDefault();
-        const result = skills.useSkill(skillId);
-        if (result) {
-          slot.classList.add('skill-btn--channeling');
-        }
-        return;
       }
 
-      // Non-channel: fire on pointerdown
-      const result = skills.useSkill(skillId);
-      if (!result) {
-        const remaining = skills.getSkillCooldownRemaining(skillId);
-        if (remaining > 0) {
-          // On cooldown — no toast, UI shows timer
-        } else {
-          const level = player.unlockedSkills[skillId];
-          const energyCost = skillDef && level ? (skillDef.levels[level]?.energyCost || 0) : 0;
-          if (player.energy < energyCost) {
-            showToast('Not enough energy!', 'error', 1500);
-          }
-        }
-      }
+      // Fire intent — skills.js handles validation, cooldown, energy
+      emit('skill:requestUse', { skillId });
     });
 
     // Release channel on pointerup
     slot.addEventListener('pointerup', () => {
       if (state.channelState) {
-        skills.releaseChannel();
+        emit('skill:requestReleaseChannel');
         slot.classList.remove('skill-btn--channeling');
       }
     });
@@ -106,22 +88,38 @@ export function init() {
     // Release on pointer leave (finger moves off button) — fires with current charge
     slot.addEventListener('pointerleave', () => {
       if (state.channelState) {
-        skills.releaseChannel();
+        emit('skill:requestReleaseChannel');
         slot.classList.remove('skill-btn--channeling');
       }
     });
   });
 
   // Event subscriptions
-  on('skill:unlocked', () => { renderSkillsScreen(); renderSkillBar(); });
-  on('skill:upgraded', () => { renderSkillsScreen(); renderSkillBar(); });
+  on('skill:unlocked', ({ skillId }) => {
+    const def = SKILLS[skillId];
+    if (def) showToast(`Unlocked: ${def.icon} ${def.name}!`, 'success', 2000);
+    renderSkillsScreen(); renderSkillBar();
+  });
+  on('skill:upgraded', ({ skillId, newLevel }) => {
+    const def = SKILLS[skillId];
+    if (def) showToast(`${def.icon} ${def.name} \u2192 Lv.${newLevel}!`, 'success', 2000);
+    renderSkillsScreen(); renderSkillBar();
+  });
   on('skill:used', () => { renderSkillBar(); });
   on('skill:equipped', () => { renderSkillsScreen(); renderSkillBar(); });
   on('skill:unequipped', () => { renderSkillsScreen(); renderSkillBar(); });
   on('skill:buffApplied', () => { renderSkillBar(); });
   on('skill:buffExpired', () => { renderSkillBar(); });
   on('skill:cooldownReady', () => { renderSkillBar(); });
-  on('skill:respecced', () => { renderSkillsScreen(); renderSkillBar(); });
+  on('skill:respecced', () => {
+    showToast('Skills reset! SP refunded.', 'success', 3000);
+    renderSkillsScreen(); renderSkillBar();
+  });
+  on('skill:useFailed', ({ reason }) => {
+    if (reason === 'energy') {
+      showToast('Not enough energy!', 'error', 1500);
+    }
+  });
   on('sp:gained', ({ amount, source }) => {
     const label = source === 'level' ? 'Level up' : source;
     showToast(`+${amount} Skill Points! (${label})`, 'warning', 3000);
@@ -214,9 +212,9 @@ function renderEquippedSlots() {
       const slot = parseInt(el.dataset.slot);
       const type = el.dataset.type;
       if (type === 'active') {
-        skills.unequipActiveSkill(slot);
+        emit('skill:requestUnequipActive', { slot });
       } else {
-        skills.unequipPassiveSkill(slot);
+        emit('skill:requestUnequipPassive', { slot });
       }
     });
   });
@@ -286,8 +284,7 @@ function renderRespecButton() {
   if (btn && canAfford) {
     btn.addEventListener('click', () => {
       if (confirm(`Reset ALL skills for ${cost.toLocaleString()} gold?\nYou'll get your SP back.`)) {
-        const ok = skills.respec();
-        if (ok) showToast('Skills reset! SP refunded.', 'success', 3000);
+        emit('skill:requestRespec');
       }
     });
   }
@@ -415,16 +412,11 @@ function handleSkillAction(e) {
 
   switch (action) {
     case 'unlock': {
-      const ok = skills.unlockSkill(skillId);
-      if (ok) showToast(`Unlocked: ${skillDef.icon} ${skillDef.name}!`, 'success', 2000);
+      emit('skill:requestUnlock', { skillId });
       break;
     }
     case 'upgrade': {
-      const ok = skills.upgradeSkill(skillId);
-      if (ok) {
-        const newLvl = player.unlockedSkills[skillId];
-        showToast(`${skillDef.icon} ${skillDef.name} \u2192 Lv.${newLvl}!`, 'success', 2000);
-      }
+      emit('skill:requestUpgrade', { skillId });
       break;
     }
     case 'equip': {
@@ -432,21 +424,21 @@ function handleSkillAction(e) {
         // Find first empty slot, or last slot
         const emptyIdx = player.equippedActive.indexOf(null);
         const slot = emptyIdx !== -1 ? emptyIdx : ACTIVE_SKILL_SLOTS - 1;
-        skills.equipActiveSkill(skillId, slot);
+        emit('skill:requestEquipActive', { skillId, slot });
       } else {
         const emptyIdx = player.equippedPassive.indexOf(null);
         const slot = emptyIdx !== -1 ? emptyIdx : PASSIVE_SKILL_SLOTS - 1;
-        skills.equipPassiveSkill(skillId, slot);
+        emit('skill:requestEquipPassive', { skillId, slot });
       }
       break;
     }
     case 'unequip': {
       if (skillDef.type === 'active') {
         const slot = player.equippedActive.indexOf(skillId);
-        if (slot !== -1) skills.unequipActiveSkill(slot);
+        if (slot !== -1) emit('skill:requestUnequipActive', { slot });
       } else {
         const slot = player.equippedPassive.indexOf(skillId);
-        if (slot !== -1) skills.unequipPassiveSkill(slot);
+        if (slot !== -1) emit('skill:requestUnequipPassive', { slot });
       }
       break;
     }
@@ -504,7 +496,7 @@ function renderSkillBar() {
       continue;
     }
 
-    const remaining = skills.getSkillCooldownRemaining(skillId);
+    const remaining = Math.max(0, player.skillCooldowns[skillId] || 0);
     const noEnergy = player.energy < energyCost;
     const onCooldown = remaining > 0;
 
@@ -539,7 +531,7 @@ function updateCooldowns() {
   let needsUpdate = false;
   for (const skillId of player.equippedActive) {
     if (!skillId) continue;
-    if (skills.getSkillCooldownRemaining(skillId) > 0) {
+    if ((player.skillCooldowns[skillId] || 0) > 0) {
       needsUpdate = true;
       break;
     }

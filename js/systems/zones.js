@@ -160,6 +160,10 @@ function findNextZone(bossId) {
 export function init() {
   on('combat:monsterKilled', handleMonsterKilled);
   on('zone:autoTravel', ({ zoneId }) => travelToZone(zoneId));
+
+  // Intent events from UI
+  on('zone:requestTravel', ({ zoneId }) => travelToZone(zoneId));
+  on('zone:requestBoss', () => challengeBoss());
 }
 
 export function update(dt) {

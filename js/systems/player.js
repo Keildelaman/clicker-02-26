@@ -205,6 +205,8 @@ export function getComputedStats() {
     bonusDamage: buffFx.bonusDamage
   };
   cacheValid = true;
+  // Expose on state so UI can read without importing player.js
+  state.computedStats = statCache;
   return statCache;
 }
 
