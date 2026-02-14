@@ -3,7 +3,7 @@
 **Date:** 2026-02-14
 **Scope:** Full codebase review (~14,600 lines across 40 files)
 **Focus:** Separation of concerns, coupling, cohesion, DRY, SOLID, clean code, maintainability
-**Last Updated:** 2026-02-14 (post Phase A+B refactor)
+**Last Updated:** 2026-02-14 (post Phase A+B+C refactor)
 
 ---
 
@@ -15,7 +15,7 @@
 | C2. UI-to-system mutation calls | CRITICAL | **RESOLVED** | Phase B — Intent events + state reads |
 | C3. `main.js` business logic | CRITICAL | Open | — |
 | C4. Unguarded state | CRITICAL | Open | — |
-| H1. `skills.js` God Object | HIGH | Open | — |
+| H1. `skills.js` God Object | HIGH | **RESOLVED** | Phase C — extracted to skill-effects.js + skill-passives.js |
 | H2. `handleClick()` mega-function | HIGH | Open | — |
 | H3. Hardcoded skill IDs | HIGH | Open | — |
 | H4. innerHTML rendering | HIGH | Open | — |
@@ -338,7 +338,7 @@ ACTUAL:       Systems ◄──import──► Systems  (health→player, energy
 | Priority | Issue | Impact | Status |
 |----------|-------|--------|--------|
 | 1 | **C1+C2**: Establish consistent DI or mediator pattern for cross-system deps | Prevents dependency graph from worsening | **DONE** |
-| 2 | **H1**: Extract skill effect handlers to per-skill modules or a registry | Unblocks skill content addition | Open |
+| 2 | **H1**: Extract skill effect handlers to per-skill modules or a registry | Unblocks skill content addition | **DONE** |
 | 3 | **C3+H5**: Move business logic out of `main.js` and `tutorial.js` | Restores separation of concerns to core architecture | Open |
 | 4 | **H3**: Centralize skill ID references; make passives data-driven | Reduces shotgun surgery for new skills | Open |
 | 5 | **H2**: Decompose `handleClick()` into a damage pipeline | Reduces bug surface in core combat loop | Open |

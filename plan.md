@@ -212,9 +212,9 @@ Wire all the new deps in the boot sequence. The init order already handles depen
 
 ---
 
-## Priority 2: Fix H1 — Extract Skill Effect/Passive Handlers from God Object
+## Priority 2: Fix H1 — Extract Skill Effect/Passive Handlers from God Object [COMPLETED]
 
-**Status:** PLANNED
+**Status:** DONE (Phase C committed)
 
 **Goal:** Break `skills.js` (1,001 lines, 13+ responsibilities) into focused modules. Extract the 15 active effect handlers and 10 passive handlers into separate files so that adding a new skill doesn't require modifying the core skill system.
 
