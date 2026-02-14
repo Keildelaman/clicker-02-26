@@ -97,7 +97,8 @@ export function applyDamageToMonster(rawDamage, opts = {}) {
 export function handleClick() {
   if (state.combatState !== 'active') return;
   if (!state.currentMonster) return;
-  if (state.channelState) return; // Clicks blocked during channel
+  // Block normal clicks while channel is charging (queued state handled by main.js)
+  if (state.channelState && state.channelState.phase === 'charging') return;
 
   state.lastClickTime = performance.now();
 

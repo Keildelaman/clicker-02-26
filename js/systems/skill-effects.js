@@ -182,17 +182,18 @@ export const EFFECT_HANDLERS = {
     emit('skill:effectTriggered', { effect: 'lifeTap', hpCost, energyGained: gained });
   },
 
-  // Channel: hold to charge, release for scaled damage
+  // Channel: click to queue, hold monster to charge, release for scaled damage
   charge_up(skillDef, levelData) {
     state.channelState = {
+      phase: 'queued',
       skillId: 'charge_up',
-      startTime: performance.now(),
+      startTime: 0,
       channelMin: levelData.channelMin,
       channelMax: levelData.channelMax,
       minMult: levelData.minMult,
       maxMult: levelData.maxMult
     };
-    emit('skill:channelStarted', { skillId: 'charge_up' });
+    emit('skill:channelStarted', { skillId: 'charge_up', phase: 'queued' });
   },
 
   // Toggle: builds stacks on fast clicks, drains energy/sec

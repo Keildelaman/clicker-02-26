@@ -71,14 +71,37 @@ registerTickSystem(skills.update);
 registerTickSystem(renderer.update);
 
 // 5. Wire DOM events
-document.getElementById('monster-area').addEventListener('pointerdown', (e) => {
+const monsterArea = document.getElementById('monster-area');
+
+monsterArea.addEventListener('pointerdown', (e) => {
   if (e.pointerType === 'mouse' && e.button !== 0) return;
   e.preventDefault();
+
+  // If Charge Up is queued, start charging on monster press (don't normal click)
+  if (state.channelState && state.channelState.phase === 'queued') {
+    skills.startChannelCharging();
+    return;
+  }
+
   combat.handleClick();
 });
 
+monsterArea.addEventListener('pointerup', () => {
+  // Release Charge Up when player lifts finger from monster
+  if (state.channelState && state.channelState.phase === 'charging') {
+    skills.releaseChannel();
+  }
+});
+
+monsterArea.addEventListener('pointerleave', () => {
+  // Release Charge Up if finger drifts off monster area
+  if (state.channelState && state.channelState.phase === 'charging') {
+    skills.releaseChannel();
+  }
+});
+
 // Keyboard support (space/enter to attack)
-document.getElementById('monster-area').addEventListener('keydown', (e) => {
+monsterArea.addEventListener('keydown', (e) => {
   if (e.key === ' ' || e.key === 'Enter') {
     e.preventDefault();
     combat.handleClick();

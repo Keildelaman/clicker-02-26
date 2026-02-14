@@ -306,13 +306,30 @@ export function hasActiveBuff(skillId) {
 }
 
 /**
+ * Transition a queued channel to charging phase (player pressed on monster).
+ */
+export function startChannelCharging() {
+  if (!state.channelState || state.channelState.phase !== 'queued') return false;
+  state.channelState.phase = 'charging';
+  state.channelState.startTime = performance.now();
+  emit('skill:channelCharging', { skillId: 'charge_up' });
+  return true;
+}
+
+/**
  * Release a channel skill (Charge Up). Computes damage based on hold duration.
- * Damage scales linearly from minMult (at 0s) to maxMult (at channelMax).
- * If released before channelMin, the channel fizzles (no damage, but cooldown/energy already spent).
+ * Only works in 'charging' phase. If released before channelMin, fizzles.
  */
 export function releaseChannel() {
   if (!state.channelState) return;
   const ch = state.channelState;
+
+  // If still queued (not charging), cancel without damage
+  if (ch.phase === 'queued') {
+    cancelChannel();
+    return;
+  }
+
   const elapsed = (performance.now() - ch.startTime) / 1000;
 
   state.channelState = null;
@@ -514,8 +531,8 @@ export function update(dt) {
     }
   }
 
-  // Channel auto-fire: release automatically when channelMax is reached
-  if (state.channelState) {
+  // Channel auto-fire: release automatically when channelMax is reached (only in charging phase)
+  if (state.channelState && state.channelState.phase === 'charging') {
     const chElapsed = (performance.now() - state.channelState.startTime) / 1000;
     if (chElapsed >= state.channelState.channelMax) {
       releaseChannel();
