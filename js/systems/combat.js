@@ -16,7 +16,10 @@
 
 import { on, emit } from '../core/event-bus.js';
 import { state, getPlayer } from '../core/game-state.js';
-import { MIN_DAMAGE, DEATH_ANIMATION_DURATION, BOSS_TIMERS } from '../data/constants.js';
+import {
+  MIN_DAMAGE, DEATH_ANIMATION_DURATION, BOSS_TIMERS,
+  OVERKILL_CARRY_PERCENT, OVERKILL_CHAIN_MAX
+} from '../data/constants.js';
 import { SKILLS as SKILLS_REF } from '../data/skills.data.js';
 
 let dyingTimer = 0;
@@ -78,6 +81,7 @@ export function applyDamageToMonster(rawDamage, opts = {}) {
 
   let killed = false;
   if (monster.currentHealth <= 0) {
+    monster.overkillAmount = Math.abs(monster.currentHealth);
     monster.currentHealth = 0;
     killed = true;
   }
@@ -251,8 +255,9 @@ export function handleClick() {
 
 /**
  * Handle instant skill damage (Barrage, Arcane Bolt, Chain Lightning, Shield Bash).
+ * Overkill carry is now handled generically by killMonster() for all damage sources.
  */
-function onInstantDamage({ hits, damagePerHit, skillId, overkillCarryPercent }) {
+function onInstantDamage({ hits, damagePerHit, skillId }) {
   const monster = state.currentMonster;
   if (!monster || state.combatState !== 'active') return;
 
@@ -264,19 +269,9 @@ function onInstantDamage({ hits, damagePerHit, skillId, overkillCarryPercent }) 
     if (isCrit) dmg = Math.floor(dmg * stats.critDamage);
     dmg = Math.max(dmg, MIN_DAMAGE);
 
-    // Record HP before hit for overkill calculation
-    const hpBefore = monster.currentHealth;
-
     const result = applyDamageToMonster(dmg, { isCrit, isSkillDamage: true, skillId });
 
     if (result.killed) {
-      // Overkill carry for Chain Lightning
-      if (overkillCarryPercent) {
-        const overkill = dmg - hpBefore;
-        if (overkill > 0) {
-          state.overkillCarry = Math.floor(overkill * (overkillCarryPercent / 100));
-        }
-      }
       killMonster();
       return;
     }
@@ -331,6 +326,9 @@ function handleBossTimeout() {
   emit('combat:dyingComplete', {});
 }
 
+/** Track overkill chains to prevent infinite loops. */
+let overkillChainCount = 0;
+
 /**
  * Handle monster spawn event — start boss timer, apply overkill carry.
  */
@@ -339,27 +337,31 @@ function onMonsterSpawned({ monster }) {
     startBossTimer(monster);
   }
 
-  // Apply overkill carry from Chain Lightning (skip bosses)
-  if (state.overkillCarry > 0 && !monster.isBoss) {
+  // Apply overkill carry from any damage source (skip bosses)
+  if (state.overkillCarry > 0 && !monster.isBoss && overkillChainCount < OVERKILL_CHAIN_MAX) {
     const carry = state.overkillCarry;
     state.overkillCarry = 0;
-    // Use setTimeout(0) so monster is fully initialized
-    setTimeout(() => {
-      if (state.currentMonster && state.combatState === 'active') {
-        const result = applyDamageToMonster(carry, { isSkillDamage: true, skillId: 'chain_lightning' });
-        if (result.killed) killMonster();
+    overkillChainCount++;
+
+    if (state.currentMonster && state.combatState === 'active') {
+      const result = applyDamageToMonster(carry, { isSkillDamage: true, skillId: 'overkill_carry' });
+      if (result.killed) {
+        killMonster();
+        return; // killMonster will trigger the next spawn + carry
       }
-    }, 0);
+    }
   }
+
+  // Reset chain counter when a monster survives the carry (or no carry)
+  overkillChainCount = 0;
 }
 
 /**
  * Process monster death: rewards and schedule next spawn.
+ * Non-boss kills trigger instant respawn; boss kills keep the death animation.
  */
 function killMonster() {
   const monster = state.currentMonster;
-  state.combatState = 'dying';
-  dyingTimer = DEATH_ANIMATION_DURATION / 1000;
 
   // Clear boss timer on kill
   if (monster.isBoss) {
@@ -369,6 +371,12 @@ function killMonster() {
   const player = getPlayer();
   player.statistics.totalKills++;
 
+  // Calculate overkill carry (for all damage sources, not just Chain Lightning)
+  const overkill = monster.overkillAmount || 0;
+  if (overkill > 0 && !monster.isBoss) {
+    state.overkillCarry = Math.floor(overkill * (OVERKILL_CARRY_PERCENT / 100));
+  }
+
   emit('combat:monsterKilled', {
     monster,
     definitionId: monster.definitionId,
@@ -376,6 +384,15 @@ function killMonster() {
     goldReward: monster.goldReward,
     xpReward: monster.xpReward
   });
+
+  if (monster.isBoss) {
+    // Boss kills: keep the death animation + spawn delay ceremony
+    state.combatState = 'dying';
+    dyingTimer = DEATH_ANIMATION_DURATION / 1000;
+  } else {
+    // Non-boss kills: instant transition to next monster
+    emit('combat:requestImmediateSpawn');
+  }
 }
 
 /**

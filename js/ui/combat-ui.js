@@ -135,13 +135,33 @@ function onCombatHit({ damage, isCrit, isSkillDamage, skillId }) {
 }
 
 function onMonsterKilled({ monster }) {
-  monsterArea.classList.add('monster-area--dead');
-  monsterArea.classList.remove('monster-area--warning', 'monster-area--attacking', 'monster-area--regen-pulse');
-  monsterEmoji.textContent = monster.deathEmoji;
-  hideTypeIndicators();
-
   // Hide boss timer on kill
   if (bossTimerEl) bossTimerEl.style.display = 'none';
+
+  if (monster.isBoss) {
+    // Boss kills: blocking death animation (old behavior)
+    monsterArea.classList.add('monster-area--dead');
+    monsterArea.classList.remove('monster-area--warning', 'monster-area--attacking', 'monster-area--regen-pulse');
+    monsterEmoji.textContent = monster.deathEmoji;
+    hideTypeIndicators();
+  } else {
+    // Non-boss kills: non-blocking death particle overlay
+    showDeathParticle(monster.deathEmoji);
+    monsterArea.classList.remove('monster-area--warning', 'monster-area--attacking', 'monster-area--regen-pulse');
+  }
+}
+
+/**
+ * Show a floating death emoji particle that fades out independently.
+ * Does not block the monster area — new monster is already clickable underneath.
+ */
+function showDeathParticle(emoji) {
+  const el = document.createElement('div');
+  el.className = 'death-particle';
+  el.textContent = emoji;
+  monsterArea.appendChild(el);
+
+  el.addEventListener('animationend', () => el.remove());
 }
 
 function onShieldBroken() {

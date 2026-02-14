@@ -27,7 +27,7 @@ export const state = {
   playerShield: null,       // { amount, maxAmount, remaining }
   passiveStates: {},        // { skillId: { ... } }
   lastClickTime: 0,          // performance.now() of last combat click
-  overkillCarry: 0            // Chain Lightning overkill damage for next spawn
+  overkillCarry: 0            // Overflow damage carried to next monster spawn
 };
 
 export function getState() {
