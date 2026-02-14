@@ -365,6 +365,35 @@
   background: rgba(255, 200, 0, 0.1);
 }
 
+.buff-indicator--channel {
+  position: relative;
+  overflow: hidden;
+  border-color: #64b5f6;
+  background: rgba(100, 181, 246, 0.1);
+  transition: border-color 0.3s, background 0.3s;
+}
+
+.buff-indicator--charge-mid {
+  border-color: #42a5f5;
+  background: rgba(66, 165, 245, 0.2);
+}
+
+.buff-indicator--charge-high {
+  border-color: #1e88e5;
+  background: rgba(30, 136, 229, 0.3);
+  animation: charge-pulse 0.5s ease-in-out infinite;
+}
+
+.buff-indicator__charge-bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 100%;
+  background: rgba(100, 181, 246, 0.25);
+  transition: width 0.15s linear;
+  pointer-events: none;
+}
+
 /* === Toasts === */
 .toast {
   padding: var(--spacing-sm) var(--spacing-md);
@@ -1288,10 +1317,20 @@
 }
 
 .skill-btn--channeling {
+  position: relative;
   border-color: #64b5f6;
-  background: linear-gradient(to top, rgba(100, 181, 246, 0.5), transparent) no-repeat bottom;
-  background-size: 100% 0%;
-  animation: channel-fill 3s linear forwards;
+  overflow: hidden;
+}
+
+.skill-btn__charge-fill {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  background: linear-gradient(to top, rgba(100, 181, 246, 0.6), rgba(100, 181, 246, 0.15));
+  transition: height 0.15s linear;
+  pointer-events: none;
+  border-radius: inherit;
 }
 
 .skill-btn:active:not(.skill-btn--empty) {

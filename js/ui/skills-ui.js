@@ -103,10 +103,10 @@ export function init() {
       }
     });
 
-    // Cancel on pointer leave (finger moves off button)
+    // Release on pointer leave (finger moves off button) — fires with current charge
     slot.addEventListener('pointerleave', () => {
       if (state.channelState) {
-        skills.cancelChannel();
+        skills.releaseChannel();
         slot.classList.remove('skill-btn--channeling');
       }
     });
@@ -132,11 +132,19 @@ export function init() {
   on('skill:toggleOn', () => { renderSkillBar(); });
   on('skill:toggleOff', () => { renderSkillBar(); });
   on('skill:channelStarted', () => { renderSkillBar(); });
-  on('skill:channelCancelled', () => { renderSkillBar(); });
+  on('skill:channelRelease', () => {
+    // Remove channeling class from all slots (handles auto-fire case)
+    skillBarSlots.forEach(s => s.classList.remove('skill-btn--channeling'));
+    renderSkillBar();
+  });
+  on('skill:channelCancelled', () => {
+    skillBarSlots.forEach(s => s.classList.remove('skill-btn--channeling'));
+    renderSkillBar();
+  });
   on('skill:effectEnded', () => { renderSkillBar(); });
 
   // Start cooldown timer update
-  cooldownIntervalId = setInterval(updateCooldowns, 250);
+  cooldownIntervalId = setInterval(updateCooldowns, 100);
 
   // Initial render
   renderSkillBar();
@@ -484,12 +492,15 @@ function renderSkillBar() {
       continue;
     }
 
-    // Channel active state
+    // Channel active state — show charge percentage
     if (state.channelState && state.channelState.skillId === skillId) {
+      const elapsed = (performance.now() - state.channelState.startTime) / 1000;
+      const pct = Math.min(100, Math.floor((elapsed / state.channelState.channelMax) * 100));
       el.className = 'skill-btn skill-btn--channeling';
-      el.title = `${skillDef.name} (Charging...)`;
+      el.title = `${skillDef.name} (Charging ${pct}%)`;
       el.innerHTML = `<span class="skill-btn__icon">${skillDef.icon}</span>
-        <span class="skill-btn__cost">HOLD</span>`;
+        <span class="skill-btn__cost">${pct}%</span>
+        <span class="skill-btn__charge-fill" style="height:${pct}%"></span>`;
       continue;
     }
 
@@ -518,6 +529,12 @@ function renderSkillBar() {
 function updateCooldowns() {
   const player = getPlayer();
   if (!player || state.currentScreen !== 'combat') return;
+
+  // Re-render during active channel (charge % updates) or active cooldowns
+  if (state.channelState) {
+    renderSkillBar();
+    return;
+  }
 
   let needsUpdate = false;
   for (const skillId of player.equippedActive) {

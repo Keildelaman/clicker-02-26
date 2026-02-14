@@ -498,18 +498,25 @@ export function hasActiveBuff(skillId) {
 
 /**
  * Release a channel skill (Charge Up). Computes damage based on hold duration.
+ * Damage scales linearly from minMult (at 0s) to maxMult (at channelMax).
+ * If released before channelMin, the channel fizzles (no damage, but cooldown/energy already spent).
  */
 export function releaseChannel() {
   if (!state.channelState) return;
   const ch = state.channelState;
   const elapsed = (performance.now() - ch.startTime) / 1000;
 
-  const t = Math.max(0, Math.min(1,
-    (elapsed - ch.channelMin) / (ch.channelMax - ch.channelMin)
-  ));
-  const mult = ch.minMult + t * (ch.maxMult - ch.minMult);
-
   state.channelState = null;
+
+  // Must hold at least channelMin to fire; early release fizzles
+  if (elapsed < ch.channelMin) {
+    emit('skill:channelCancelled', { skillId: 'charge_up', reason: 'too_short' });
+    return;
+  }
+
+  // t scales 0→1 over full 0..channelMax window
+  const t = Math.min(1, elapsed / ch.channelMax);
+  const mult = ch.minMult + t * (ch.maxMult - ch.minMult);
 
   const stats = computeStats ? computeStats() : {};
   let damage = Math.floor((stats.attack || 1) * (mult / 100));
@@ -907,6 +914,14 @@ export function update(dt) {
       state.playerShield = null;
       emit('skill:effectTriggered', { effect: 'shieldExpired' });
       emit('skill:effectEnded', { skillId: 'shield_bash', type: 'shield' });
+    }
+  }
+
+  // Channel auto-fire: release automatically when channelMax is reached
+  if (state.channelState) {
+    const chElapsed = (performance.now() - state.channelState.startTime) / 1000;
+    if (chElapsed >= state.channelState.channelMax) {
+      releaseChannel();
     }
   }
 
