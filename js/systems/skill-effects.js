@@ -149,16 +149,9 @@ export const EFFECT_HANDLERS = {
     for (const equippedId of player.equippedActive) {
       if (!equippedId || equippedId === 'overcharge') continue;
       if ((player.skillCooldowns[equippedId] || 0) > 0) {
-        const eDef = SKILLS[equippedId];
-        const eLevel = player.unlockedSkills[equippedId];
-        const baseCd = eDef?.levels[eLevel]?.cooldown || 0;
-        const floor = baseCd * 0.5;
-        const currentCd = player.skillCooldowns[equippedId];
-        if (currentCd > floor) {
-          player.skillCooldowns[equippedId] = Math.max(currentCd - levelData.cdrAmount, floor);
-        } else {
-          player.skillCooldowns[equippedId] = Math.max(currentCd - levelData.cdrAmount, 0);
-        }
+        player.skillCooldowns[equippedId] = Math.max(
+          player.skillCooldowns[equippedId] - levelData.cdrAmount, 0
+        );
         if (player.skillCooldowns[equippedId] <= 0) {
           player.skillCooldowns[equippedId] = 0;
           if (!cooldownReadyNotified.has(equippedId)) {
