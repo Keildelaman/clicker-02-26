@@ -15,17 +15,30 @@ import {
   ENERGY_ON_BOSS_KILL, ENERGY_REGEN_PER_SECOND,
   ENERGY_GAIN_COOLDOWN
 } from '../data/constants.js';
-import { getComputedStats } from './player.js';
 import { SKILLS } from '../data/skills.data.js';
 
 // 200ms cooldown between click-based energy gains (in seconds)
 const COOLDOWN_SEC = ENERGY_GAIN_COOLDOWN / 1000;
 let timeSinceLastGain = COOLDOWN_SEC; // Start ready
 let lastClickTime = 0;
+let computeStats = null; // Injected: player.getComputedStats
 
-export function init() {
+/**
+ * @param {Object} deps - Injected dependencies
+ * @param {Function} deps.getComputedStats - Returns player computed stats
+ */
+export function init(deps = {}) {
+  computeStats = deps.getComputedStats;
+
   on('combat:click', onCombatClick);
   on('combat:monsterKilled', onMonsterKilled);
+
+  // Tutorial full heal (first zone travel)
+  on('tutorial:fullHeal', () => {
+    const player = getPlayer();
+    player.energy = Math.min(player.energy + MAX_ENERGY, MAX_ENERGY);
+    emitChanged();
+  });
 }
 
 function getEnergyPerClick() {
@@ -49,7 +62,7 @@ function onCombatClick() {
   const player = getPlayer();
   if (player.energy >= MAX_ENERGY) return;
 
-  const mult = getComputedStats().energyGainMult || 1.0;
+  const mult = computeStats().energyGainMult || 1.0;
   const baseEnergy = getEnergyPerClick();
   player.energy = Math.min(player.energy + Math.floor(baseEnergy * mult), MAX_ENERGY);
   timeSinceLastGain = 0;
@@ -58,7 +71,7 @@ function onCombatClick() {
 
 function onMonsterKilled({ isBoss }) {
   const player = getPlayer();
-  const mult = getComputedStats().energyGainMult || 1.0;
+  const mult = computeStats().energyGainMult || 1.0;
   const bonus = isBoss ? ENERGY_ON_BOSS_KILL : ENERGY_ON_KILL;
   player.energy = Math.min(player.energy + Math.floor(bonus * mult), MAX_ENERGY);
   emitChanged();

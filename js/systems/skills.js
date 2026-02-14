@@ -1,23 +1,19 @@
 /**
- * skills.js - Skill System (v2)
+ * skills.js - Skill System Core Engine
  *
  * Owns: SP tracking, unlock/upgrade, cooldowns (tick-based), buff management,
- *       skill effect handlers, active/passive equip/unequip, respec.
+ *       active/passive equip/unequip, channel/toggle tick logic, respec.
+ * Delegates: effect execution to skill-effects.js, passive lifecycle to skill-passives.js.
  * Listens to: player:levelUp, player:died, visibilitychange
  * Emits: skill:unlocked, skill:upgraded, skill:used, skill:equipped,
  *        skill:unequipped, skill:buffApplied, skill:buffExpired,
- *        skill:cooldownReady, skill:hitModifierSet, sp:gained,
- *        player:statsChanged, skill:toggleOn, skill:toggleOff,
- *        skill:channelStarted, skill:channelRelease, skill:channelCancelled,
- *        skill:effectEnded
- *
- * Phase 7.5e: All 25 skills functional. Bug fixes: death cleanup,
- * tab-hide channel cancel, shield expiry + Residual Energy.
+ *        skill:cooldownReady, sp:gained, player:statsChanged,
+ *        skill:channelRelease, skill:channelCancelled, skill:effectEnded
  *
  * @see docs/design/skill-system-v2.md
  */
 
-import { on, off, emit } from '../core/event-bus.js';
+import { on, emit } from '../core/event-bus.js';
 import { state, getPlayer } from '../core/game-state.js';
 import { SKILLS } from '../data/skills.data.js';
 import {
@@ -25,203 +21,16 @@ import {
   SP_PER_LEVEL_INTERVAL, SP_UPGRADE_COST, RESPEC_COSTS,
   SKILL_SWAP_COOLDOWN_PENALTY
 } from '../data/constants.js';
-import { invalidateStatCache } from './player.js';
+import { EFFECT_HANDLERS, initEffects, onCombatClickMomentum } from './skill-effects.js';
+import { PASSIVE_HANDLERS, initPassives } from './skill-passives.js';
 
 // Dependency injection — set during init()
 let computeStats = null;
 let hurtPlayer = null;
+let invalidateStats = null; // Injected: player.invalidateStatCache
 
 // Track cooldown-ready notifications to avoid spam
 const cooldownReadyNotified = new Set();
-
-// --- Effect Handlers ---
-// Keyed by skill ID. Dispatched by useSkill() after energy/cooldown checks.
-
-const EFFECT_HANDLERS = {
-  // Hit modifier: next click deals multiplier% damage
-  power_strike(skillDef, levelData) {
-    state.hitModifier = {
-      skillId: 'power_strike',
-      multiplier: levelData.damage / 100
-    };
-    emit('skill:hitModifierSet', { skillId: 'power_strike' });
-  },
-
-  // Hit modifier: conditional multiplier based on monster HP%
-  execute(skillDef, levelData) {
-    state.hitModifier = {
-      skillId: 'execute',
-      type: 'execute',
-      threshold: levelData.threshold / 100,
-      strongMult: levelData.strongMult / 100,
-      weakMult: levelData.weakMult / 100
-    };
-    emit('skill:hitModifierSet', { skillId: 'execute' });
-  },
-
-  // Hit modifier: normal click + bonus %maxHP (ignores armor)
-  shatter(skillDef, levelData) {
-    state.hitModifier = {
-      skillId: 'shatter',
-      type: 'shatter',
-      multiplier: 1,
-      percentHP: levelData.percentHP / 100
-    };
-    emit('skill:hitModifierSet', { skillId: 'shatter' });
-  },
-
-  // Click modifier: N guaranteed crit clicks
-  precision(skillDef, levelData) {
-    state.clickModifiers['precision'] = { charges: levelData.charges };
-    emit('skill:effectTriggered', { effect: 'precision', charges: levelData.charges });
-  },
-
-  // Instant multi-hit damage
-  barrage(skillDef, levelData) {
-    emit('skill:instantDamage', {
-      hits: levelData.hits,
-      damagePerHit: levelData.damagePerHit,
-      skillId: 'barrage'
-    });
-  },
-
-  // Instant single-hit damage
-  arcane_bolt(skillDef, levelData) {
-    emit('skill:instantDamage', {
-      hits: 1,
-      damagePerHit: levelData.damage,
-      skillId: 'arcane_bolt'
-    });
-  },
-
-  // Instant damage (overkill carry now handled generically by combat system)
-  chain_lightning(skillDef, levelData) {
-    emit('skill:instantDamage', {
-      hits: 1,
-      damagePerHit: levelData.damage,
-      skillId: 'chain_lightning'
-    });
-  },
-
-  // Instant damage + player shield
-  shield_bash(skillDef, levelData) {
-    const player = getPlayer();
-    const shieldAmount = Math.floor(player.maxHP * (levelData.shieldPercent / 100));
-    state.playerShield = {
-      amount: shieldAmount,
-      maxAmount: shieldAmount,
-      remaining: levelData.shieldDuration
-    };
-    emit('skill:effectTriggered', { effect: 'shieldGranted', amount: shieldAmount });
-    emit('skill:instantDamage', {
-      hits: 1,
-      damagePerHit: levelData.damage,
-      skillId: 'shield_bash'
-    });
-  },
-
-  // Timed buff: multi-hit per click
-  flurry(skillDef, levelData) {
-    state.activeBuffs['flurry'] = {
-      remaining: levelData.duration,
-      effects: { hitsPerClick: levelData.hitsPerClick }
-    };
-    emit('skill:buffApplied', { skillId: 'flurry', duration: levelData.duration });
-  },
-
-  // Timed buff: crit chance = energy%, drains energy per second
-  adrenaline_rush(skillDef, levelData) {
-    state.activeBuffs['adrenaline_rush'] = {
-      remaining: levelData.duration,
-      effects: { drainRate: levelData.drainRate, critFromEnergy: true }
-    };
-    emit('skill:buffApplied', { skillId: 'adrenaline_rush', duration: levelData.duration });
-  },
-
-  // Instant energy grant
-  energy_surge(skillDef, levelData) {
-    const player = getPlayer();
-    const gained = Math.min(levelData.energyGained, player.maxEnergy - player.energy);
-    player.energy += gained;
-    emit('energy:changed', { energy: player.energy, maxEnergy: player.maxEnergy });
-    emit('skill:effectTriggered', { effect: 'energySurge', gained });
-  },
-
-  // Reduce all other equipped skill cooldowns
-  overcharge(skillDef, levelData) {
-    const player = getPlayer();
-    for (const equippedId of player.equippedActive) {
-      if (!equippedId || equippedId === 'overcharge') continue;
-      if ((player.skillCooldowns[equippedId] || 0) > 0) {
-        const eDef = SKILLS[equippedId];
-        const eLevel = player.unlockedSkills[equippedId];
-        const baseCd = eDef?.levels[eLevel]?.cooldown || 0;
-        const floor = baseCd * 0.5;
-        player.skillCooldowns[equippedId] = Math.max(
-          player.skillCooldowns[equippedId] - levelData.cdrAmount, floor
-        );
-        if (player.skillCooldowns[equippedId] <= 0) {
-          player.skillCooldowns[equippedId] = 0;
-          if (!cooldownReadyNotified.has(equippedId)) {
-            cooldownReadyNotified.add(equippedId);
-            emit('skill:cooldownReady', { skillId: equippedId });
-          }
-        }
-      }
-    }
-    emit('skill:effectTriggered', { effect: 'overcharge', cdrAmount: levelData.cdrAmount });
-  },
-
-  // HP cost -> energy gain
-  life_tap(skillDef, levelData) {
-    const player = getPlayer();
-    const hpCost = Math.floor(player.hp * (levelData.hpCostPercent / 100));
-    if (hpCost > 0) {
-      player.hp = Math.max(1, player.hp - hpCost);
-      emit('player:hpChanged', { hp: player.hp, maxHP: player.maxHP });
-    }
-    const gained = Math.min(levelData.energyGained, player.maxEnergy - player.energy);
-    player.energy += gained;
-    emit('energy:changed', { energy: player.energy, maxEnergy: player.maxEnergy });
-    emit('skill:effectTriggered', { effect: 'lifeTap', hpCost, energyGained: gained });
-  },
-
-  // Channel: click to queue, hold monster to charge, release for scaled damage
-  charge_up(skillDef, levelData) {
-    state.channelState = {
-      phase: 'queued',
-      skillId: 'charge_up',
-      startTime: 0,
-      channelMin: levelData.channelMin,
-      channelMax: levelData.channelMax,
-      minMult: levelData.minMult,
-      maxMult: levelData.maxMult
-    };
-    emit('skill:channelStarted', { skillId: 'charge_up', phase: 'queued' });
-  },
-
-  // Toggle: builds stacks on fast clicks, drains energy/sec
-  momentum(skillDef, levelData) {
-    const toggle = state.toggleStates['momentum'];
-    if (toggle && toggle.active) {
-      state.toggleStates['momentum'] = { active: false, stacks: 0, lastClickTime: 0 };
-      invalidateStatCache();
-      emit('skill:toggleOff', { skillId: 'momentum' });
-      emit('skill:effectEnded', { skillId: 'momentum', type: 'toggle' });
-    } else {
-      state.toggleStates['momentum'] = {
-        active: true,
-        stacks: 0,
-        lastClickTime: 0,
-        decayTimer: levelData.decayTimer,
-        drainPerSec: levelData.drainPerSec,
-        dmgPerStack: levelData.dmgPerStack,
-        maxStacks: levelData.maxStacks
-      };
-      emit('skill:toggleOn', { skillId: 'momentum' });
-    }
-  }
-};
 
 // --- Public API ---
 
@@ -327,7 +136,7 @@ export function upgradeSkill(skillId) {
 
   // If skill is equipped, invalidate stat cache
   if (player.equippedPassive.includes(skillId) || player.equippedActive.includes(skillId)) {
-    invalidateStatCache();
+    invalidateStats();
   }
 
   emit('skill:upgraded', { skillId, newLevel: level + 1, spRemaining: player.skillPoints });
@@ -437,7 +246,7 @@ export function equipPassiveSkill(skillId, slotIndex) {
     handler.onEquip(skillId, player.unlockedSkills[skillId]);
   }
 
-  invalidateStatCache();
+  invalidateStats();
   emit('skill:equipped', { skillId, slot: slotIndex, type: 'passive' });
   emit('player:statsChanged', {});
   return true;
@@ -462,7 +271,7 @@ export function unequipPassiveSkill(slotIndex) {
   if (handler?.onUnequip) handler.onUnequip(skillId);
 
   player.equippedPassive[slotIndex] = null;
-  invalidateStatCache();
+  invalidateStats();
   emit('skill:unequipped', { skillId, slot: slotIndex, type: 'passive' });
   emit('player:statsChanged', {});
   return true;
@@ -608,222 +417,10 @@ export function respec() {
 
   player.respecCount++;
 
-  invalidateStatCache();
+  invalidateStats();
   emit('skill:respecced', { refundedSP, cost, respecCount: player.respecCount });
   emit('player:statsChanged', {});
   return true;
-}
-
-// --- Passive Skill Handlers ---
-
-const passiveHandlerRefs = {}; // { skillId: [{ event, fn }, ...] }
-
-const PASSIVE_HANDLERS = {
-  click_mastery: {
-    onEquip(skillId, level) {
-      const data = SKILLS[skillId].levels[level];
-      state.passiveStates['click_mastery'] = { stacks: 0, lastClickTime: 0 };
-      const fn = () => {
-        const ps = state.passiveStates['click_mastery'];
-        if (!ps) return;
-        const now = performance.now();
-        const gap = (now - ps.lastClickTime) / 1000;
-        if (ps.lastClickTime > 0 && gap <= data.clickWindow) {
-          ps.stacks = Math.min(ps.stacks + 1, data.maxStacks);
-        } else {
-          ps.stacks = 1;
-        }
-        ps.lastClickTime = now;
-      };
-      passiveHandlerRefs[skillId] = [{ event: 'combat:click', fn }];
-      on('combat:click', fn);
-    },
-    onUnequip(skillId) {
-      cleanupPassive(skillId);
-      delete state.passiveStates['click_mastery'];
-    }
-  },
-
-  vampiric_strikes: {
-    onEquip(skillId, level) {
-      const data = SKILLS[skillId].levels[level];
-      const fn = ({ damage, isSkillDamage }) => {
-        if (isSkillDamage) return;
-        const player = getPlayer();
-        if (!player) return;
-        const heal = Math.floor(damage * (data.healPercent / 100));
-        if (heal > 0) {
-          player.hp = Math.min(player.hp + heal, player.maxHP);
-          player.statistics.totalHealingDone += heal;
-          emit('player:hpChanged', { hp: player.hp, maxHP: player.maxHP });
-        }
-      };
-      passiveHandlerRefs[skillId] = [{ event: 'combat:hit', fn }];
-      on('combat:hit', fn);
-    },
-    onUnequip(skillId) { cleanupPassive(skillId); }
-  },
-
-  critical_flow: {
-    onEquip(skillId, level) {
-      const data = SKILLS[skillId].levels[level];
-      const fn = ({ isCrit }) => {
-        if (!isCrit) return;
-        const player = getPlayer();
-        if (!player) return;
-        const gained = Math.min(data.energyPerCrit, player.maxEnergy - player.energy);
-        if (gained > 0) {
-          player.energy += gained;
-          emit('energy:changed', { energy: player.energy, maxEnergy: player.maxEnergy });
-        }
-      };
-      passiveHandlerRefs[skillId] = [{ event: 'combat:hit', fn }];
-      on('combat:hit', fn);
-    },
-    onUnequip(skillId) { cleanupPassive(skillId); }
-  },
-
-  heavy_handed: {
-    onEquip(skillId, level) {},
-    onUnequip(skillId) {}
-  },
-
-  combo_artist: {
-    onEquip(skillId, level) {
-      const data = SKILLS[skillId].levels[level];
-      state.passiveStates['combo_artist'] = { lastSkillId: null, lastSkillTime: 0 };
-      const fn = ({ skillId: usedSkillId }) => {
-        const ps = state.passiveStates['combo_artist'];
-        if (!ps) return;
-        const now = performance.now();
-        const gap = (now - ps.lastSkillTime) / 1000;
-        if (ps.lastSkillId && ps.lastSkillId !== usedSkillId && gap <= data.triggerWindow) {
-          state.activeBuffs['combo_artist'] = {
-            remaining: data.buffDuration,
-            effects: { damageBonus: data.dmgBonus / 100 }
-          };
-          invalidateStatCache();
-          emit('skill:buffApplied', { skillId: 'combo_artist', duration: data.buffDuration });
-        }
-        ps.lastSkillId = usedSkillId;
-        ps.lastSkillTime = now;
-      };
-      passiveHandlerRefs[skillId] = [{ event: 'skill:used', fn }];
-      on('skill:used', fn);
-    },
-    onUnequip(skillId) {
-      cleanupPassive(skillId);
-      delete state.passiveStates['combo_artist'];
-      delete state.activeBuffs['combo_artist'];
-      invalidateStatCache();
-    }
-  },
-
-  berserker: {
-    onEquip(skillId, level) {},
-    onUnequip(skillId) {}
-  },
-
-  efficient_casting: {
-    onEquip(skillId, level) {},
-    onUnequip(skillId) {}
-  },
-
-  spell_weaver: {
-    onEquip(skillId, level) {
-      const data = SKILLS[skillId].levels[level];
-      const fn = ({ skillId: usedSkillId }) => {
-        const player = getPlayer();
-        if (!player) return;
-        for (const equippedId of player.equippedActive) {
-          if (!equippedId || equippedId === usedSkillId) continue;
-          if ((player.skillCooldowns[equippedId] || 0) > 0) {
-            const eDef = SKILLS[equippedId];
-            const eLevel = player.unlockedSkills[equippedId];
-            const baseCd = eDef?.levels[eLevel]?.cooldown || 0;
-            const floor = baseCd * 0.5;
-            player.skillCooldowns[equippedId] = Math.max(
-              player.skillCooldowns[equippedId] - data.cdrPerUse, floor
-            );
-            if (player.skillCooldowns[equippedId] <= 0) {
-              player.skillCooldowns[equippedId] = 0;
-              if (!cooldownReadyNotified.has(equippedId)) {
-                cooldownReadyNotified.add(equippedId);
-                emit('skill:cooldownReady', { skillId: equippedId });
-              }
-            }
-          }
-        }
-      };
-      passiveHandlerRefs[skillId] = [{ event: 'skill:used', fn }];
-      on('skill:used', fn);
-    },
-    onUnequip(skillId) { cleanupPassive(skillId); }
-  },
-
-  residual_energy: {
-    onEquip(skillId, level) {
-      const data = SKILLS[skillId].levels[level];
-      const fn = ({ skillId: endedSkillId, type: endType }) => {
-        const def = SKILLS[endedSkillId];
-        if (endType !== 'shield' && def && (def.mechanic === 'instant' || def.mechanic === 'cd_utility' || def.mechanic === 'hp_cost')) return;
-        const player = getPlayer();
-        if (!player) return;
-        const gained = Math.min(data.energyOnEnd, player.maxEnergy - player.energy);
-        if (gained > 0) {
-          player.energy += gained;
-          emit('energy:changed', { energy: player.energy, maxEnergy: player.maxEnergy });
-          emit('skill:effectTriggered', { effect: 'residualEnergy', gained });
-        }
-      };
-      passiveHandlerRefs[skillId] = [{ event: 'skill:effectEnded', fn }];
-      on('skill:effectEnded', fn);
-    },
-    onUnequip(skillId) { cleanupPassive(skillId); }
-  },
-
-  focused_mind: {
-    onEquip(skillId, level) {},
-    onUnequip(skillId) {}
-  }
-};
-
-function cleanupPassive(skillId) {
-  const refs = passiveHandlerRefs[skillId];
-  if (refs) {
-    for (const { event, fn } of refs) {
-      off(event, fn);
-    }
-    delete passiveHandlerRefs[skillId];
-  }
-}
-
-function initPassives() {
-  const player = getPlayer();
-  if (!player) return;
-  for (const skillId of player.equippedPassive) {
-    if (!skillId) continue;
-    const handler = PASSIVE_HANDLERS[skillId];
-    const level = player.unlockedSkills[skillId];
-    if (handler?.onEquip && level) {
-      handler.onEquip(skillId, level);
-    }
-  }
-}
-
-// --- Momentum Click Handler ---
-
-function onCombatClickMomentum() {
-  const momentum = state.toggleStates['momentum'];
-  if (!momentum || !momentum.active) return;
-  const now = performance.now();
-  const gap = momentum.lastClickTime > 0 ? (now - momentum.lastClickTime) / 1000 : 999;
-  if (gap <= 0.8) {
-    momentum.stacks = Math.min(momentum.stacks + 1, momentum.maxStacks);
-  } else {
-    momentum.stacks = 1;
-  }
-  momentum.lastClickTime = now;
 }
 
 // --- Event Handlers ---
@@ -871,7 +468,7 @@ function onPlayerDied() {
     state.passiveStates['combo_artist'].lastSkillTime = 0;
   }
 
-  invalidateStatCache();
+  invalidateStats();
 }
 
 function onLevelUp({ newLevel }) {
@@ -918,7 +515,7 @@ export function update(dt) {
     buff.remaining -= dt;
     if (buff.remaining <= 0) {
       delete state.activeBuffs[skillId];
-      invalidateStatCache();
+      invalidateStats();
       emit('skill:buffExpired', { skillId });
       emit('skill:effectEnded', { skillId, type: 'buff' });
     }
@@ -953,7 +550,7 @@ export function update(dt) {
 
     if (player.energy <= 0) {
       state.toggleStates['momentum'] = { active: false, stacks: 0, lastClickTime: 0 };
-      invalidateStatCache();
+      invalidateStats();
       emit('skill:toggleOff', { skillId: 'momentum' });
       emit('skill:effectEnded', { skillId: 'momentum', type: 'toggle' });
     } else {
@@ -962,7 +559,7 @@ export function update(dt) {
         const gap = (now - momentum.lastClickTime) / 1000;
         if (gap > momentum.decayTimer && momentum.stacks > 0) {
           momentum.stacks = 0;
-          invalidateStatCache();
+          invalidateStats();
           emit('skill:effectTriggered', { effect: 'momentumDecay' });
         }
       }
@@ -976,14 +573,41 @@ export function update(dt) {
  * @param {Object} deps
  * @param {Function} deps.getComputedStats
  * @param {Function} deps.damagePlayer
+ * @param {Function} deps.invalidateStatCache
  */
 export function init(deps = {}) {
   computeStats = deps.getComputedStats;
   hurtPlayer = deps.damagePlayer;
+  invalidateStats = deps.invalidateStatCache;
+
+  // Initialize extracted modules with shared deps
+  initEffects({ invalidateStatCache: deps.invalidateStatCache, cooldownReadyNotified });
+  initPassives({ invalidateStatCache: deps.invalidateStatCache, cooldownReadyNotified });
 
   on('player:levelUp', onLevelUp);
   on('player:died', onPlayerDied);
   on('combat:click', onCombatClickMomentum);
+
+  // Intent events from UI
+  on('skill:requestUse', ({ skillId }) => {
+    if (!useSkill(skillId)) {
+      const player = getPlayer();
+      const remaining = getSkillCooldownRemaining(skillId);
+      if (remaining > 0) {
+        emit('skill:useFailed', { skillId, reason: 'cooldown' });
+      } else {
+        emit('skill:useFailed', { skillId, reason: 'energy' });
+      }
+    }
+  });
+  on('skill:requestUnlock', ({ skillId }) => unlockSkill(skillId));
+  on('skill:requestUpgrade', ({ skillId }) => upgradeSkill(skillId));
+  on('skill:requestEquipActive', ({ skillId, slot }) => equipActiveSkill(skillId, slot));
+  on('skill:requestUnequipActive', ({ slot }) => unequipActiveSkill(slot));
+  on('skill:requestEquipPassive', ({ skillId, slot }) => equipPassiveSkill(skillId, slot));
+  on('skill:requestUnequipPassive', ({ slot }) => unequipPassiveSkill(slot));
+  on('skill:requestReleaseChannel', () => releaseChannel());
+  on('skill:requestRespec', () => respec());
 
   // Cancel channel on tab hide (performance.now() would inflate elapsed time)
   document.addEventListener('visibilitychange', () => {
@@ -992,6 +616,4 @@ export function init(deps = {}) {
     }
   });
 
-  // Re-subscribe passives on game load
-  initPassives();
 }

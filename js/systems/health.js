@@ -10,7 +10,6 @@
 
 import { on, emit } from '../core/event-bus.js';
 import { state, getPlayer } from '../core/game-state.js';
-import { getComputedStats } from './player.js';
 import {
   DEATH_GOLD_LOSS, DEATH_LEVEL_MILESTONE, DEATH_RESPAWN_DELAY
 } from '../data/constants.js';
@@ -19,11 +18,24 @@ import { xpToNextLevel } from '../data/balance.js';
 
 let respawnTimer = 0;
 let isRespawning = false;
+let computeStats = null; // Injected: player.getComputedStats
 
-export function init() {
+/**
+ * @param {Object} deps - Injected dependencies
+ * @param {Function} deps.getComputedStats - Returns player computed stats
+ */
+export function init(deps = {}) {
+  computeStats = deps.getComputedStats;
   on('player:levelUp', onLevelUp);
   on('item:equipped', syncMaxHP);
   on('item:unequipped', syncMaxHP);
+
+  // Tutorial full heal (first zone travel)
+  on('tutorial:fullHeal', () => {
+    const player = getPlayer();
+    player.hp = player.maxHP;
+    emitHPChanged();
+  });
 }
 
 function onLevelUp() {
@@ -38,7 +50,7 @@ function onLevelUp() {
  */
 function syncMaxHP() {
   const player = getPlayer();
-  const stats = getComputedStats();
+  const stats = computeStats();
   const oldMaxHP = player.maxHP;
   player.maxHP = stats.maxHP;
 
@@ -61,7 +73,7 @@ export function damagePlayer(amount, source) {
   const player = getPlayer();
   if (!player || isRespawning) return;
 
-  const stats = getComputedStats();
+  const stats = computeStats();
 
   // Invulnerable (Transcendence buff)
   if (stats.invulnerable) {
@@ -169,7 +181,7 @@ function handleDeath() {
  */
 function completeRespawn() {
   const player = getPlayer();
-  const stats = getComputedStats();
+  const stats = computeStats();
 
   // Recalc maxHP for potentially lower level
   player.maxHP = stats.maxHP;
@@ -197,7 +209,7 @@ export function update(dt) {
 
   // Passive HP regen: hpRegen % of maxHP per second (includes equipment bonus)
   if (player.hp < player.maxHP) {
-    const stats = getComputedStats();
+    const stats = computeStats();
     const regenAmount = player.maxHP * stats.hpRegen * dt;
     player.hp = Math.min(player.hp + regenAmount, player.maxHP);
     player.statistics.totalHealingDone += regenAmount;

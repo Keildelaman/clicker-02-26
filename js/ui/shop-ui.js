@@ -2,16 +2,16 @@
  * shop-ui.js - Shop & Inventory UI
  *
  * Renders shop items, inventory, and equipment slots.
- * Calls economy.js for all state mutations.
+ * Emits intent events for mutations; economy.js handles them.
+ * Reads shop state from state.shopItems / state.shopRefreshCost / state.shopRefreshTimer.
  *
  * @see docs/systems/economy.system.md
  */
 
-import { on } from '../core/event-bus.js';
-import { getPlayer } from '../core/game-state.js';
+import { on, emit } from '../core/event-bus.js';
+import { state, getPlayer } from '../core/game-state.js';
 import { ITEMS } from '../data/items.data.js';
 import { RARITIES, SELL_PRICE_RATIO } from '../data/constants.js';
-import * as economy from '../systems/economy.js';
 import { showToast } from './toasts.js';
 
 let shopContent;
@@ -55,17 +55,27 @@ export function init() {
 
   // Back button
   document.getElementById('shop-back-btn').addEventListener('click', () => {
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-      if (btn.dataset.screen === 'combat') btn.click();
-    });
+    emit('nav:navigate', { screen: 'combat' });
   });
 
-  // Listen for state changes
+  // Listen for state changes (result events from economy system)
   on('shop:refreshed', renderShop);
-  on('item:purchased', () => { renderShop(); renderInventory(); updateGold(); });
-  on('item:sold', () => { renderInventory(); updateGold(); });
-  on('item:equipped', () => { renderInventory(); updateGold(); });
-  on('item:unequipped', () => { renderInventory(); updateGold(); });
+  on('item:purchased', ({ item }) => {
+    showToast(`Purchased ${item.emoji} ${item.name}!`, 'success');
+    renderShop(); renderInventory(); updateGold();
+  });
+  on('item:sold', ({ item }) => {
+    showToast(`Sold ${item.emoji} ${item.name}`, 'info');
+    renderInventory(); updateGold();
+  });
+  on('item:equipped', ({ item }) => {
+    showToast(`Equipped ${item.emoji} ${item.name}!`, 'success');
+    renderInventory(); updateGold();
+  });
+  on('item:unequipped', () => {
+    showToast('Item unequipped', 'info');
+    renderInventory(); updateGold();
+  });
   on('loot:itemDropped', ({ item }) => {
     showToast(`Found: ${item.emoji} ${item.name}!`, 'success', 3000);
     if (activeTab === 'inventory') renderInventory();
@@ -118,14 +128,14 @@ function renderShop() {
   updateGold();
 
   const player = getPlayer();
-  const items = economy.getCurrentShopItems();
+  const items = state.shopItems || [];
 
   let html = '';
 
   // Refresh bar
-  const refreshCost = economy.getRefreshCost();
+  const refreshCost = state.shopRefreshCost || 0;
   const canRefresh = player.gold >= refreshCost;
-  const timeLeft = economy.getTimeToRefresh();
+  const timeLeft = state.shopRefreshTimer || 0;
   const minutes = Math.floor(timeLeft / 60000);
   const seconds = Math.floor((timeLeft % 60000) / 1000);
   const timeStr = `${minutes}:${String(seconds).padStart(2, '0')}`;
@@ -152,20 +162,14 @@ function renderShop() {
   const refreshBtn = document.getElementById('shop-refresh-btn');
   if (refreshBtn) {
     refreshBtn.addEventListener('click', () => {
-      if (economy.refreshShop(true)) {
-        renderShop();
-      }
+      emit('shop:requestRefresh');
     });
   }
 
   // Wire buy buttons
   shopContent.querySelectorAll('[data-buy]').forEach(btn => {
     btn.addEventListener('click', () => {
-      const itemId = btn.dataset.buy;
-      const item = ITEMS[itemId];
-      if (economy.purchaseItem(itemId)) {
-        showToast(`Purchased ${item.emoji} ${item.name}!`, 'success');
-      }
+      emit('shop:requestPurchase', { itemId: btn.dataset.buy });
     });
   });
 }
@@ -359,32 +363,21 @@ function wireInventoryHandlers() {
   // Wire unequip
   inventoryContent.querySelectorAll('[data-unequip]').forEach(el => {
     el.addEventListener('click', () => {
-      const slot = el.dataset.unequip;
-      if (economy.unequipItem(slot)) {
-        showToast('Item unequipped', 'info');
-      }
+      emit('shop:requestUnequip', { slot: el.dataset.unequip });
     });
   });
 
   // Wire equip
   inventoryContent.querySelectorAll('[data-equip]').forEach(btn => {
     btn.addEventListener('click', () => {
-      const itemId = btn.dataset.equip;
-      const item = ITEMS[itemId];
-      if (economy.equipItem(itemId)) {
-        showToast(`Equipped ${item.emoji} ${item.name}!`, 'success');
-      }
+      emit('shop:requestEquip', { itemId: btn.dataset.equip });
     });
   });
 
   // Wire sell
   inventoryContent.querySelectorAll('[data-sell]').forEach(btn => {
     btn.addEventListener('click', () => {
-      const itemId = btn.dataset.sell;
-      const item = ITEMS[itemId];
-      if (economy.sellItem(itemId)) {
-        showToast(`Sold ${item.emoji} ${item.name}`, 'info');
-      }
+      emit('shop:requestSell', { itemId: btn.dataset.sell });
     });
   });
 
@@ -427,8 +420,8 @@ function handleBulkSell(btn, rarity) {
   if (btn.classList.contains('inv-bulk-btn--confirming')) {
     clearTimeout(confirmTimers[rarity]);
     delete confirmTimers[rarity];
-    const typeArg = activeFilter !== 'all' ? activeFilter : null;
-    economy.sellAllByRarity(rarity, typeArg);
+    const typeFilter = activeFilter !== 'all' ? activeFilter : null;
+    emit('shop:requestBulkSell', { rarity, typeFilter });
     // renderInventory is triggered by items:bulkSold event
     return;
   }

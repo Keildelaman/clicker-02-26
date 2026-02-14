@@ -13,7 +13,6 @@ import { on, emit } from '../core/event-bus.js';
 import { getPlayer } from '../core/game-state.js';
 import { ZONES, ZONE_ORDER } from '../data/zones.data.js';
 import { MONSTERS } from '../data/monsters.data.js';
-import { travelToZone, challengeBoss, canTravelToZone, getBossKillProgress } from '../systems/zones.js';
 import { showToast } from './toasts.js';
 
 let zonesList = null;
@@ -30,7 +29,7 @@ export function init() {
   // Boss challenge button
   if (bossChallengeBtn) {
     bossChallengeBtn.addEventListener('click', () => {
-      challengeBoss();
+      emit('zone:requestBoss');
     });
   }
 
@@ -38,6 +37,7 @@ export function init() {
   on('zone:changed', ({ zoneId }) => {
     applyZoneTheme(zoneId);
     updateBossButton();
+    renderZoneList();
   });
   on('zone:bossDefeated', updateBossButton);
   on('combat:monsterSpawned', updateBossButton);
@@ -136,8 +136,7 @@ function renderZoneList() {
       travelBtn.className = 'zone-card__btn';
       travelBtn.textContent = 'TRAVEL';
       travelBtn.addEventListener('click', () => {
-        travelToZone(zoneId);
-        renderZoneList(); // Re-render after travel
+        emit('zone:requestTravel', { zoneId });
       });
       actions.appendChild(travelBtn);
 
@@ -153,6 +152,19 @@ function renderZoneList() {
     card.appendChild(actions);
     zonesList.appendChild(card);
   }
+}
+
+/**
+ * Derive boss kill progress from player state + zone data (read-only).
+ */
+function deriveBossKillProgress(player, zone) {
+  if (!zone || !zone.bossId) return { met: true, current: 0, required: 0 };
+  if (player.bossesDefeated.includes(zone.bossId)) {
+    return { met: true, current: zone.bossKillReq || 0, required: zone.bossKillReq || 0 };
+  }
+  const required = zone.bossKillReq || 0;
+  const current = (player.zoneKills && player.zoneKills[player.currentZone]) || 0;
+  return { met: current >= required, current, required };
 }
 
 /**
@@ -174,7 +186,7 @@ function updateBossButton() {
 
   const boss = MONSTERS[zone.bossId];
   const defeated = player.bossesDefeated.includes(zone.bossId);
-  const progress = getBossKillProgress();
+  const progress = deriveBossKillProgress(player, zone);
 
   if (bossChallengeBtn) {
     if (defeated) {

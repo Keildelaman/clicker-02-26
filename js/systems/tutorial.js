@@ -1,9 +1,10 @@
 /**
  * tutorial.js - Tutorial & Onboarding System
  *
- * Event-driven tutorial: subscribes to game events, shows blocking
- * modals for key steps, toasts for minor tips, grants first-time
- * bonuses, and tracks completion state.
+ * Event-driven tutorial: subscribes to game events, emits UI events
+ * (tutorial:showModal, tutorial:tip) for display, and delegates
+ * bonuses to owning systems via intent events (tutorial:grantGold,
+ * tutorial:fullHeal). Tracks completion state on state.player.tutorial.
  * No tick updates needed — purely reactive.
  *
  * @see docs/systems/tutorial.system.md
@@ -11,7 +12,6 @@
 
 import { on, emit } from '../core/event-bus.js';
 import { state } from '../core/game-state.js';
-import { showToast } from '../ui/toasts.js';
 import {
   FIRST_KILL_BONUS_GOLD,
   FIRST_ITEM_BONUS_GOLD,
@@ -22,7 +22,6 @@ import {
   TIPS_DISABLED_AFTER_LEVEL,
   SHOP_SUGGEST_LEVEL,
   SHOP_SUGGEST_GOLD,
-  MAX_ENERGY,
   LEVEL_UP_CELEBRATION
 } from '../data/constants.js';
 
@@ -50,7 +49,7 @@ function canShowTip() {
 
 function showTip(message, type = 'info') {
   if (!canShowTip()) return;
-  showToast(message, type, TIP_DISPLAY_DURATION);
+  emit('tutorial:tip', { message, type, duration: TIP_DISPLAY_DURATION });
   state.player.tutorial.lastTipTime = Date.now();
   state.player.tutorial.tipsShown++;
   sessionTipCount++;
@@ -83,10 +82,7 @@ function onMonsterKilled({ goldReward, isBoss }) {
   // First kill bonus
   if (!isCompleted('first_kill')) {
     markCompleted('first_kill');
-    const p = state.player;
-    p.gold += FIRST_KILL_BONUS_GOLD;
-    p.totalGoldEarned += FIRST_KILL_BONUS_GOLD;
-    emit('gold:earned', { amount: FIRST_KILL_BONUS_GOLD, total: p.gold });
+    emit('tutorial:grantGold', { amount: FIRST_KILL_BONUS_GOLD });
 
     showModal({
       icon: '\u2694\uFE0F',
@@ -176,11 +172,8 @@ function onBossDefeated({ bossId, firstKill }) {
     const m = state.currentMonster;
     if (m) {
       const bonusGold = Math.floor(m.goldReward * (FIRST_BOSS_BONUS_MULTIPLIER - 1));
-      const p = state.player;
-      p.gold += bonusGold;
-      p.totalGoldEarned += bonusGold;
-      emit('gold:earned', { amount: bonusGold, total: p.gold });
-      showToast(`Boss Slayer! +${bonusGold} bonus gold!`, 'success', TIP_DISPLAY_DURATION);
+      emit('tutorial:grantGold', { amount: bonusGold });
+      emit('tutorial:tip', { message: `Boss Slayer! +${bonusGold} bonus gold!`, type: 'success', duration: TIP_DISPLAY_DURATION });
       sessionTipCount++;
     }
   }
@@ -189,13 +182,8 @@ function onBossDefeated({ bossId, firstKill }) {
 function onZoneChanged({ zoneId }) {
   if (!isCompleted('first_zone_travel') && zoneId !== 'whisperwood') {
     markCompleted('first_zone_travel');
-    const p = state.player;
-    // Full heal + full energy
-    p.hp = p.maxHP;
-    p.energy = p.maxEnergy || MAX_ENERGY;
-    emit('player:hpChanged', { hp: p.hp, maxHP: p.maxHP });
-    emit('energy:changed', { energy: p.energy, maxEnergy: p.maxEnergy || MAX_ENERGY });
-    showToast('New lands! Full HP & Energy restored!', 'success', TIP_DISPLAY_DURATION);
+    emit('tutorial:fullHeal');
+    emit('tutorial:tip', { message: 'New lands! Full HP & Energy restored!', type: 'success', duration: TIP_DISPLAY_DURATION });
     sessionTipCount++;
   }
 }
@@ -205,10 +193,7 @@ function onPlayerDied({ goldLost }) {
     markCompleted('first_death');
     // Mercy: refund lost gold
     if (goldLost > 0) {
-      const p = state.player;
-      p.gold += goldLost;
-      p.totalGoldEarned += goldLost;
-      emit('gold:earned', { amount: goldLost, total: p.gold });
+      emit('tutorial:grantGold', { amount: goldLost });
     }
     showModal({
       icon: '\uD83D\uDC80',
@@ -222,10 +207,7 @@ function onPlayerDied({ goldLost }) {
 function onItemPurchased() {
   if (!isCompleted('first_item_bought')) {
     markCompleted('first_item_bought');
-    const p = state.player;
-    p.gold += FIRST_ITEM_BONUS_GOLD;
-    p.totalGoldEarned += FIRST_ITEM_BONUS_GOLD;
-    emit('gold:earned', { amount: FIRST_ITEM_BONUS_GOLD, total: p.gold });
+    emit('tutorial:grantGold', { amount: FIRST_ITEM_BONUS_GOLD });
     showModal({
       icon: '\uD83D\uDDE1\uFE0F',
       title: 'NICE GEAR!',

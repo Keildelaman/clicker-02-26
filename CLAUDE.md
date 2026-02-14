@@ -79,6 +79,7 @@ clicker-02-26/
 │
 ├── js/
 │   ├── main.js                 # Bootstrap: init state, wire events, start loop
+│   ├── debug.js                # Dev-only debug tools (window.DEBUG)
 │   │
 │   ├── core/                   # Framework-level modules
 │   │   ├── event-bus.js        # Pub/sub event system (system communication)
@@ -89,7 +90,9 @@ clicker-02-26/
 │   │   ├── combat.js           # Click handling, damage calc, monster type behavior
 │   │   ├── player.js           # Stat computation, derived stats, equipment
 │   │   ├── monster.js          # Spawning, selection, instance creation, type init
-│   │   ├── skills.js           # Unlock, upgrade, MP, cooldowns, effects, buffs
+│   │   ├── skills.js           # Core engine: unlock, upgrade, cooldowns, equip, respec
+│   │   ├── skill-effects.js    # Active skill effect handlers (15 handlers)
+│   │   ├── skill-passives.js   # Passive skill handlers (10 handlers)
 │   │   ├── health.js           # HP regen, damage taken, death, shield absorption
 │   │   ├── energy.js           # Energy gain/spend, regen
 │   │   ├── loot.js             # Drop rolls, item granting, boss loot
@@ -182,13 +185,29 @@ export function giveGold(amount) { }
 
 ### Architecture Rules
 
-1. **Event-driven communication** - Systems talk via EventBus, never import each other
-2. **UI layer never modifies game state** - Only reads and displays
-3. **Game state is the single source of truth** - Central GameState store
-4. **No circular dependencies** - Systems → EventBus → UI (one-way)
-5. **DOM is touched only in ui/ folder** - Separation of concerns
-6. **Tick-based game loop** - All time-dependent mechanics via single rAF loop
-7. **Systems own their domain** - 12 isolated systems (combat, player, skills, etc.)
+These rules were established during a comprehensive architecture audit and refactoring. **Follow them strictly to prevent architectural drift.**
+
+#### Layer Dependency Rules (HARD RULES — never violate)
+
+1. **Systems NEVER import other systems** - Cross-system access uses dependency injection via `init(deps)` in main.js (e.g., `health.init({ getComputedStats: player.getComputedStats })`). Exception: skill sub-modules (skill-effects.js, skill-passives.js) are imported by skills.js only.
+2. **Systems NEVER import from ui/** - Systems emit events; UI listens. If a system needs to trigger a UI action (like showing a toast), emit an event (e.g., `emit('tutorial:tip', { message })`).
+3. **UI NEVER imports from systems/** - UI reads from the central `state` object and `data/` modules. UI triggers actions via intent events (e.g., `emit('shop:requestPurchase', { itemId })`).
+4. **Core (event-bus, game-state, game-loop) imports NOTHING** from systems, ui, or data.
+5. **Data modules are pure** - They contain only static objects/functions. They may import other data modules (e.g., balance.js imports constants.js) but never systems, ui, or services.
+
+#### Communication Patterns
+
+6. **UI → System: Intent events** - UI emits `namespace:requestAction` events. Systems listen and handle. Example: `emit('shop:requestPurchase', { itemId })` → economy.js handles the purchase.
+7. **System → UI: Result events + state** - Systems emit result events (e.g., `'item:purchased'`, `'gold:earned'`). Transient data is exposed on `state` (e.g., `state.computedStats`, `state.shopItems`). UI subscribes to events and reads state.
+8. **Cross-system: DI or events** - For synchronous function calls, use DI via `init(deps)` wired in main.js. For async notifications, use events.
+
+#### Other Rules
+
+9. **main.js is pure orchestration** - Only imports, init calls, DI wiring, tick registration, DOM event binding, and game loop start. NO business logic.
+10. **DOM is touched only in ui/ folder** - Systems never access `document`.
+11. **Tick-based game loop** - All time-dependent mechanics via single rAF loop.
+12. **Systems own their domain** - Each system mutates only its own slice of state. Tutorial bonuses delegate to owning systems via intent events (e.g., `tutorial:grantGold` → economy.js).
+13. **debug.js is exempt** - Development-only tools may import systems/data directly for convenience.
 
 ---
 
@@ -233,10 +252,16 @@ export function giveGold(amount) { }
 3. Add to zone's shop in `js/data/zones.data.js`
 4. Check pricing against economy doc
 
-### Add New Skill
+### Add New Active Skill
 1. Define in `docs/data/skills.data.md` following schema
 2. Add to `js/data/skills.data.js`
-3. Add effect handler in `js/systems/skills.js` EFFECT_HANDLERS map
+3. Add effect handler in `js/systems/skill-effects.js` EFFECT_HANDLERS map
+4. UI auto-generates from skill data (no manual UI changes needed)
+
+### Add New Passive Skill
+1. Define in `docs/data/skills.data.md` following schema
+2. Add to `js/data/skills.data.js`
+3. Add handler in `js/systems/skill-passives.js` PASSIVE_HANDLERS map
 4. UI auto-generates from skill data (no manual UI changes needed)
 
 ### Add New Zone
