@@ -21,6 +21,9 @@ export const ENERGY_GAIN_COOLDOWN = 200;
 export const SPAWN_ANIMATION_DURATION = 200;
 export const DEATH_ANIMATION_DURATION = 300;
 
+// Skill Hit Stagger
+export const BARRAGE_HIT_DELAY = 100; // ms between each Barrage hit
+
 // Overkill & Instant Spawn
 export const OVERKILL_CARRY_PERCENT = 100;  // % of overkill damage that carries to next monster
 export const OVERKILL_CHAIN_MAX = 3;        // Max consecutive overkill chains to prevent infinite loops

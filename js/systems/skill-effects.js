@@ -14,6 +14,7 @@
 import { emit } from '../core/event-bus.js';
 import { state, getPlayer } from '../core/game-state.js';
 import { SKILLS } from '../data/skills.data.js';
+import { BARRAGE_HIT_DELAY } from '../data/constants.js';
 
 // Dependency injection — set during initEffects()
 let invalidateStats = null;
@@ -72,12 +73,13 @@ export const EFFECT_HANDLERS = {
     emit('skill:effectTriggered', { effect: 'precision', charges: levelData.charges });
   },
 
-  // Instant multi-hit damage
+  // Instant multi-hit damage (staggered)
   barrage(skillDef, levelData) {
     emit('skill:instantDamage', {
       hits: levelData.hits,
       damagePerHit: levelData.damagePerHit,
-      skillId: 'barrage'
+      skillId: 'barrage',
+      hitDelay: BARRAGE_HIT_DELAY
     });
   },
 
