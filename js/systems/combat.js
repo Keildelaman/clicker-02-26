@@ -256,26 +256,43 @@ export function handleClick() {
 
 /**
  * Handle instant skill damage (Barrage, Arcane Bolt, Chain Lightning, Shield Bash).
+ * Supports optional hitDelay (ms) between hits for staggered multi-hit skills.
  * Overkill carry is now handled generically by killMonster() for all damage sources.
  */
-function onInstantDamage({ hits, damagePerHit, skillId }) {
+function onInstantDamage({ hits, damagePerHit, skillId, hitDelay }) {
   const monster = state.currentMonster;
   if (!monster || state.combatState !== 'active') return;
 
-  const stats = computeStats();
+  // No delay or single hit — fire all immediately (original behavior)
+  if (!hitDelay || hits <= 1) {
+    const stats = computeStats();
+    for (let i = 0; i < hits; i++) {
+      const isCrit = Math.random() < stats.critChance;
+      let dmg = Math.floor(stats.attack * (damagePerHit / 100));
+      if (isCrit) dmg = Math.floor(dmg * stats.critDamage);
+      dmg = Math.max(dmg, MIN_DAMAGE);
 
-  for (let i = 0; i < hits; i++) {
-    const isCrit = Math.random() < stats.critChance;
-    let dmg = Math.floor(stats.attack * (damagePerHit / 100));
-    if (isCrit) dmg = Math.floor(dmg * stats.critDamage);
-    dmg = Math.max(dmg, MIN_DAMAGE);
-
-    const result = applyDamageToMonster(dmg, { isCrit, isSkillDamage: true, skillId });
-
-    if (result.killed) {
-      killMonster();
-      return;
+      const result = applyDamageToMonster(dmg, { isCrit, isSkillDamage: true, skillId });
+      if (result.killed) { killMonster(); return; }
     }
+    return;
+  }
+
+  // Staggered hits — fire each hit after hitDelay * index ms
+  for (let i = 0; i < hits; i++) {
+    setTimeout(() => {
+      // Re-check state before each delayed hit
+      if (!state.currentMonster || state.combatState !== 'active') return;
+
+      const stats = computeStats();
+      const isCrit = Math.random() < stats.critChance;
+      let dmg = Math.floor(stats.attack * (damagePerHit / 100));
+      if (isCrit) dmg = Math.floor(dmg * stats.critDamage);
+      dmg = Math.max(dmg, MIN_DAMAGE);
+
+      const result = applyDamageToMonster(dmg, { isCrit, isSkillDamage: true, skillId });
+      if (result.killed) killMonster();
+    }, i * hitDelay);
   }
 }
 
