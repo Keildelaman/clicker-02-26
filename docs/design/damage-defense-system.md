@@ -1,6 +1,6 @@
 # Damage & Defense Type System — Design & Implementation Plan
 
-> **Status:** Implementation in progress (Phase 5 of 7)
+> **Status:** Implementation in progress (Phase 6 of 7)
 > **Created:** 2026-02-17
 > **Scope:** Core combat rework — 2 damage types, 5 status effects, percentage-based defense
 
@@ -246,7 +246,7 @@ Phase 2: Combat Pipeline    — Typed damage through combat.js + health.js ✅ D
 Phase 3: Data Migration     — Monsters, items, skills get type data      ✅ DONE
 Phase 4: Shield Rework      — Simplify shield, add status immunity       ✅ DONE
 Phase 5: Status Effects     — New system: bleed, poison, burn, slow, freeze ✅ DONE
-Phase 6: Monster Threat     — Monsters deal typed damage to player
+Phase 6: Monster Threat     — Monsters deal typed damage to player       ✅ DONE
 Phase 7: UI & Polish        — Visual feedback, damage colors, stat display
 ```
 
@@ -543,10 +543,15 @@ hurtPlayer(dmg, 'swift_escape', monster.damageType || 'physical');
 **Effort:** Small-Medium (1-2 sessions)
 
 **Deliverables:**
-- [ ] Aggressive damage uses monster.damageType → player armor/MR reduces it
-- [ ] Swift escape damage uses monster.damageType
-- [ ] Monster attacks can apply status effects to player
-- [ ] Player needs armor for physical zones, MR for magic zones — gear choices matter
+- [x] Aggressive damage uses monster.damageType → player armor/MR reduces it (done in Phase 2)
+- [x] Swift escape damage uses monster.damageType (done in Phase 2)
+- [x] Monster attacks can apply status effects to player (32 monsters with `statusEffectOnHit`)
+- [x] `statusEffectOnHit` config added to thematic monsters across all 7 zones
+- [x] `createMonsterInstance` copies `statusEffectOnHit` to monster instance
+- [x] Aggressive attack path rolls status effect chance on player hit
+- [x] Swift escape path rolls status effect chance on player hit
+- [x] All 5 effect types represented: bleed(8), poison(6), burn(8), slow(4), freeze(6)
+- [x] Player needs armor for physical zones, MR for magic zones — gear choices matter
 
 ---
 
@@ -635,7 +640,7 @@ These are **not part of this implementation** but are enabled by it:
 | 3. Data Migration | Monsters, items, skills | Medium-Large | **DONE** |
 | 4. Shield Rework | Simplify + status immunity | Small | **DONE** |
 | 5. Status Effects | New system (5 effects) | Large | **DONE** |
-| 6. Monster Threat | Typed monster damage | Small-Medium | Pending |
+| 6. Monster Threat | Typed monster damage + status effects on player | Small-Medium | **DONE** |
 | 7. UI & Polish | Visual feedback | Medium | Pending |
 
 **The game remains playable after every phase.** Phase 1-2 changes the math but defaults to physical. Phase 3 makes it type-aware. Phase 4-5 adds the status layer. Phase 6 makes monsters dangerous. Phase 7 makes it all visible.

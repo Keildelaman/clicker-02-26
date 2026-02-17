@@ -120,6 +120,7 @@ function createMonsterInstance(definition) {
     magicResist: definition.magicResist || MONSTER_MAGIC_RESIST_DEFAULT,
     damageType: definition.damageType || DAMAGE_TYPES.PHYSICAL,
     statusImmunities: definition.statusImmunities || [],
+    statusEffectOnHit: definition.statusEffectOnHit || null,
 
     // Type-specific runtime state (defaults, overridden by initializeType)
     shield: 0,

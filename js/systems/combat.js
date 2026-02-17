@@ -117,6 +117,21 @@ export function handleClick() {
     const dmg = Math.floor(player.maxHP * dmgPct);
     hurtPlayer(dmg, 'aggressive', monster.damageType || DAMAGE_TYPES.PHYSICAL);
 
+    // Monster status effect on player (Phase 6)
+    if (monster.statusEffectOnHit) {
+      const se = monster.statusEffectOnHit;
+      if (Math.random() < se.chance) {
+        emit('statusEffect:tryApply', {
+          target: 'player',
+          effectId: se.type,
+          stacks: se.stacks || 1,
+          source: monster.definitionId,
+          sourceAttack: dmg,
+          sourceMagicPower: dmg
+        });
+      }
+    }
+
     emit('combat:click', {
       damage: 0,
       isCrit: false,
@@ -446,6 +461,21 @@ function handleMonsterEscape(monster) {
   const player = getPlayer();
   const dmg = Math.floor(player.maxHP * monster.escapeDamage);
   hurtPlayer(dmg, 'swift_escape', monster.damageType || DAMAGE_TYPES.PHYSICAL);
+
+  // Monster status effect on player (Phase 6)
+  if (monster.statusEffectOnHit) {
+    const se = monster.statusEffectOnHit;
+    if (Math.random() < se.chance) {
+      emit('statusEffect:tryApply', {
+        target: 'player',
+        effectId: se.type,
+        stacks: se.stacks || 1,
+        source: monster.definitionId,
+        sourceAttack: dmg,
+        sourceMagicPower: dmg
+      });
+    }
+  }
 
   emit('combat:monsterEscaped', { monster });
 
