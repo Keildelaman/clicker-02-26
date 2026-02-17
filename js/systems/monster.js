@@ -77,7 +77,7 @@ function initializeType(monster, definition) {
     }
     if (t === 'armored') {
       // Armored type overrides base armor with higher value
-      monster.armor = definition.armorValue || ARMOR_VALUE_DEFAULT;
+      monster.armor = definition.armor || ARMOR_VALUE_DEFAULT;
     }
     if (t === 'regenerating') {
       monster.regenRate = definition.regenRate || REGEN_RATE_DEFAULT;
@@ -133,7 +133,10 @@ function createMonsterInstance(definition) {
     mechanics: null,
     regenRate: 0,
     frozen: false,
-    frozenUntil: 0
+    frozenUntil: 0,
+    slowed: false,
+    slowStrength: 0,
+    freezeCooldown: 0
   };
 
   // Initialize type-specific mechanics
