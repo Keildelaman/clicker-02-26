@@ -183,8 +183,10 @@ export function handleClick() {
 
     // PRIMARY hit only (i === 0): apply hitModifier
     let shatterBonus = 0;
+    let hitDamageType = DAMAGE_TYPES.PHYSICAL; // default; overridden by hitModifier skill type
     if (i === 0 && state.hitModifier) {
       const mod = state.hitModifier;
+      hitDamageType = mod.damageType || DAMAGE_TYPES.PHYSICAL;
 
       if (mod.type === 'execute') {
         const hpRatio = monster.currentHealth / monster.maxHealth;
@@ -211,15 +213,15 @@ export function handleClick() {
       damage = Math.floor(damage * (1 + stats.bonusDamage));
     }
 
-    // Apply main hit (clicks are physical; weapon-based type comes in Phase 3)
-    const result = applyDamageToMonster(damage, { isCrit, damageType: DAMAGE_TYPES.PHYSICAL });
+    // Apply main hit (type from hitModifier skill, or physical for normal clicks)
+    const result = applyDamageToMonster(damage, { isCrit, damageType: hitDamageType });
     totalDamage += result.finalDamage;
 
     // Apply Shatter bonus as separate hit (ignores armor)
     if (shatterBonus > 0 && !result.killed) {
       const shatterResult = applyDamageToMonster(shatterBonus, {
         ignoreArmor: true, isCrit: false, isSkillDamage: true, skillId: 'shatter',
-        damageType: DAMAGE_TYPES.PHYSICAL
+        damageType: hitDamageType
       });
       totalDamage += shatterResult.finalDamage;
       if (shatterResult.killed) { anyKilled = true; break; }

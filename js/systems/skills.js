@@ -351,7 +351,7 @@ export function releaseChannel() {
   if (isCrit) damage = Math.floor(damage * (stats.critDamage || 2.0));
   damage = Math.max(damage, 1);
 
-  emit('skill:channelRelease', { damage, isCrit, skillId: 'charge_up' });
+  emit('skill:channelRelease', { damage, isCrit, skillId: 'charge_up', damageType: ch.damageType });
   emit('skill:effectEnded', { skillId: 'charge_up', type: 'channel' });
 }
 

@@ -1,6 +1,6 @@
 # Damage & Defense Type System — Design & Implementation Plan
 
-> **Status:** Design agreed, ready for phased implementation
+> **Status:** Implementation in progress (Phase 3 of 7)
 > **Created:** 2026-02-17
 > **Scope:** Core combat rework — 2 damage types, 5 status effects, percentage-based defense
 
@@ -241,9 +241,9 @@ Status effects (3-5 sec) must have time to matter → fights can't be 1-second k
 ### Overview
 
 ```
-Phase 1: Foundation         — Defense formula, stats, constants
-Phase 2: Combat Pipeline    — Typed damage through combat.js + health.js
-Phase 3: Data Migration     — Monsters, items, skills get type data
+Phase 1: Foundation         — Defense formula, stats, constants          ✅ DONE
+Phase 2: Combat Pipeline    — Typed damage through combat.js + health.js ✅ DONE
+Phase 3: Data Migration     — Monsters, items, skills get type data      ✅ DONE
 Phase 4: Shield Rework      — Simplify shield, add status immunity
 Phase 5: Status Effects     — New system: bleed, poison, burn, slow, freeze
 Phase 6: Monster Threat     — Monsters deal typed damage to player
@@ -627,15 +627,15 @@ These are **not part of this implementation** but are enabled by it:
 
 ## Summary
 
-| Phase | Scope | Effort | Cumulative |
-|-------|-------|--------|------------|
-| 1. Foundation | Stats, formula, constants | Small | Small |
-| 2. Combat Pipeline | Typed damage flow | Medium | Medium |
-| 3. Data Migration | Monsters, items, skills | Medium-Large | Large |
-| 4. Shield Rework | Simplify + status immunity | Small | Large |
-| 5. Status Effects | New system (5 effects) | Large | Very Large |
-| 6. Monster Threat | Typed monster damage | Small-Medium | Very Large |
-| 7. UI & Polish | Visual feedback | Medium | Complete |
+| Phase | Scope | Effort | Status |
+|-------|-------|--------|--------|
+| 1. Foundation | Stats, formula, constants | Small | **DONE** |
+| 2. Combat Pipeline | Typed damage flow | Medium | **DONE** |
+| 3. Data Migration | Monsters, items, skills | Medium-Large | **DONE** |
+| 4. Shield Rework | Simplify + status immunity | Small | Pending |
+| 5. Status Effects | New system (5 effects) | Large | Pending |
+| 6. Monster Threat | Typed monster damage | Small-Medium | Pending |
+| 7. UI & Polish | Visual feedback | Medium | Pending |
 
 **The game remains playable after every phase.** Phase 1-2 changes the math but defaults to physical. Phase 3 makes it type-aware. Phase 4-5 adds the status layer. Phase 6 makes monsters dangerous. Phase 7 makes it all visible.
 
