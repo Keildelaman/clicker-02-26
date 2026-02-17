@@ -320,6 +320,13 @@ function renderSkillCard(skillDef, player) {
     actionBtn += ` <button class="skill-card__btn" data-action="upgrade" data-skill="${skillDef.id}" ${!canUpgrade ? 'disabled' : ''}>UPGRADE (${SP_UPGRADE_COST} SP)</button>`;
   }
 
+  // Damage type badge
+  let dtypeBadge = '';
+  if (skillDef.damageType) {
+    const dtLabel = skillDef.damageType === 'physical' ? '\u2694 Physical' : '\u2728 Magic';
+    dtypeBadge = `<span class="skill-card__dtype skill-card__dtype--${skillDef.damageType}">${dtLabel}</span>`;
+  }
+
   // Info line for active skills
   let infoLine = '';
   if (skillDef.type === 'active') {
@@ -329,6 +336,7 @@ function renderSkillCard(skillDef, player) {
       infoLine = `<div class="skill-card__info-line">
         <span class="skill-card__energy">\u26A1 ${infoData.energyCost}</span>
         <span class="skill-card__cooldown">\u23F1 ${infoData.cooldown}s</span>
+        ${dtypeBadge}
       </div>`;
     }
   }

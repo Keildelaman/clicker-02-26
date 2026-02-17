@@ -326,6 +326,20 @@
   animation: float-up-crit 0.8s ease-out forwards;
 }
 
+/* Damage type colors (Phase 7) */
+.damage-number--physical { color: var(--damage-physical); }
+.damage-number--magic { color: var(--damage-magic); animation-name: float-up-skill; }
+
+/* DoT tick damage numbers */
+.damage-number--dot {
+  font-size: 16px;
+  font-weight: 700;
+  animation: float-up-dot 0.7s ease-out forwards;
+}
+.damage-number--bleed { color: var(--effect-bleed); }
+.damage-number--poison { color: var(--effect-poison); }
+.damage-number--burn { color: var(--effect-burn); }
+
 /* Skill-typed damage number colors */
 .damage-number--skill-power { color: #ff8000; }
 .damage-number--skill-mage { color: #64b5f6; animation-name: float-up-skill; }
@@ -424,6 +438,116 @@
   background: rgba(100, 181, 246, 0.25);
   transition: width 0.15s linear;
   pointer-events: none;
+}
+
+/* === Status Effect Indicators === */
+.status-effects-row {
+  display: flex;
+  gap: 3px;
+  justify-content: center;
+  flex-wrap: wrap;
+  min-height: 20px;
+  padding: 2px 0;
+}
+
+.status-effect {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 5px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  animation: buff-apply 0.3s ease-out;
+}
+
+.status-effect__icon { font-size: 11px; }
+.status-effect__info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+.status-effect__stacks { font-size: 9px; font-weight: 800; }
+.status-effect__timer { font-size: 8px; opacity: 0.8; }
+
+.status-effect--bleed {
+  background: rgba(229, 57, 53, 0.15);
+  border: 1px solid var(--effect-bleed);
+  color: var(--effect-bleed);
+}
+.status-effect--poison {
+  background: rgba(67, 160, 71, 0.15);
+  border: 1px solid var(--effect-poison);
+  color: var(--effect-poison);
+}
+.status-effect--burn {
+  background: rgba(255, 109, 0, 0.15);
+  border: 1px solid var(--effect-burn);
+  color: var(--effect-burn);
+}
+.status-effect--slow {
+  background: rgba(79, 195, 247, 0.15);
+  border: 1px solid var(--effect-slow);
+  color: var(--effect-slow);
+}
+.status-effect--freeze {
+  background: rgba(129, 212, 250, 0.2);
+  border: 1px solid var(--effect-freeze);
+  color: var(--effect-freeze);
+  animation: freeze-pulse 1s infinite;
+}
+
+/* Monster frozen overlay */
+.monster-area--frozen .monster-display__emoji {
+  filter: brightness(1.3) saturate(0.4);
+  animation: freeze-shake 0.3s infinite;
+}
+
+/* Monster slowed overlay */
+.monster-area--slowed .monster-display__emoji {
+  filter: saturate(0.6);
+  opacity: 0.85;
+}
+
+/* === Player Shield Bar === */
+.player-shield-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.player-shield-fill {
+  background: var(--player-shield-color);
+}
+
+.player-shield-text {
+  font-size: var(--font-size-xs);
+  color: var(--player-shield-color);
+  white-space: nowrap;
+  min-width: 70px;
+  text-align: right;
+}
+
+/* === Damage Type Badge (Skill Cards) === */
+.skill-card__dtype {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+.skill-card__dtype--physical {
+  background: rgba(255, 167, 38, 0.15);
+  color: var(--damage-physical);
+  border: 1px solid var(--damage-physical);
+}
+.skill-card__dtype--magic {
+  background: rgba(124, 77, 255, 0.15);
+  color: var(--damage-magic);
+  border: 1px solid var(--damage-magic);
 }
 
 /* === Toasts === */

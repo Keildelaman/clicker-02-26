@@ -15,6 +15,15 @@ import { SKILLS } from '../data/skills.data.js';
 import { showToast } from './toasts.js';
 import { formatNumber } from '../services/utils.js';
 
+// Status effect emoji map
+const EFFECT_ICONS = {
+  bleed: '\u{1FA78}',   // drop of blood
+  poison: '\u2620\uFE0F', // skull and crossbones
+  burn: '\u{1F525}',    // fire
+  slow: '\u{1F4A7}',    // droplet (ice)
+  freeze: '\u2744\uFE0F'  // snowflake
+};
+
 // Cached DOM references
 let monsterArea, monsterEmoji, monsterName, monsterLevel;
 let monsterHPFill, monsterHPText, monsterHPBar;
@@ -25,6 +34,8 @@ let bossTimerEl, bossTimerFill, bossTimerText;
 let playerBars, gameContainer;
 let executeMarker = null;
 let buffRow = null;
+let monsterStatusRow = null;
+let playerStatusRow = null;
 
 // Type badge labels
 const TYPE_LABELS = {
@@ -56,6 +67,8 @@ export function init() {
   playerBars = document.querySelector('.player-bars');
   gameContainer = document.querySelector('.game-container');
   buffRow = document.getElementById('buff-row');
+  monsterStatusRow = document.getElementById('monster-status-effects');
+  playerStatusRow = document.getElementById('player-status-effects');
 
   on('combat:monsterSpawned', onMonsterSpawned);
   on('combat:click', onCombatClick);
@@ -87,9 +100,24 @@ export function init() {
   on('skill:channelRelease', renderBuffRow);
   on('skill:channelCancelled', renderBuffRow);
 
+  // Status effect events
+  on('statusEffect:applied', renderStatusEffects);
+  on('statusEffect:expired', renderStatusEffects);
+  on('statusEffect:tick', onStatusEffectTick);
+  on('statusEffect:immune', onStatusEffectImmune);
+  on('statusEffect:frozen', onFrozenStateChange);
+  on('statusEffect:unfrozen', onFrozenStateChange);
+  on('statusEffect:slowed', onSlowedStateChange);
+  on('statusEffect:slowEnded', onSlowedStateChange);
+  on('combat:monsterKilled', clearMonsterStatusUI);
+  on('combat:monsterEscaped', clearMonsterStatusUI);
+  on('combat:bossTimeout', clearMonsterStatusUI);
+  on('player:died', clearPlayerStatusUI);
+
   // Buff timer refresh (also updates channel charge indicator)
   setInterval(() => {
     if (buffRow && (buffRow.children.length > 0 || state.channelState)) renderBuffRow();
+    renderStatusEffects();
   }, 100);
 }
 
@@ -129,13 +157,13 @@ function onCombatClick({ blocked }) {
   // Damage numbers now handled by combat:hit events
 }
 
-function onCombatHit({ damage, isCrit, isSkillDamage, skillId }) {
+function onCombatHit({ damage, isCrit, isSkillDamage, skillId, damageType }) {
   const monster = state.currentMonster;
   if (monster) {
     updateHPBar(monster);
     if (hasType(monster, 'shielded')) updateShieldBar(monster);
   }
-  showDamageNumber(damage, isCrit, isSkillDamage, skillId);
+  showDamageNumber(damage, isCrit, isSkillDamage, skillId, damageType);
 }
 
 function onMonsterKilled({ monster }) {
@@ -356,7 +384,7 @@ function hideTypeIndicators() {
   monsterArea.classList.remove('monster-area--warning', 'monster-area--attacking', 'monster-area--regen-pulse');
 }
 
-function showDamageNumber(damage, isCrit, isSkillDamage = false, skillId = null) {
+function showDamageNumber(damage, isCrit, isSkillDamage = false, skillId = null, damageType = null) {
   const el = document.createElement('div');
   let cls = 'damage-number';
   if (isCrit) cls += ' damage-number--crit';
@@ -369,6 +397,9 @@ function showDamageNumber(damage, isCrit, isSkillDamage = false, skillId = null)
         cls += ' damage-number--skill-channel';
       }
     }
+  } else if (damageType) {
+    // Color by damage type when not a skill (basic attacks)
+    cls += ` damage-number--${damageType}`;
   }
 
   el.className = cls;
@@ -383,6 +414,21 @@ function showDamageNumber(damage, isCrit, isSkillDamage = false, skillId = null)
   setTimeout(() => {
     el.remove();
   }, DAMAGE_NUMBER_DURATION);
+}
+
+/**
+ * Show a DoT tick damage number (smaller, effect-colored).
+ */
+function showDotDamageNumber(damage, effectId) {
+  const el = document.createElement('div');
+  el.className = `damage-number damage-number--dot damage-number--${effectId}`;
+  el.textContent = damage;
+
+  const offsetX = (Math.random() - 0.5) * 80;
+  el.style.left = `calc(50% + ${offsetX}px)`;
+
+  damageContainer.appendChild(el);
+  setTimeout(() => el.remove(), 700);
 }
 
 // --- Execute Threshold Marker ---
@@ -528,4 +574,87 @@ function renderBuffRow() {
   }
 
   previousBuffKeys = currentKeys;
+}
+
+// --- Status Effect Indicators ---
+
+function renderStatusEffects() {
+  renderMonsterEffects();
+  renderPlayerEffects();
+}
+
+function renderMonsterEffects() {
+  if (!monsterStatusRow) return;
+  const effects = state.monsterStatusEffects || [];
+  if (effects.length === 0) {
+    monsterStatusRow.innerHTML = '';
+    return;
+  }
+
+  monsterStatusRow.innerHTML = effects.map(e => {
+    const icon = EFFECT_ICONS[e.id] || '?';
+    const stacks = e.stacks > 1 ? `<span class="status-effect__stacks">x${e.stacks}</span>` : '';
+    const timer = `<span class="status-effect__timer">${e.remaining.toFixed(1)}s</span>`;
+    return `<div class="status-effect status-effect--${e.id}">
+      <span class="status-effect__icon">${icon}</span>
+      <span class="status-effect__info">${stacks}${timer}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderPlayerEffects() {
+  if (!playerStatusRow) return;
+  const effects = state.playerStatusEffects || [];
+  if (effects.length === 0) {
+    playerStatusRow.innerHTML = '';
+    return;
+  }
+
+  playerStatusRow.innerHTML = effects.map(e => {
+    const icon = EFFECT_ICONS[e.id] || '?';
+    const stacks = e.stacks > 1 ? `<span class="status-effect__stacks">x${e.stacks}</span>` : '';
+    const timer = `<span class="status-effect__timer">${e.remaining.toFixed(1)}s</span>`;
+    return `<div class="status-effect status-effect--${e.id}">
+      <span class="status-effect__icon">${icon}</span>
+      <span class="status-effect__info">${stacks}${timer}</span>
+    </div>`;
+  }).join('');
+}
+
+function onStatusEffectTick({ target, effectId, damage }) {
+  if (target === 'monster') {
+    showDotDamageNumber(damage, effectId);
+  }
+}
+
+function onStatusEffectImmune({ target, effectId, reason }) {
+  if (target === 'monster') {
+    const label = reason === 'shield' ? 'SHIELDED' : 'IMMUNE';
+    showToast(`${label}! ${effectId} blocked`, 'info', 1500);
+  }
+}
+
+function onFrozenStateChange({ target }) {
+  if (target === 'monster' && monsterArea) {
+    const frozen = state.currentMonster && state.currentMonster.frozen;
+    monsterArea.classList.toggle('monster-area--frozen', !!frozen);
+  }
+}
+
+function onSlowedStateChange({ target }) {
+  if (target === 'monster' && monsterArea) {
+    const slowed = state.currentMonster && state.currentMonster.slowed;
+    monsterArea.classList.toggle('monster-area--slowed', !!slowed);
+  }
+}
+
+function clearMonsterStatusUI() {
+  if (monsterStatusRow) monsterStatusRow.innerHTML = '';
+  if (monsterArea) {
+    monsterArea.classList.remove('monster-area--frozen', 'monster-area--slowed');
+  }
+}
+
+function clearPlayerStatusUI() {
+  if (playerStatusRow) playerStatusRow.innerHTML = '';
 }

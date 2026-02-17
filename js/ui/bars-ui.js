@@ -9,17 +9,25 @@
 
 import { on } from '../core/event-bus.js';
 import { getPlayer } from '../core/game-state.js';
+import { state } from '../core/game-state.js';
 import { HP_CAUTION_THRESHOLD, HP_CRITICAL_THRESHOLD, MAX_ENERGY } from '../data/constants.js';
 
 let hpFill, hpText, energyFill, energyText;
+let shieldBar, shieldFill, shieldText;
 
 export function init() {
   hpFill = document.getElementById('player-hp-fill');
   hpText = document.getElementById('player-hp-text');
   energyFill = document.getElementById('energy-fill');
   energyText = document.getElementById('energy-text');
+  shieldBar = document.getElementById('player-shield-bar');
+  shieldFill = document.getElementById('player-shield-fill');
+  shieldText = document.getElementById('player-shield-text');
 
   on('player:hpChanged', renderHP);
+  on('player:hpChanged', renderShield);
+  on('player:shieldBroken', renderShield);
+  on('skill:buffApplied', renderShield);
   on('energy:changed', renderEnergy);
   on('player:levelUp', renderAll);
   on('combat:monsterSpawned', renderAll);
@@ -31,6 +39,7 @@ export function renderInitial() {
 
 function renderAll() {
   renderHP();
+  renderShield();
   renderEnergy();
 }
 
@@ -50,6 +59,20 @@ function renderHP() {
   } else if (ratio <= HP_CAUTION_THRESHOLD) {
     hpFill.classList.add('hp-fill--caution');
   }
+}
+
+function renderShield() {
+  if (!shieldBar) return;
+  const shield = state.playerShield;
+  if (!shield || shield.amount <= 0) {
+    shieldBar.style.display = 'none';
+    return;
+  }
+
+  shieldBar.style.display = '';
+  const pct = (shield.amount / shield.max) * 100;
+  if (shieldFill) shieldFill.style.width = `${Math.min(pct, 100)}%`;
+  if (shieldText) shieldText.textContent = `${Math.ceil(shield.amount)} / ${shield.max}`;
 }
 
 function renderEnergy() {

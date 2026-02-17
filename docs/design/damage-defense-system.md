@@ -1,6 +1,6 @@
 # Damage & Defense Type System — Design & Implementation Plan
 
-> **Status:** Implementation in progress (Phase 6 of 7)
+> **Status:** Implementation COMPLETE (all 7 phases done)
 > **Created:** 2026-02-17
 > **Scope:** Core combat rework — 2 damage types, 5 status effects, percentage-based defense
 
@@ -580,13 +580,13 @@ hurtPlayer(dmg, 'swift_escape', monster.damageType || 'physical');
 **Effort:** Medium (2-3 sessions)
 
 **Deliverables:**
-- [ ] Damage numbers color-coded by type
-- [ ] Status effect icons on monster (with stack count/timer)
-- [ ] Status effect icons on player
-- [ ] Stats screen shows all new stats
-- [ ] Skill tooltips show damage type
-- [ ] Item tooltips show new stats
-- [ ] Shield bar visual (distinct from HP bar)
+- [x] Damage numbers color-coded by type (physical=orange, magic=purple, DoT=effect color)
+- [x] Status effect icons on monster (with stack count/timer, frozen/slowed visual overlays)
+- [x] Status effect icons on player (same format as monster, below player bars)
+- [x] Stats screen shows all new stats (attack, magicPower, armor in stats bar)
+- [x] Skill tooltips show damage type (physical/magic badge on skill cards)
+- [x] Item tooltips show new stats (magicPower, armor, magicResist, magicPen labels)
+- [x] Shield bar visual (distinct cyan bar between HP and energy, shows/hides dynamically)
 
 ---
 
@@ -641,7 +641,7 @@ These are **not part of this implementation** but are enabled by it:
 | 4. Shield Rework | Simplify + status immunity | Small | **DONE** |
 | 5. Status Effects | New system (5 effects) | Large | **DONE** |
 | 6. Monster Threat | Typed monster damage + status effects on player | Small-Medium | **DONE** |
-| 7. UI & Polish | Visual feedback | Medium | Pending |
+| 7. UI & Polish | Visual feedback | Medium | **DONE** |
 
 **The game remains playable after every phase.** Phase 1-2 changes the math but defaults to physical. Phase 3 makes it type-aware. Phase 4-5 adds the status layer. Phase 6 makes monsters dangerous. Phase 7 makes it all visible.
 

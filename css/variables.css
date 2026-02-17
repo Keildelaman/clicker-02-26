@@ -40,6 +40,20 @@
   --damage-crit: #ff4444;
   --damage-player: #ff6666;
 
+  /* Damage Type Colors */
+  --damage-physical: #ffa726;
+  --damage-magic: #7c4dff;
+
+  /* Status Effect Colors */
+  --effect-bleed: #e53935;
+  --effect-poison: #43a047;
+  --effect-burn: #ff6d00;
+  --effect-slow: #4fc3f7;
+  --effect-freeze: #81d4fa;
+
+  /* Player Shield */
+  --player-shield-color: #26c6da;
+
   /* Monster Type Colors */
   --shield-color: #42a5f5;
   --armor-color: #9e9e9e;
