@@ -96,6 +96,11 @@ export const SLOW_STRENGTH = 0.30;         // 30% action speed reduction
 export const FREEZE_DURATION = 1.5;        // seconds
 export const FREEZE_REAPPLY_COOLDOWN = 5;  // seconds before freeze can be reapplied to same target
 
+// DoT Damage Scaling (% of source stat per tick, snapshotted at application time)
+export const BLEED_DAMAGE_PERCENT = 5;     // 5% of attack per stack per tick
+export const POISON_DAMAGE_PERCENT = 3;    // 3% of attack per stack per tick
+export const BURN_DAMAGE_PERCENT = 10;     // 10% of magicPower per tick
+
 // Monster Type Defaults
 export const ESCAPE_DAMAGE_DEFAULT = 0.05;   // 5% of player maxHP
 export const ESCAPE_TIMER_DEFAULT = 12000;    // ms (Phase 9: increased for higher HP pools)

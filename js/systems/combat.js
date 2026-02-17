@@ -201,6 +201,22 @@ export function handleClick() {
       }
 
       emit('skill:effectTriggered', { skillId: mod.skillId, result: 'applied', damage });
+
+      // Status effect from hit modifier skill (Phase 5)
+      if (mod.statusEffect) {
+        const se = mod.statusEffect;
+        if (Math.random() < se.chance) {
+          emit('statusEffect:tryApply', {
+            target: 'monster',
+            effectId: se.type,
+            stacks: se.stacks || 1,
+            source: mod.skillId,
+            sourceAttack: stats.attack || 0,
+            sourceMagicPower: stats.magicPower || 0
+          });
+        }
+      }
+
       state.hitModifier = null;
       emit('skill:effectEnded', { skillId: mod.skillId, type: 'hitModifier' });
     }
@@ -509,15 +525,21 @@ function updateRegenerating(monster, dt) {
  * Run per-tick type updates for the active monster.
  */
 function updateMonsterTypes(monster, dt) {
-  // Frozen monsters skip type updates
+  // Frozen monsters skip type updates entirely
   if (monster.frozen) return;
+
+  // Slowed monsters act at reduced speed
+  let effectiveDt = dt;
+  if (monster.slowed) {
+    effectiveDt *= (1 - (monster.slowStrength || 0));
+  }
 
   const types = monster.type.split('+');
 
   for (const t of types) {
-    if (t === 'aggressive') updateAggressive(monster, dt);
-    if (t === 'swift') updateSwift(monster, dt);
-    if (t === 'regenerating') updateRegenerating(monster, dt);
+    if (t === 'aggressive') updateAggressive(monster, effectiveDt);
+    if (t === 'swift') updateSwift(monster, effectiveDt);
+    if (t === 'regenerating') updateRegenerating(monster, effectiveDt);
     // armored and shielded have no tick behavior
   }
 }
@@ -546,6 +568,18 @@ export function init(deps = {}) {
   on('combat:monsterSpawned', onMonsterSpawned);
   on('skill:instantDamage', onInstantDamage);
   on('skill:channelRelease', onChannelRelease);
+
+  // Status effect DoT damage (Phase 5) — damage is pre-reduced by status-effects.js
+  on('statusEffect:damageMonster', ({ damage, damageType, effectId }) => {
+    if (!state.currentMonster || state.combatState !== 'active') return;
+    const result = applyDamageToMonster(damage, {
+      ignoreArmor: true,
+      isSkillDamage: true,
+      skillId: `dot:${effectId}`,
+      damageType
+    });
+    if (result.killed) killMonster();
+  });
 }
 
 export function update(dt) {

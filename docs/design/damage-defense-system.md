@@ -1,6 +1,6 @@
 # Damage & Defense Type System — Design & Implementation Plan
 
-> **Status:** Implementation in progress (Phase 4 of 7)
+> **Status:** Implementation in progress (Phase 5 of 7)
 > **Created:** 2026-02-17
 > **Scope:** Core combat rework — 2 damage types, 5 status effects, percentage-based defense
 
@@ -245,7 +245,7 @@ Phase 1: Foundation         — Defense formula, stats, constants          ✅ D
 Phase 2: Combat Pipeline    — Typed damage through combat.js + health.js ✅ DONE
 Phase 3: Data Migration     — Monsters, items, skills get type data      ✅ DONE
 Phase 4: Shield Rework      — Simplify shield, add status immunity       ✅ DONE
-Phase 5: Status Effects     — New system: bleed, poison, burn, slow, freeze
+Phase 5: Status Effects     — New system: bleed, poison, burn, slow, freeze ✅ DONE
 Phase 6: Monster Threat     — Monsters deal typed damage to player
 Phase 7: UI & Polish        — Visual feedback, damage colors, stat display
 ```
@@ -496,16 +496,16 @@ power_strike: {
 **Effort:** Large (4-5 sessions — most complex phase)
 
 **Deliverables:**
-- [ ] `status-effects.js` created following system contract
-- [ ] 5 status effects implemented: bleed, poison, burn, slow, freeze
-- [ ] Shield immunity check before applying
-- [ ] Monster status immunity check (per-monster list)
-- [ ] Status effect damage ticks respect armor/MR
-- [ ] Freeze reapply cooldown (anti-perma-freeze)
-- [ ] Slow affects monster mechanics (aggressive cycle, swift timer, regen rate)
-- [ ] Skills can define statusEffect config (chance, stacks, etc.)
-- [ ] Wired into main.js tick loop
-- [ ] Status effects on player (from monsters — foundation only, activated in Phase 6)
+- [x] `status-effects.js` created following system contract (init, update, getMonsterEffects, getPlayerEffects)
+- [x] 5 status effects implemented: bleed, poison, burn, slow, freeze
+- [x] Shield immunity check before applying (via `checkStatusImmunity()` from balance.js)
+- [x] Monster status immunity check (per-monster `statusImmunities` array)
+- [x] Status effect damage ticks respect armor/MR (DoT damage reduced by target defense, no pen)
+- [x] Freeze reapply cooldown (5s anti-perma-freeze)
+- [x] Slow affects monster mechanics (30% speed reduction on aggressive cycle, swift timer, regen rate)
+- [x] Skills define statusEffect config: power_strike→bleed, barrage→poison, execute→bleed, arcane_bolt→burn, chain_lightning→slow
+- [x] Wired into main.js tick loop (init + registerTickSystem)
+- [x] Status effects on player (foundation — applyToPlayer, clearPlayerEffects, activated in Phase 6)
 
 ---
 
@@ -634,7 +634,7 @@ These are **not part of this implementation** but are enabled by it:
 | 2. Combat Pipeline | Typed damage flow | Medium | **DONE** |
 | 3. Data Migration | Monsters, items, skills | Medium-Large | **DONE** |
 | 4. Shield Rework | Simplify + status immunity | Small | **DONE** |
-| 5. Status Effects | New system (5 effects) | Large | Pending |
+| 5. Status Effects | New system (5 effects) | Large | **DONE** |
 | 6. Monster Threat | Typed monster damage | Small-Medium | Pending |
 | 7. UI & Polish | Visual feedback | Medium | Pending |
 
