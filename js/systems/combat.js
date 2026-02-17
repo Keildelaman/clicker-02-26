@@ -18,8 +18,10 @@ import { on, emit } from '../core/event-bus.js';
 import { state, getPlayer } from '../core/game-state.js';
 import {
   MIN_DAMAGE, DEATH_ANIMATION_DURATION, BOSS_TIMERS,
-  OVERKILL_CARRY_PERCENT, OVERKILL_CHAIN_MAX
+  OVERKILL_CARRY_PERCENT, OVERKILL_CHAIN_MAX,
+  DAMAGE_TYPES
 } from '../data/constants.js';
+import { calcDamageReduction } from '../data/balance.js';
 import { SKILLS as SKILLS_REF } from '../data/skills.data.js';
 
 let dyingTimer = 0;
@@ -37,35 +39,37 @@ function hasType(monster, typeName) {
 }
 
 /**
- * Apply damage to the current monster. Handles armor, shield, and kill detection.
+ * Apply damage to the current monster. Handles defense (% formula), shield, and kill detection.
  * Used by handleClick (per-hit), skill:instantDamage, and overkill carry.
  * @param {number} rawDamage
- * @param {Object} opts - { isCrit, ignoreArmor, isSkillDamage, skillId }
+ * @param {Object} opts - { isCrit, ignoreArmor, isSkillDamage, skillId, damageType }
  * @returns {{ finalDamage: number, killed: boolean }}
  */
 export function applyDamageToMonster(rawDamage, opts = {}) {
   const monster = state.currentMonster;
   if (!monster || state.combatState !== 'active') return { finalDamage: 0, killed: false };
 
+  const damageType = opts.damageType || DAMAGE_TYPES.PHYSICAL;
   let damage = Math.max(rawDamage, MIN_DAMAGE);
 
-  // Armored: flat damage reduction (skip if ignoreArmor)
-  if (!opts.ignoreArmor && hasType(monster, 'armored')) {
+  // Defense: percentage-based reduction (all monsters, not just armored type)
+  if (!opts.ignoreArmor) {
     const stats = computeStats();
-    const effectiveArmor = Math.max(monster.armorValue - stats.armorPen, 0);
-    damage = Math.max(damage - effectiveArmor, MIN_DAMAGE);
+    const defense = damageType === DAMAGE_TYPES.MAGIC ? monster.magicResist : monster.armor;
+    const pen = damageType === DAMAGE_TYPES.MAGIC ? stats.magicPen : stats.armorPen;
+    const reduction = calcDamageReduction(defense, pen);
+    damage = Math.max(Math.floor(damage * (1 - reduction)), MIN_DAMAGE);
   }
 
-  // Shielded: absorb with DR, overflow to HP
-  if (hasType(monster, 'shielded') && monster.shield > 0) {
-    const reducedDamage = Math.max(Math.floor(damage * (1 - monster.shieldDR)), MIN_DAMAGE);
-    if (reducedDamage >= monster.shield) {
-      const overflow = reducedDamage - monster.shield;
+  // Shield: absorb 1:1, overflow to HP
+  if (monster.shield > 0) {
+    if (damage >= monster.shield) {
+      const overflow = damage - monster.shield;
       monster.shield = 0;
       monster.currentHealth -= overflow;
       emit('combat:shieldBroken', { monster });
     } else {
-      monster.shield -= reducedDamage;
+      monster.shield -= damage;
     }
   } else {
     monster.currentHealth -= damage;
@@ -74,6 +78,7 @@ export function applyDamageToMonster(rawDamage, opts = {}) {
   // Emit per-hit event for UI damage numbers
   emit('combat:hit', {
     damage,
+    damageType,
     isCrit: !!opts.isCrit,
     isSkillDamage: !!opts.isSkillDamage,
     skillId: opts.skillId || null
@@ -110,7 +115,7 @@ export function handleClick() {
   if (hasType(monster, 'aggressive') && monster.attackPhase === 'attacking') {
     const dmgPct = (monster.mechanics && monster.mechanics.damagePercent) || 0.10;
     const dmg = Math.floor(player.maxHP * dmgPct);
-    hurtPlayer(dmg, 'aggressive');
+    hurtPlayer(dmg, 'aggressive', monster.damageType || DAMAGE_TYPES.PHYSICAL);
 
     emit('combat:click', {
       damage: 0,
@@ -206,14 +211,15 @@ export function handleClick() {
       damage = Math.floor(damage * (1 + stats.bonusDamage));
     }
 
-    // Apply main hit
-    const result = applyDamageToMonster(damage, { isCrit });
+    // Apply main hit (clicks are physical; weapon-based type comes in Phase 3)
+    const result = applyDamageToMonster(damage, { isCrit, damageType: DAMAGE_TYPES.PHYSICAL });
     totalDamage += result.finalDamage;
 
     // Apply Shatter bonus as separate hit (ignores armor)
     if (shatterBonus > 0 && !result.killed) {
       const shatterResult = applyDamageToMonster(shatterBonus, {
-        ignoreArmor: true, isCrit: false, isSkillDamage: true, skillId: 'shatter'
+        ignoreArmor: true, isCrit: false, isSkillDamage: true, skillId: 'shatter',
+        damageType: DAMAGE_TYPES.PHYSICAL
       });
       totalDamage += shatterResult.finalDamage;
       if (shatterResult.killed) { anyKilled = true; break; }
@@ -259,9 +265,11 @@ export function handleClick() {
  * Supports optional hitDelay (ms) between hits for staggered multi-hit skills.
  * Overkill carry is now handled generically by killMonster() for all damage sources.
  */
-function onInstantDamage({ hits, damagePerHit, skillId, hitDelay }) {
+function onInstantDamage({ hits, damagePerHit, skillId, hitDelay, damageType }) {
   const monster = state.currentMonster;
   if (!monster || state.combatState !== 'active') return;
+
+  const type = damageType || DAMAGE_TYPES.PHYSICAL;
 
   // No delay or single hit — fire all immediately (original behavior)
   if (!hitDelay || hits <= 1) {
@@ -272,7 +280,7 @@ function onInstantDamage({ hits, damagePerHit, skillId, hitDelay }) {
       if (isCrit) dmg = Math.floor(dmg * stats.critDamage);
       dmg = Math.max(dmg, MIN_DAMAGE);
 
-      const result = applyDamageToMonster(dmg, { isCrit, isSkillDamage: true, skillId });
+      const result = applyDamageToMonster(dmg, { isCrit, isSkillDamage: true, skillId, damageType: type });
       if (result.killed) { killMonster(); return; }
     }
     return;
@@ -290,7 +298,7 @@ function onInstantDamage({ hits, damagePerHit, skillId, hitDelay }) {
       if (isCrit) dmg = Math.floor(dmg * stats.critDamage);
       dmg = Math.max(dmg, MIN_DAMAGE);
 
-      const result = applyDamageToMonster(dmg, { isCrit, isSkillDamage: true, skillId });
+      const result = applyDamageToMonster(dmg, { isCrit, isSkillDamage: true, skillId, damageType: type });
       if (result.killed) killMonster();
     }, i * hitDelay);
   }
@@ -419,7 +427,7 @@ function killMonster() {
 function handleMonsterEscape(monster) {
   const player = getPlayer();
   const dmg = Math.floor(player.maxHP * monster.escapeDamage);
-  hurtPlayer(dmg, 'swift_escape');
+  hurtPlayer(dmg, 'swift_escape', monster.damageType || DAMAGE_TYPES.PHYSICAL);
 
   emit('combat:monsterEscaped', { monster });
 
@@ -515,10 +523,11 @@ function updateMonsterTypes(monster, dt) {
 /**
  * Handle channel release damage (Charge Up).
  */
-function onChannelRelease({ damage, isCrit, skillId }) {
+function onChannelRelease({ damage, isCrit, skillId, damageType }) {
   if (!state.currentMonster || state.combatState !== 'active') return;
   const result = applyDamageToMonster(damage, {
-    isCrit, isSkillDamage: true, skillId
+    isCrit, isSkillDamage: true, skillId,
+    damageType: damageType || DAMAGE_TYPES.PHYSICAL
   });
   if (result.killed) killMonster();
 }
