@@ -16,7 +16,7 @@ import {
   BASE_PLAYER_HP, BASE_HP_REGEN,
   MAX_ENERGY, SAVE_VERSION
 } from '../data/constants.js';
-import { maxHPAtLevel, baseAttackAtLevel } from '../data/balance.js';
+import { maxHPAtLevel, baseAttackAtLevel, baseArmorAtLevel, baseMagicResistAtLevel } from '../data/balance.js';
 import { ITEMS } from '../data/items.data.js';
 import { SKILLS } from '../data/skills.data.js';
 
@@ -132,6 +132,7 @@ export function getComputedStats() {
 
   // Base + equipment
   let attack = computeTotalAttack(player);
+  let magicPower = getEquipmentBonus(player, 'magicPower');
   let critChance = computeTotalCritChance(player);
   let critDamage = computeTotalCritDamage(player);
   let maxHP = computeMaxHP(player);
@@ -139,7 +140,11 @@ export function getComputedStats() {
   let goldFind = getEquipmentBonus(player, 'goldFind');
   let xpBonus = getEquipmentBonus(player, 'xpBonus');
   let damageReduction = getEquipmentBonus(player, 'damageReduction');
+  let armor = baseArmorAtLevel(player.level) + getEquipmentBonus(player, 'armor');
+  let magicResist = baseMagicResistAtLevel(player.level) + getEquipmentBonus(player, 'magicResist');
   let armorPen = getEquipmentBonus(player, 'armorPen');
+  let magicPen = getEquipmentBonus(player, 'magicPen');
+  let maxShield = getEquipmentBonus(player, 'maxShield');
   let energyGainMult = 1.0;
   let warningBonus = 0;
 
@@ -181,6 +186,7 @@ export function getComputedStats() {
 
   statCache = {
     attack,
+    magicPower,
     critChance,
     critDamage,
     maxHP,
@@ -188,7 +194,11 @@ export function getComputedStats() {
     goldFind,
     xpBonus,
     damageReduction,
+    armor,
+    magicResist,
     armorPen,
+    magicPen,
+    maxShield,
     energyGainMult,
     warningBonus,
     skillCooldown,

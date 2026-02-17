@@ -52,13 +52,57 @@ export const ENERGY_REGEN_PER_SECOND = 1;
 export const DEATH_GOLD_LOSS = 0.5;
 export const DEATH_RESPAWN_DELAY = 1500; // ms before respawn after death
 
+// Damage Types
+export const DAMAGE_TYPES = { PHYSICAL: 'physical', MAGIC: 'magic' };
+
+// Defense Formula: reduction = defense / (defense + DEFENSE_SCALING_FACTOR)
+export const DEFENSE_SCALING_FACTOR = 100;
+
+// Base defense per level (small gains, feels good to level up)
+export const BASE_ARMOR_PER_LEVEL = 1;        // +1 armor per level (0 at L1, 99 at L100)
+export const BASE_MAGIC_RESIST_PER_LEVEL = 1; // +1 MR per level (0 at L1, 99 at L100)
+
+// Monster Default Defense
+export const MONSTER_ARMOR_DEFAULT = 0;        // most monsters have 0 armor (armored type overrides)
+export const MONSTER_MAGIC_RESIST_DEFAULT = 0; // most monsters have 0 MR
+
+// Status Effects
+export const STATUS_EFFECTS = {
+  BLEED:  'bleed',
+  POISON: 'poison',
+  BURN:   'burn',
+  SLOW:   'slow',
+  FREEZE: 'freeze'
+};
+
+// Status Effect Defaults
+export const BLEED_MAX_STACKS = 5;
+export const BLEED_DURATION = 4;           // seconds
+export const BLEED_TICK_INTERVAL = 1;      // seconds between ticks
+export const BLEED_DAMAGE_TYPE = 'physical';
+
+export const POISON_MAX_STACKS = 10;
+export const POISON_DURATION = 5;          // seconds
+export const POISON_TICK_INTERVAL = 1;     // seconds between ticks
+export const POISON_DAMAGE_TYPE = 'physical';
+
+export const BURN_DURATION = 3.5;          // seconds
+export const BURN_TICK_INTERVAL = 0.5;     // seconds between ticks (faster ticks, no stacking)
+export const BURN_DAMAGE_TYPE = 'magic';
+
+export const SLOW_DURATION = 4;            // seconds
+export const SLOW_STRENGTH = 0.30;         // 30% action speed reduction
+
+export const FREEZE_DURATION = 1.5;        // seconds
+export const FREEZE_REAPPLY_COOLDOWN = 5;  // seconds before freeze can be reapplied to same target
+
 // Monster Type Defaults
 export const ESCAPE_DAMAGE_DEFAULT = 0.05;   // 5% of player maxHP
 export const ESCAPE_TIMER_DEFAULT = 12000;    // ms (Phase 9: increased for higher HP pools)
 export const SHIELD_PERCENT_DEFAULT = 0.30;   // 30% of monster HP
-export const SHIELD_DR_DEFAULT = 0.50;        // 50% damage reduction while shielded
+export const SHIELD_DR_DEFAULT = 0.50;        // 50% DR while shielded — DEPRECATED, removed in Phase 4 (shield rework)
 export const REGEN_RATE_DEFAULT = 0.008;      // 0.8% maxHP per second (Phase 9: reduced for higher HP pools)
-export const ARMOR_VALUE_DEFAULT = 40;        // Phase 9: scaled for new attack values
+export const ARMOR_VALUE_DEFAULT = 40;        // legacy — used as monster.armor for armored type
 export const AGGRESSIVE_DAMAGE_DEFAULT = 0.10; // 10% of player maxHP
 
 // Boss Timer Durations (milliseconds) — Phase 9: DPS check timers
