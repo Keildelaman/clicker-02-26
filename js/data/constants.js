@@ -100,7 +100,6 @@ export const FREEZE_REAPPLY_COOLDOWN = 5;  // seconds before freeze can be reapp
 export const ESCAPE_DAMAGE_DEFAULT = 0.05;   // 5% of player maxHP
 export const ESCAPE_TIMER_DEFAULT = 12000;    // ms (Phase 9: increased for higher HP pools)
 export const SHIELD_PERCENT_DEFAULT = 0.30;   // 30% of monster HP
-export const SHIELD_DR_DEFAULT = 0.50;        // 50% DR while shielded — DEPRECATED, removed in Phase 4 (shield rework)
 export const REGEN_RATE_DEFAULT = 0.008;      // 0.8% maxHP per second (Phase 9: reduced for higher HP pools)
 export const ARMOR_VALUE_DEFAULT = 40;        // legacy — used as monster.armor for armored type
 export const AGGRESSIVE_DAMAGE_DEFAULT = 0.10; // 10% of player maxHP

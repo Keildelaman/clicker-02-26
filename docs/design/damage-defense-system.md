@@ -1,6 +1,6 @@
 # Damage & Defense Type System — Design & Implementation Plan
 
-> **Status:** Implementation in progress (Phase 3 of 7)
+> **Status:** Implementation in progress (Phase 4 of 7)
 > **Created:** 2026-02-17
 > **Scope:** Core combat rework — 2 damage types, 5 status effects, percentage-based defense
 
@@ -244,7 +244,7 @@ Status effects (3-5 sec) must have time to matter → fights can't be 1-second k
 Phase 1: Foundation         — Defense formula, stats, constants          ✅ DONE
 Phase 2: Combat Pipeline    — Typed damage through combat.js + health.js ✅ DONE
 Phase 3: Data Migration     — Monsters, items, skills get type data      ✅ DONE
-Phase 4: Shield Rework      — Simplify shield, add status immunity
+Phase 4: Shield Rework      — Simplify shield, add status immunity       ✅ DONE
 Phase 5: Status Effects     — New system: bleed, poison, burn, slow, freeze
 Phase 6: Monster Threat     — Monsters deal typed damage to player
 Phase 7: UI & Polish        — Visual feedback, damage colors, stat display
@@ -420,11 +420,12 @@ const reduced = Math.max(1, Math.floor(finalAmount * (1 - reduction)));
 **Effort:** Small (1 session)
 
 **Deliverables:**
-- [ ] Shield absorbs damage 1:1 (no DR multiplier)
-- [ ] Shield > 0 = status effect immunity (checked before applying effects in Phase 5)
-- [ ] `shieldDR` removed from monster data and combat.js
-- [ ] Player shield gains same immunity rule
-- [ ] `combat:shieldBroken` event = "target is now vulnerable to status effects"
+- [x] Shield absorbs damage 1:1 (no DR multiplier)
+- [x] Shield > 0 = status effect immunity (`checkStatusImmunity()` in balance.js, used by Phase 5)
+- [x] `shieldDR` removed from monster data and combat.js
+- [x] Player shield gains same immunity rule (via `checkStatusImmunity()`)
+- [x] `combat:shieldBroken` event emitted when monster shield breaks
+- [x] `player:shieldBroken` event emitted when player shield is depleted by damage
 
 ---
 
@@ -632,7 +633,7 @@ These are **not part of this implementation** but are enabled by it:
 | 1. Foundation | Stats, formula, constants | Small | **DONE** |
 | 2. Combat Pipeline | Typed damage flow | Medium | **DONE** |
 | 3. Data Migration | Monsters, items, skills | Medium-Large | **DONE** |
-| 4. Shield Rework | Simplify + status immunity | Small | Pending |
+| 4. Shield Rework | Simplify + status immunity | Small | **DONE** |
 | 5. Status Effects | New system (5 effects) | Large | Pending |
 | 6. Monster Threat | Typed monster damage | Small-Medium | Pending |
 | 7. UI & Polish | Visual feedback | Medium | Pending |

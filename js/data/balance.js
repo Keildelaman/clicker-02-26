@@ -100,3 +100,24 @@ export function baseArmorAtLevel(level) {
 export function baseMagicResistAtLevel(level) {
   return BASE_MAGIC_RESIST_PER_LEVEL * (level - 1);
 }
+
+/**
+ * Check if a target is immune to a status effect.
+ *
+ * Immunity sources (checked in order):
+ * 1. Shield active (shield > 0) — immune to ALL status effects
+ * 2. Monster statusImmunities array — immune to specific effects
+ *
+ * @param {{ shield?: number, statusImmunities?: string[] }} target - Monster or player-like object
+ * @param {string} effectId - Status effect id (e.g. 'bleed', 'poison', 'burn', 'slow', 'freeze')
+ * @returns {{ immune: boolean, reason: string|null }}
+ */
+export function checkStatusImmunity(target, effectId) {
+  if (target.shield > 0) {
+    return { immune: true, reason: 'shielded' };
+  }
+  if (target.statusImmunities && target.statusImmunities.includes(effectId)) {
+    return { immune: true, reason: 'innate' };
+  }
+  return { immune: false, reason: null };
+}

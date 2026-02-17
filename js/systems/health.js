@@ -109,6 +109,7 @@ export function damagePlayer(amount, source, damageType) {
       remaining -= state.playerShield.amount;
       state.playerShield.amount = 0;
       state.playerShield = null;
+      emit('player:shieldBroken', { source });
     }
     emit('skill:effectTriggered', { effect: 'shieldAbsorbed' });
   }
