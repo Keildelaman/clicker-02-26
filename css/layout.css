@@ -161,6 +161,14 @@ body {
   color: var(--gold-color);
 }
 
+.stat-item__value--magic {
+  color: var(--damage-magic);
+}
+
+.stat-item__value--armor {
+  color: var(--armor-color);
+}
+
 /* XP bar section */
 .xp-section {
   padding: var(--spacing-xs) var(--spacing-md);

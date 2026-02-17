@@ -16,8 +16,10 @@ import { ZONES } from '../data/zones.data.js';
 import {
   MONSTER_SPAWN_DELAY,
   ESCAPE_TIMER_DEFAULT, ESCAPE_DAMAGE_DEFAULT,
-  SHIELD_PERCENT_DEFAULT, SHIELD_DR_DEFAULT,
-  ARMOR_VALUE_DEFAULT, REGEN_RATE_DEFAULT
+  SHIELD_PERCENT_DEFAULT,
+  ARMOR_VALUE_DEFAULT, REGEN_RATE_DEFAULT,
+  MONSTER_ARMOR_DEFAULT, MONSTER_MAGIC_RESIST_DEFAULT,
+  DAMAGE_TYPES
 } from '../data/constants.js';
 import { randomInt } from '../services/utils.js';
 
@@ -72,10 +74,10 @@ function initializeType(monster, definition) {
       const pct = definition.shieldPercent || SHIELD_PERCENT_DEFAULT;
       monster.shield = Math.floor(monster.maxHealth * pct);
       monster.maxShield = monster.shield;
-      monster.shieldDR = definition.shieldDamageReduction || SHIELD_DR_DEFAULT;
     }
     if (t === 'armored') {
-      monster.armorValue = definition.armorValue || ARMOR_VALUE_DEFAULT;
+      // Armored type overrides base armor with higher value
+      monster.armor = definition.armor || ARMOR_VALUE_DEFAULT;
     }
     if (t === 'regenerating') {
       monster.regenRate = definition.regenRate || REGEN_RATE_DEFAULT;
@@ -113,20 +115,28 @@ function createMonsterInstance(definition) {
     deathEmoji: definition.deathEmoji,
     lootTable: definition.lootTable || [],
 
+    // Defense stats (all monsters have these; armored type overrides armor)
+    armor: definition.armor || MONSTER_ARMOR_DEFAULT,
+    magicResist: definition.magicResist || MONSTER_MAGIC_RESIST_DEFAULT,
+    damageType: definition.damageType || DAMAGE_TYPES.PHYSICAL,
+    statusImmunities: definition.statusImmunities || [],
+    statusEffectOnHit: definition.statusEffectOnHit || null,
+
     // Type-specific runtime state (defaults, overridden by initializeType)
     shield: 0,
     maxShield: 0,
-    shieldDR: 0,
     escapeTimer: 0,
     maxEscapeTimer: 0,
     escapeDamage: 0,
     attackTimer: 0,
     attackPhase: 'safe',
     mechanics: null,
-    armorValue: 0,
     regenRate: 0,
     frozen: false,
-    frozenUntil: 0
+    frozenUntil: 0,
+    slowed: false,
+    slowStrength: 0,
+    freezeCooldown: 0
   };
 
   // Initialize type-specific mechanics

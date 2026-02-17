@@ -11,7 +11,9 @@
 import {
   BASE_XP_REQUIREMENT, XP_GROWTH_RATE,
   BASE_PLAYER_HP, HP_PER_LEVEL,
-  BASE_PLAYER_ATTACK
+  BASE_PLAYER_ATTACK,
+  DEFENSE_SCALING_FACTOR,
+  BASE_ARMOR_PER_LEVEL, BASE_MAGIC_RESIST_PER_LEVEL
 } from './constants.js';
 
 /**
@@ -63,4 +65,59 @@ export function maxHPAtLevel(level) {
  */
 export function baseAttackAtLevel(level) {
   return BASE_PLAYER_ATTACK + (level - 1);
+}
+
+/**
+ * Calculate damage reduction from defense (armor or magic resist).
+ * Formula: reduction = defense / (defense + 100)
+ * With penetration: effective_defense = defense * (1 - penPercent)
+ *
+ * @param {number} defense - Target's armor or magic resist
+ * @param {number} [penPercent=0] - Attacker's penetration (0-1 range, e.g. 0.3 = 30%)
+ * @returns {number} Damage reduction as a fraction (0-1 range, e.g. 0.33 = 33% reduction)
+ */
+export function calcDamageReduction(defense, penPercent = 0) {
+  const effectiveDefense = Math.max(defense * (1 - penPercent), 0);
+  return effectiveDefense / (effectiveDefense + DEFENSE_SCALING_FACTOR);
+}
+
+/**
+ * Base armor at a given level (before equipment/buffs).
+ * Formula: (level - 1) * 1 — starts at 0, grows linearly.
+ * @param {number} level - Player level
+ * @returns {number} Base armor
+ */
+export function baseArmorAtLevel(level) {
+  return BASE_ARMOR_PER_LEVEL * (level - 1);
+}
+
+/**
+ * Base magic resist at a given level (before equipment/buffs).
+ * Formula: (level - 1) * 1 — starts at 0, grows linearly.
+ * @param {number} level - Player level
+ * @returns {number} Base magic resist
+ */
+export function baseMagicResistAtLevel(level) {
+  return BASE_MAGIC_RESIST_PER_LEVEL * (level - 1);
+}
+
+/**
+ * Check if a target is immune to a status effect.
+ *
+ * Immunity sources (checked in order):
+ * 1. Shield active (shield > 0) — immune to ALL status effects
+ * 2. Monster statusImmunities array — immune to specific effects
+ *
+ * @param {{ shield?: number, statusImmunities?: string[] }} target - Monster or player-like object
+ * @param {string} effectId - Status effect id (e.g. 'bleed', 'poison', 'burn', 'slow', 'freeze')
+ * @returns {{ immune: boolean, reason: string|null }}
+ */
+export function checkStatusImmunity(target, effectId) {
+  if (target.shield > 0) {
+    return { immune: true, reason: 'shielded' };
+  }
+  if (target.statusImmunities && target.statusImmunities.includes(effectId)) {
+    return { immune: true, reason: 'innate' };
+  }
+  return { immune: false, reason: null };
 }

@@ -66,6 +66,9 @@
           <div class="monster-hp__text" id="monster-hp-text">0 / 0</div>
         </div>
 
+        <!-- Monster Status Effects -->
+        <div class="status-effects-row" id="monster-status-effects"></div>
+
         <!-- Floating Damage Numbers -->
         <div class="damage-container" id="damage-container"></div>
       </div>
@@ -79,6 +82,13 @@
           </div>
           <span class="player-bar__text" id="player-hp-text">100 / 100</span>
         </div>
+        <div class="player-bar player-shield-bar" id="player-shield-bar" style="display: none;">
+          <span class="player-bar__icon">&#x1F6E1;&#xFE0F;</span>
+          <div class="progress-bar">
+            <div class="progress-bar__fill player-shield-fill" id="player-shield-fill" style="width: 0%"></div>
+          </div>
+          <span class="player-bar__text player-shield-text" id="player-shield-text">0 / 0</span>
+        </div>
         <div class="player-bar">
           <span class="player-bar__icon">&#x26A1;</span>
           <div class="progress-bar">
@@ -87,6 +97,9 @@
           <span class="player-bar__text" id="energy-text">0 / 100</span>
         </div>
       </div>
+
+      <!-- Player Status Effects -->
+      <div class="status-effects-row" id="player-status-effects"></div>
 
       <!-- Buff & Hit Modifier Indicators -->
       <div class="buff-row" id="buff-row"></div>
@@ -118,6 +131,14 @@
           <div class="stat-item">
             <span class="stat-item__icon">&#x2694;&#xFE0F;</span>
             <span class="stat-item__value" id="attack-display">5</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-item__icon">&#x1F52E;</span>
+            <span class="stat-item__value stat-item__value--magic" id="magic-display">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-item__icon">&#x1F6E1;&#xFE0F;</span>
+            <span class="stat-item__value stat-item__value--armor" id="armor-display">0</span>
           </div>
           <div class="stat-item">
             <span class="stat-item__icon">&#x1F4B0;</span>

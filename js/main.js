@@ -21,6 +21,7 @@ import * as energy from './systems/energy.js';
 import * as progression from './systems/progression.js';
 import * as economy from './systems/economy.js';
 import * as loot from './systems/loot.js';
+import * as statusEffects from './systems/status-effects.js';
 import * as zones from './systems/zones.js';
 import * as skills from './systems/skills.js';
 import * as tutorial from './systems/tutorial.js';
@@ -55,6 +56,7 @@ economy.init();
 loot.init();
 zones.init();
 skills.init({ getComputedStats: player.getComputedStats, damagePlayer: health.damagePlayer, invalidateStatCache: player.invalidateStatCache });
+statusEffects.init({ damagePlayer: health.damagePlayer });
 tutorial.init();
 
 // 3. Initialize UI
@@ -68,6 +70,7 @@ registerTickSystem(energy.update);
 registerTickSystem(progression.update);
 registerTickSystem(economy.update);
 registerTickSystem(skills.update);
+registerTickSystem(statusEffects.update);
 registerTickSystem(renderer.update);
 
 // 5. Wire DOM events

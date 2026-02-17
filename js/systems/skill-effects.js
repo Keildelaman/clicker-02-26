@@ -39,7 +39,8 @@ export const EFFECT_HANDLERS = {
   power_strike(skillDef, levelData) {
     state.hitModifier = {
       skillId: 'power_strike',
-      multiplier: levelData.damage / 100
+      multiplier: levelData.damage / 100,
+      damageType: skillDef.damageType
     };
     emit('skill:hitModifierSet', { skillId: 'power_strike' });
   },
@@ -51,7 +52,8 @@ export const EFFECT_HANDLERS = {
       type: 'execute',
       threshold: levelData.threshold / 100,
       strongMult: levelData.strongMult / 100,
-      weakMult: levelData.weakMult / 100
+      weakMult: levelData.weakMult / 100,
+      damageType: skillDef.damageType
     };
     emit('skill:hitModifierSet', { skillId: 'execute' });
   },
@@ -62,7 +64,8 @@ export const EFFECT_HANDLERS = {
       skillId: 'shatter',
       type: 'shatter',
       multiplier: 1,
-      percentHP: levelData.percentHP / 100
+      percentHP: levelData.percentHP / 100,
+      damageType: skillDef.damageType
     };
     emit('skill:hitModifierSet', { skillId: 'shatter' });
   },
@@ -79,7 +82,8 @@ export const EFFECT_HANDLERS = {
       hits: levelData.hits,
       damagePerHit: levelData.damagePerHit,
       skillId: 'barrage',
-      hitDelay: BARRAGE_HIT_DELAY
+      hitDelay: BARRAGE_HIT_DELAY,
+      damageType: skillDef.damageType
     });
   },
 
@@ -88,7 +92,8 @@ export const EFFECT_HANDLERS = {
     emit('skill:instantDamage', {
       hits: 1,
       damagePerHit: levelData.damage,
-      skillId: 'arcane_bolt'
+      skillId: 'arcane_bolt',
+      damageType: skillDef.damageType
     });
   },
 
@@ -97,7 +102,8 @@ export const EFFECT_HANDLERS = {
     emit('skill:instantDamage', {
       hits: 1,
       damagePerHit: levelData.damage,
-      skillId: 'chain_lightning'
+      skillId: 'chain_lightning',
+      damageType: skillDef.damageType
     });
   },
 
@@ -114,7 +120,8 @@ export const EFFECT_HANDLERS = {
     emit('skill:instantDamage', {
       hits: 1,
       damagePerHit: levelData.damage,
-      skillId: 'shield_bash'
+      skillId: 'shield_bash',
+      damageType: skillDef.damageType
     });
   },
 
@@ -189,7 +196,8 @@ export const EFFECT_HANDLERS = {
       channelMin: levelData.channelMin,
       channelMax: levelData.channelMax,
       minMult: levelData.minMult,
-      maxMult: levelData.maxMult
+      maxMult: levelData.maxMult,
+      damageType: skillDef.damageType
     };
     emit('skill:channelStarted', { skillId: 'charge_up', phase: 'queued' });
   },

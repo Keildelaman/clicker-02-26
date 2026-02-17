@@ -13,10 +13,12 @@ import { formatNumber } from '../services/utils.js';
 import { ZONES } from '../data/zones.data.js';
 import { showToast } from './toasts.js';
 
-let attackDisplay, goldDisplay, levelDisplay, xpFill, xpText, zoneNameDisplay;
+let attackDisplay, magicDisplay, armorDisplay, goldDisplay, levelDisplay, xpFill, xpText, zoneNameDisplay;
 
 export function init() {
   attackDisplay = document.getElementById('attack-display');
+  magicDisplay = document.getElementById('magic-display');
+  armorDisplay = document.getElementById('armor-display');
   goldDisplay = document.getElementById('gold-display');
   levelDisplay = document.getElementById('level-display');
   xpFill = document.getElementById('xp-fill');
@@ -44,6 +46,8 @@ function renderAll() {
 function renderAttack() {
   const stats = state.computedStats || {};
   if (attackDisplay) attackDisplay.textContent = stats.attack || 0;
+  if (magicDisplay) magicDisplay.textContent = stats.magicPower || 0;
+  if (armorDisplay) armorDisplay.textContent = stats.armor || 0;
 }
 
 export function renderGold() {

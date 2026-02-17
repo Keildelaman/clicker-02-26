@@ -27,15 +27,18 @@ let bulkPanelOpen = false;
 
 const STAT_LABELS = {
   attack: 'ATK',
+  magicPower: 'Magic',
   critChance: 'Crit',
   critDamage: 'CritDmg',
   maxHP: 'HP',
   hpRegen: 'HP Regen',
+  armor: 'Armor',
+  magicResist: 'MR',
+  armorPen: 'Armor Pen',
+  magicPen: 'Magic Pen',
   goldFind: 'Gold Find',
   xpBonus: 'XP Bonus',
-  damageReduction: 'DR',
-  energyGain: 'Energy',
-  armorPen: 'Armor Pen'
+  energyGain: 'Energy'
 };
 
 const RARITY_ORDER = { legendary: 0, epic: 1, rare: 2, uncommon: 3, common: 4 };

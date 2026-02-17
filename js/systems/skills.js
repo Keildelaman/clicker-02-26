@@ -79,6 +79,28 @@ export function useSkill(skillId) {
     handler(skillDef, levelData);
   }
 
+  // Status effect application (Phase 5)
+  if (skillDef.statusEffect) {
+    if (state.hitModifier && state.hitModifier.skillId === skillId) {
+      // Next-click skills: attach statusEffect to hitModifier (combat.js applies on hit)
+      state.hitModifier.statusEffect = skillDef.statusEffect;
+    } else if (skillDef.mechanic === 'instant') {
+      // Instant skills: roll and apply now (damage is immediate)
+      const se = skillDef.statusEffect;
+      if (state.currentMonster && state.combatState === 'active' && Math.random() < se.chance) {
+        const stats = computeStats ? computeStats() : {};
+        emit('statusEffect:tryApply', {
+          target: 'monster',
+          effectId: se.type,
+          stacks: se.stacks || 1,
+          source: skillId,
+          sourceAttack: stats.attack || 0,
+          sourceMagicPower: stats.magicPower || 0
+        });
+      }
+    }
+  }
+
   emit('skill:used', { skillId, tags: skillDef.tags });
   return true;
 }
@@ -351,7 +373,7 @@ export function releaseChannel() {
   if (isCrit) damage = Math.floor(damage * (stats.critDamage || 2.0));
   damage = Math.max(damage, 1);
 
-  emit('skill:channelRelease', { damage, isCrit, skillId: 'charge_up' });
+  emit('skill:channelRelease', { damage, isCrit, skillId: 'charge_up', damageType: ch.damageType });
   emit('skill:effectEnded', { skillId: 'charge_up', type: 'channel' });
 }
 
