@@ -578,6 +578,9 @@ function renderBuffRow() {
 
 // --- Status Effect Indicators ---
 
+let previousMonsterEffectKeys = new Set();
+let previousPlayerEffectKeys = new Set();
+
 function renderStatusEffects() {
   renderMonsterEffects();
   renderPlayerEffects();
@@ -588,18 +591,32 @@ function renderMonsterEffects() {
   const effects = state.monsterStatusEffects || [];
   if (effects.length === 0) {
     monsterStatusRow.innerHTML = '';
+    previousMonsterEffectKeys = new Set();
     return;
   }
 
+  const currentKeys = new Set();
   monsterStatusRow.innerHTML = effects.map(e => {
+    const key = `monster-${e.id}`;
+    currentKeys.add(key);
     const icon = EFFECT_ICONS[e.id] || '?';
     const stacks = e.stacks > 1 ? `<span class="status-effect__stacks">x${e.stacks}</span>` : '';
     const timer = `<span class="status-effect__timer">${e.remaining.toFixed(1)}s</span>`;
-    return `<div class="status-effect status-effect--${e.id}">
+    return `<div class="status-effect status-effect--${e.id}" data-effect-key="${key}">
       <span class="status-effect__icon">${icon}</span>
       <span class="status-effect__info">${stacks}${timer}</span>
     </div>`;
   }).join('');
+
+  // Only play entry animation on newly-appeared effects
+  for (const el of monsterStatusRow.children) {
+    const key = el.dataset.effectKey;
+    if (key && !previousMonsterEffectKeys.has(key)) {
+      el.classList.add('status-effect--entering');
+    }
+  }
+
+  previousMonsterEffectKeys = currentKeys;
 }
 
 function renderPlayerEffects() {
@@ -607,18 +624,32 @@ function renderPlayerEffects() {
   const effects = state.playerStatusEffects || [];
   if (effects.length === 0) {
     playerStatusRow.innerHTML = '';
+    previousPlayerEffectKeys = new Set();
     return;
   }
 
+  const currentKeys = new Set();
   playerStatusRow.innerHTML = effects.map(e => {
+    const key = `player-${e.id}`;
+    currentKeys.add(key);
     const icon = EFFECT_ICONS[e.id] || '?';
     const stacks = e.stacks > 1 ? `<span class="status-effect__stacks">x${e.stacks}</span>` : '';
     const timer = `<span class="status-effect__timer">${e.remaining.toFixed(1)}s</span>`;
-    return `<div class="status-effect status-effect--${e.id}">
+    return `<div class="status-effect status-effect--${e.id}" data-effect-key="${key}">
       <span class="status-effect__icon">${icon}</span>
       <span class="status-effect__info">${stacks}${timer}</span>
     </div>`;
   }).join('');
+
+  // Only play entry animation on newly-appeared effects
+  for (const el of playerStatusRow.children) {
+    const key = el.dataset.effectKey;
+    if (key && !previousPlayerEffectKeys.has(key)) {
+      el.classList.add('status-effect--entering');
+    }
+  }
+
+  previousPlayerEffectKeys = currentKeys;
 }
 
 function onStatusEffectTick({ target, effectId, damage }) {
