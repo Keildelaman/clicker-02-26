@@ -459,6 +459,9 @@
   font-size: 10px;
   font-weight: 700;
   line-height: 1;
+}
+
+.status-effect--entering {
   animation: buff-apply 0.3s ease-out;
 }
 
@@ -496,7 +499,7 @@
   background: rgba(129, 212, 250, 0.2);
   border: 1px solid var(--effect-freeze);
   color: var(--effect-freeze);
-  animation: freeze-pulse 1s infinite;
+  animation: freeze-pulse 2s infinite;
 }
 
 /* Monster frozen overlay */
