@@ -300,7 +300,6 @@ function onPlayerDamaged({ damage, source }) {
     setTimeout(() => playerBars.classList.remove('player-bars--damaged'), 300);
   }
 
-  showToast(`-${damage} HP`, 'error', 1500);
 }
 
 function onPlayerDied({ goldLost }) {
