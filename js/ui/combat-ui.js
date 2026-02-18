@@ -346,6 +346,7 @@ function updateTypeBadge(monster) {
   // Reset classes
   typeBadge.className = 'monster-type-badge';
   typeBadge.classList.add(`monster-type-badge--${primaryType}`);
+  typeBadge.dataset.tooltip = `monster-type:${monster.type}`;
   typeBadge.style.display = '';
 }
 
@@ -476,7 +477,7 @@ function renderBuffRow() {
     if (skillDef) {
       const key = `hit-${state.hitModifier.skillId}`;
       currentKeys.add(key);
-      html += `<div class="buff-indicator buff-indicator--hit-mod" data-buff-key="${key}">
+      html += `<div class="buff-indicator buff-indicator--hit-mod" data-buff-key="${key}" data-tooltip="buff:hit:${state.hitModifier.skillId}">
         <span class="buff-indicator__icon">${skillDef.icon}</span>
         <span class="buff-indicator__timer">NEXT</span>
       </div>`;
@@ -491,7 +492,7 @@ function renderBuffRow() {
       currentKeys.add(key);
       if (state.channelState.phase === 'queued') {
         // Queued: show "CHARGE" token like Power Strike's "NEXT"
-        html += `<div class="buff-indicator buff-indicator--channel" data-buff-key="${key}">
+        html += `<div class="buff-indicator buff-indicator--channel" data-buff-key="${key}" data-tooltip="buff:channel:${state.channelState.skillId}">
           <span class="buff-indicator__icon">${skillDef.icon}</span>
           <span class="buff-indicator__timer">CHARGE</span>
         </div>`;
@@ -502,7 +503,7 @@ function renderBuffRow() {
         let intensity = 'low';
         if (pct >= 67) intensity = 'high';
         else if (pct >= 34) intensity = 'mid';
-        html += `<div class="buff-indicator buff-indicator--channel buff-indicator--charge-${intensity}" data-buff-key="${key}">
+        html += `<div class="buff-indicator buff-indicator--channel buff-indicator--charge-${intensity}" data-buff-key="${key}" data-tooltip="buff:channel:${state.channelState.skillId}">
           <span class="buff-indicator__icon">${skillDef.icon}</span>
           <span class="buff-indicator__timer">${pct}%</span>
           <span class="buff-indicator__charge-bar" style="width:${pct}%"></span>
@@ -529,7 +530,7 @@ function renderBuffRow() {
     if (skillDef && mod.charges > 0) {
       const key = `click-${id}`;
       currentKeys.add(key);
-      html += `<div class="buff-indicator buff-indicator--hit-mod" data-buff-key="${key}">
+      html += `<div class="buff-indicator buff-indicator--hit-mod" data-buff-key="${key}" data-tooltip="buff:click:${id}">
         <span class="buff-indicator__icon">${skillDef.icon}</span>
         <span class="buff-indicator__timer">x${mod.charges}</span>
       </div>`;
@@ -543,7 +544,7 @@ function renderBuffRow() {
     if (skillDef) {
       const key = `toggle-${id}`;
       currentKeys.add(key);
-      html += `<div class="buff-indicator buff-indicator--toggle" data-buff-key="${key}">
+      html += `<div class="buff-indicator buff-indicator--toggle" data-buff-key="${key}" data-tooltip="buff:toggle:${id}">
         <span class="buff-indicator__icon">${skillDef.icon}</span>
         <span class="buff-indicator__timer">${toggle.stacks || 0}</span>
       </div>`;
@@ -556,7 +557,7 @@ function renderBuffRow() {
     if (skillDef) {
       const key = `buff-${id}`;
       currentKeys.add(key);
-      html += `<div class="buff-indicator" data-buff-key="${key}">
+      html += `<div class="buff-indicator" data-buff-key="${key}" data-tooltip="buff:buff:${id}">
         <span class="buff-indicator__icon">${skillDef.icon}</span>
         <span class="buff-indicator__timer">${buff.remaining.toFixed(1)}s</span>
       </div>`;
@@ -602,7 +603,7 @@ function renderMonsterEffects() {
     const icon = EFFECT_ICONS[e.id] || '?';
     const stacks = e.stacks > 1 ? `<span class="status-effect__stacks">x${e.stacks}</span>` : '';
     const timer = `<span class="status-effect__timer">${e.remaining.toFixed(1)}s</span>`;
-    return `<div class="status-effect status-effect--${e.id}" data-effect-key="${key}">
+    return `<div class="status-effect status-effect--${e.id}" data-effect-key="${key}" data-tooltip="status:${e.id}">
       <span class="status-effect__icon">${icon}</span>
       <span class="status-effect__info">${stacks}${timer}</span>
     </div>`;
@@ -635,7 +636,7 @@ function renderPlayerEffects() {
     const icon = EFFECT_ICONS[e.id] || '?';
     const stacks = e.stacks > 1 ? `<span class="status-effect__stacks">x${e.stacks}</span>` : '';
     const timer = `<span class="status-effect__timer">${e.remaining.toFixed(1)}s</span>`;
-    return `<div class="status-effect status-effect--${e.id}" data-effect-key="${key}">
+    return `<div class="status-effect status-effect--${e.id}" data-effect-key="${key}" data-tooltip="status:${e.id}">
       <span class="status-effect__icon">${icon}</span>
       <span class="status-effect__info">${stacks}${timer}</span>
     </div>`;

@@ -60,9 +60,9 @@ export function init() {
     tab.addEventListener('click', () => switchTab(tab.dataset.tab));
   });
 
-  // Skill bar: all skills fire on pointerdown (channel queues, others fire immediately)
+  // Skill bar: fire on click (allows long-press tooltip to intercept)
   skillBarSlots.forEach((slot, i) => {
-    slot.addEventListener('pointerdown', (e) => {
+    slot.addEventListener('click', (e) => {
       const player = getPlayer();
       if (!player) return;
       const skillId = player.equippedActive[i];
@@ -441,8 +441,12 @@ function renderSkillBar() {
       el.className = 'skill-btn skill-btn--empty';
       el.innerHTML = '';
       el.title = `Slot ${i + 1} (empty)`;
+      delete el.dataset.tooltip;
       continue;
     }
+
+    // Set tooltip for long-press info
+    el.dataset.tooltip = `skill:${skillId}`;
 
     const skillDef = SKILLS[skillId];
     if (!skillDef) continue;

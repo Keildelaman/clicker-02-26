@@ -312,13 +312,13 @@ function renderInventory() {
     const item = itemId ? ITEMS[itemId] : null;
 
     if (item) {
-      html += `<div class="equipment-slot equipment-slot--filled" data-unequip="${slot}">
+      html += `<div class="equipment-slot equipment-slot--filled" data-unequip="${slot}" data-tooltip="item:${itemId}">
         <span class="equipment-slot__emoji">${item.emoji}</span>
         <span class="equipment-slot__name">${item.name}</span>
         <span class="equipment-slot__label">tap to unequip</span>
       </div>`;
     } else {
-      html += `<div class="equipment-slot">
+      html += `<div class="equipment-slot" data-tooltip="equip:${slot}">
         <span class="equipment-slot__label">${slot}</span>
       </div>`;
     }
@@ -458,7 +458,7 @@ function createItemCardHTML(item, actionsHtml) {
     })
     .join('');
 
-  return `<div class="item-card item-card--${item.rarity}">
+  return `<div class="item-card item-card--${item.rarity}" data-tooltip="item:${item.id}">
     <div class="item-card__header">
       <span class="item-card__emoji">${item.emoji}</span>
       <div class="item-card__info">
