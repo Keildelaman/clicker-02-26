@@ -32,9 +32,13 @@
 | **Data** | Actual game content | |
 | `docs/data/zones.data.md` | All zone definitions | ✅ |
 | `docs/data/monsters.data.md` | All monster definitions (with types) | ✅ |
-| `docs/data/items.data.md` | All item definitions (with new stats) | ✅ |
+| `docs/data/items.data.md` | Legacy v1 item definitions (superseded by v2) | ⚠️ |
 | **Design** | Game design specifications | |
 | `docs/design/skill-system-v2.md` | Skill system v2 design (canonical) | ✅ |
+| `docs/design/item-system-v2.md` | Item system v2 design (canonical) | ✅ |
+| `docs/design/item-system-v2-roadmap.md` | Item system v2 implementation roadmap | ✅ |
+| **Architecture** (continued) | | |
+| `docs/architecture/item-system-v2-architecture.md` | Item system v2 module structure & events | ✅ |
 | **Balance** | Tuning & curves | |
 | `docs/balance/curves.balance.md` | Scaling formulas & tables | ✅ |
 
@@ -56,7 +60,7 @@ MAX_PLAYER_LEVEL = 100
 AUTO_SAVE_INTERVAL = 30000      # 30 seconds
 MONSTER_SPAWN_DELAY = 500       # 0.5 seconds after kill
 DAMAGE_NUMBER_DURATION = 800    # Floating damage display
-LEVEL_UP_CELEBRATION = 2000     # Level up screen duration
+LEVEL_UP_CELEBRATION = 3500     # Level up screen duration
 ENERGY_GAIN_COOLDOWN = 200      # 0.2s between Energy gains from clicks
 ```
 
@@ -89,19 +93,21 @@ ENERGY_REGEN_PER_SECOND = 1     # Passive Energy regen (v2)
 ### Death Penalties
 ```
 DEATH_GOLD_LOSS = 0.5           # Lose 50% gold on death
-DEATH_LEVEL_MILESTONE = 10      # Reset to nearest 10 (1, 10, 20, etc)
+DEATH_RESPAWN_DELAY = 1500      # ms before respawn after death
 ```
 
 ### Economy Defaults
 ```
 STARTING_GOLD = 0
-SELL_PRICE_RATIO = 0.25         # Sell items for 25% of buy price
+SELL_PRICE_RATIO = 0.25         # Legacy v1 sell ratio
+SELL_PRICE_RATIO_V2 = 0.25      # Scrap value = 25% of base buy price
 ```
 
-### Equipment Slots
+### Equipment Slots (v2)
 ```
-EQUIPMENT_SLOTS = ["weapon", "armor", "accessory"]  # 3 equipment slots
-INVENTORY_CAPACITY = unlimited  # No artificial limit on inventory
+EQUIPMENT_SLOTS_V2 = ["weapon", "helmet", "chest", "gloves", "boots", "accessory"]
+INVENTORY_MAX = 30              # Maximum inventory size
+INVENTORY_OVERFLOW_MAX = 3      # Overflow slots for drops when inventory full
 ```
 
 ### Progression Defaults
@@ -115,9 +121,9 @@ XP_GROWTH_RATE = 0.12           # 12% more XP per level
 ```
 ACTIVE_SKILL_SLOTS = 4          # Max equipped active skills
 PASSIVE_SKILL_SLOTS = 3         # Max equipped passive skills
-BASE_SKILL_MAX_LEVEL = 5        # Max skill level (before ascension)
-ASCENDED_SKILL_MAX_LEVEL = 10   # Max skill level (with ascension)
+BASE_SKILL_MAX_LEVEL = 5        # Max skill level
 TOTAL_SKILLS = 25               # Total skills in the game (15 active + 10 passive)
+BEYOND_MAX_SKILL_BONUS_PER_LEVEL = 0.20  # +20% per skill level above 5 (from items)
 ```
 
 ### Skill Points System (v2)
@@ -144,6 +150,82 @@ ASCENSION_GOLD_BONUS = 0.05     # +5% gold per ascension
 ASCENSION_XP_BONUS = 0.05       # +5% XP per ascension
 ASCENSION_HP_BONUS = 50         # +50 HP per ascension
 ASCENSION_SP_BONUS = 3          # +3 starting Skill Points per ascension
+```
+
+### Item System v2
+
+Full specification: `docs/design/item-system-v2.md`
+
+#### Rarity Affix Counts
+```
+common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 4 (+ unique effect)
+```
+
+#### Affix System
+```
+Total affixes: 63
+Categories: offensive (6), defensive (5), utility (4),
+            statusChance (5), statusPotency (5), skillCategory (38)
+MAX_STATUS_AFFIXES_PER_ITEM = 2
+MAX_SKILL_LEVEL_AFFIXES_PER_ITEM = 1
+AFFIX_REROLL_MAX_ATTEMPTS = 10
+```
+
+#### Tier Multipliers (T1–T7, maps to zone tier)
+```
+FLAT_TIER_MULTIPLIERS  = [1.0, 2.0, 3.8, 6.5, 11.0, 18.0, 30.0]
+PERCENT_TIER_MULTIPLIERS = [1.0, 1.3, 1.7, 2.2, 2.8, 3.6, 4.5]
+ZONE_TIERS = { whisperwood:1, dustwind:2, shadowmire:3, ironhold:4,
+               emberfell:5, frostpeak:6, voidrift:7 }
+```
+
+#### Crafting
+```
+Reforge: re-roll one affix (escalating cost × 2.2)
+Imbue: add one affix to items with fewer than rarity max (one-time)
+Temper: 12 levels in 3 cycles of 4, boost selected affix 5%/7%/10%
+TEMPER_BRICK_THRESHOLD = 5     # Full resets before item bricks
+```
+
+#### Materials
+```
+ZONE_MATERIALS: whisperwood(Sap, 10%, boss 5) → voidrift(Void Particle, 3%, boss 12)
+MATERIAL_DECAY_FACTOR = 0.7    # effective_rate = base_rate × 0.7^(zones_above)
+```
+
+#### Boss Scaling
+```
+BOSS_HP_SCALING_FACTOR = 0.12   # boss_hp = base_hp × (1 + 0.12 × level)
+BOSS_DAMAGE_SCALING_FACTOR = 0.10
+BOSS_LEVEL_BUFFER = 5           # boss level = max(baseLv, playerLv - 5)
+BOSS_AFFIX_TIER_DIVISOR = 14    # affix tier = ceil(level / 14)
+```
+
+#### Shop v2
+```
+SHOP_SLOTS_V2 = 4
+SHOP_REFRESH_INTERVAL_V2 = 900000  # 15 minutes
+SHOP_RARITY_WEIGHTS_V2 = { common:55, uncommon:35, rare:10, epic:0, legendary:0 }
+SHOP_REFRESH_COSTS = { whisperwood:200 → voidrift:100000 }
+```
+
+#### Drop Rates
+```
+DROP_CHANCE_BY_ZONE = { whisperwood:0.04 → voidrift:0.02 }
+BOSS_DROP_RARITY_WEIGHTS = { rare:60, epic:35, legendary:5 }
+BOSS_SECOND_DROP_CHANCE = 0.40
+BOSS_MATERIAL_RETURN = { min:2, max:4 }
+```
+
+#### Legendary Effects (14 balance constants)
+```
+DOUBLE_HIT_MULT = 0.6           DODGE_CHANCE = 0.2
+STATUS_DURATION_BONUS = 0.4     ARMOR_TO_MR_RATIO = 0.5
+HIGH_HP_THRESHOLD = 0.8         HIGH_HP_DAMAGE_BONUS = 0.25
+LOW_HP_THRESHOLD = 0.3          BLEED_SLOW_BONUS = 0.5
+CRIT_FREEZE_DURATION = 0.5      SHIELD_REGEN_RATE = 0.05
+SHIELD_REGEN_IDLE_TIME = 3.0    KILL_SHIELD_CHANCE = 0.1
+DAMAGE_TO_SHIELD_RATIO = 0.05   CDR_ON_KILL = 1.0
 ```
 
 ---
@@ -173,22 +255,61 @@ P(legendary) = 0.2/100 = 0.2%
 
 All stats used in the game. Referenced by: Player, Items, Skills, Monsters
 
+### Core Combat Stats
+
 | Stat ID | Display Name | Description | Base Value | Stacks |
 |---------|--------------|-------------|------------|--------|
-| `attack` | Attack | Damage per click | 5 | Additive |
+| `attack` | Attack | Physical damage per click | 5 | Additive |
+| `magicPower` | Magic Power | Magic damage scaling | 0 | Additive |
 | `critChance` | Crit Chance | % chance for critical hit | 0.05 (5%) | Additive |
 | `critDamage` | Crit Damage | Multiplier on critical | 2.0 (200%) | Additive |
-| `goldFind` | Gold Find | % bonus gold from kills | 0 (0%) | Additive |
-| `xpBonus` | XP Bonus | % bonus XP from kills | 0 (0%) | Additive |
+| `armorPen` | Armor Pen | Flat armor ignored | 0 | Additive |
+| `magicPen` | Magic Pen | Flat magic resist ignored | 0 | Additive |
+
+### Defensive Stats
+
+| Stat ID | Display Name | Description | Base Value | Stacks |
+|---------|--------------|-------------|------------|--------|
 | `maxHP` | Max HP | Flat bonus to max HP | 0 | Additive |
 | `hpRegen` | HP Regen | % HP regeneration per second | 0.015 (1.5%) | Additive |
-| `damageReduction` | Damage Reduction | % damage reduced from monsters | 0 (0%) | Multiplicative |
+| `armor` | Armor | Physical damage reduction (formula-based) | level-based | Additive |
+| `magicResist` | Magic Resist | Magic damage reduction (formula-based) | level-based | Additive |
+| `maxShield` | Max Shield | Maximum shield capacity | 0 | Additive |
+
+### Utility Stats
+
+| Stat ID | Display Name | Description | Base Value | Stacks |
+|---------|--------------|-------------|------------|--------|
+| `goldFind` | Gold Find | % bonus gold from kills | 0 (0%) | Additive |
+| `xpBonus` | XP Bonus | % bonus XP from kills | 0 (0%) | Additive |
 | `energyGain` | Energy Gain | % bonus Energy from clicks/kills | 0 (0%) | Additive |
-| `armorPen` | Armor Penetration | Flat armor ignored on armored monsters | 0 | Additive |
+| `cooldownReduction` | CDR | % cooldown reduction on skills | 0 (0%) | Additive |
+
+### Status Effect Stats (from item affixes)
+
+| Stat ID | Display Name | Description |
+|---------|--------------|-------------|
+| `bleedChance` | Bleed Chance | % chance to apply bleed on skill damage |
+| `poisonChance` | Poison Chance | % chance to apply poison on skill damage |
+| `burnChance` | Burn Chance | % chance to apply burn on skill damage |
+| `slowChance` | Slow Chance | % chance to apply slow on skill damage |
+| `freezeChance` | Freeze Chance | % chance to apply freeze on skill damage |
+| `bleedPotency` | Bleed Potency | % bonus to bleed damage |
+| `poisonPotency` | Poison Potency | % bonus to poison damage |
+| `burnPotency` | Burn Potency | % bonus to burn damage |
+| `slowPotency` | Slow Potency | % bonus to slow duration |
+| `freezePotency` | Freeze Potency | % bonus to freeze duration |
+
+### Defense Formula
+```
+reduction = defense / (defense + DEFENSE_SCALING_FACTOR)
+DEFENSE_SCALING_FACTOR = 100
+BASE_ARMOR_PER_LEVEL = 1
+BASE_MAGIC_RESIST_PER_LEVEL = 1
+```
 
 **Stacking Rules:**
 - `Additive`: Sum all sources. Example: 5 base attack + 10 weapon + 3 skill = 18 total
-- `Multiplicative`: Multiply together. Example: 50% Iron Skin + 10% item = 1 - (0.5 × 0.9) = 55% total reduction
 
 ---
 
@@ -217,7 +338,7 @@ Consistent naming for all game entities.
 | Zone | `{zonename}` | `whisperwood`, `dustwind` |
 | Monster | `{zone}_{name}` | `whisperwood_sprite`, `dustwind_bandit` |
 | Boss | `boss_{name}` | `boss_mossback`, `boss_redfang` |
-| Item | `{type}_{zone}_{rarity}_{number}` | `weapon_whisperwood_common_01` |
+| Item (v2) | `item_{timestamp}_{random}` (UUID) | `item_1708905432_7a3f` |
 | Skill | `{name}` | `power_strike`, `execute`, `flurry` |
 
 ## Monster Types
@@ -273,7 +394,8 @@ totalXP = baseXP + bonusXP
 For future migration support.
 
 ```
-SAVE_VERSION = 4
+SAVE_KEY = "clickoria_save_v5"
+SAVE_VERSION = 5
 ```
 
 **Version History:**
@@ -281,6 +403,7 @@ SAVE_VERSION = 4
 - v2: Added HP, Energy, skills, ascension, tutorial state
 - v3: Equipment system expansion
 - v4: Skill System v2 (SP replaces MP, new skill schema)
+- v5: Item System v2 (6 slots, random affixes, materials, crafting; complete item wipe + gold compensation)
 
 Save structure defined in `schemas/player.schema.md`.
 
@@ -288,31 +411,28 @@ Save structure defined in `schemas/player.schema.md`.
 
 ## Implementation Priority
 
-MVP (Version 1.0) must include:
+MVP (Version 1.0):
 
 1. ✅ Specifications complete
-2. [ ] Core click combat loop
-3. [ ] Monster spawning & death (with 6 types)
-4. [ ] Gold & XP rewards
-5. [ ] Player leveling
-6. [ ] Player HP and Energy system
-7. [ ] Skill system (active + passive)
-8. [ ] All 7 zones with bosses
-9. [ ] Shop with weapons and accessories
-10. [ ] Save/Load system
-11. [ ] Mobile-responsive UI
-12. [ ] Tutorial system
+2. ✅ Core click combat loop
+3. ✅ Monster spawning & death (with 6 types)
+4. ✅ Gold & XP rewards
+5. ✅ Player leveling
+6. ✅ Player HP and Energy system
+7. ✅ Skill system v2 (15 active + 10 passive, SP-based)
+8. ✅ All 7 zones with bosses
+9. ✅ Status effect system (bleed, poison, burn, slow, freeze)
+10. ✅ Damage/defense type system (physical + magic)
+11. ✅ Item system v2 (6 slots, random affixes, crafting, legendaries)
+12. ✅ Tutorial system
+13. [ ] Save/Load hardening
+14. [ ] Mobile-responsive UI polish
 
-Post-MVP (v1.1):
-- Equipment drops from monsters
-- Sound effects
-- Advanced monster AI patterns
-
-Future (v2.0):
-- Ascension/Prestige system (specs complete, implementation later)
-- Achievements
-- Offline progress
-- PWA support
+Remaining:
+- [ ] Ascension/Prestige system
+- [ ] Sound effects
+- [ ] Accessibility pass
+- [ ] PWA support
 
 ---
 
@@ -329,5 +449,4 @@ When modifying any document, verify:
 
 ---
 
-*Last updated: Session start*
-*Next: Define schemas for each entity type*
+*Last updated: Phase 12 (Item System v2) complete*

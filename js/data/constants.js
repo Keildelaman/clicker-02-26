@@ -124,9 +124,6 @@ export const BOSS_TIMERS = {
 export const STARTING_GOLD = 0;
 export const SELL_PRICE_RATIO = 0.25;
 
-// Equipment Slots
-export const EQUIPMENT_SLOTS = ['weapon', 'armor', 'accessory'];
-
 // Progression Defaults
 export const STARTING_LEVEL = 1;
 export const BASE_XP_REQUIREMENT = 100;
@@ -158,8 +155,8 @@ export const VAULT_MAX_SLOTS = 8;
 export const VAULT_WITHDRAW_COST = 0.25;
 
 // Save
-export const SAVE_KEY = 'clickoria_save_v4';
-export const SAVE_VERSION = 4;
+export const SAVE_KEY = 'clickoria_save_v5';
+export const SAVE_VERSION = 5;
 
 // Shop / Economy
 export const SHOP_REFRESH_INTERVAL = 600000; // 10 minutes
@@ -194,3 +191,144 @@ export const RARITIES = {
   epic:      { name: 'Epic',      color: '#a335ee', weight: 1.8, statMult: 3.0 },
   legendary: { name: 'Legendary', color: '#ff8000', weight: 0.2, statMult: 5.0 }
 };
+
+// === ITEM SYSTEM V2 ===
+// @see docs/design/item-system-v2.md
+
+// Equipment v2 (6 slots)
+export const EQUIPMENT_SLOTS_V2 = ['weapon', 'helmet', 'chest', 'gloves', 'boots', 'accessory'];
+
+// Inventory
+export const INVENTORY_MAX = 30;
+export const INVENTORY_OVERFLOW_MAX = 3;
+
+// Rarity affix counts (max affixes per rarity)
+export const RARITY_AFFIX_COUNTS = { common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 4 };
+// Chance of rolling max-1 affixes instead of max
+export const RARITY_MAX_MINUS_ONE_CHANCE = { uncommon: 0.40, rare: 0.50, epic: 0.60 };
+
+// Affix validation
+export const MAX_STATUS_AFFIXES_PER_ITEM = 2;
+export const MAX_SKILL_LEVEL_AFFIXES_PER_ITEM = 1;
+export const AFFIX_REROLL_MAX_ATTEMPTS = 10;
+
+// Tier multipliers (index 0 = T1, index 6 = T7)
+export const FLAT_TIER_MULTIPLIERS = [1.0, 2.0, 3.8, 6.5, 11.0, 18.0, 30.0];
+export const PERCENT_TIER_MULTIPLIERS = [1.0, 1.3, 1.7, 2.2, 2.8, 3.6, 4.5];
+
+// Zone → tier mapping
+export const ZONE_TIERS = {
+  whisperwood: 1, dustwind: 2, shadowmire: 3, ironhold: 4,
+  emberfell: 5, frostpeak: 6, voidrift: 7
+};
+
+// Zone required levels for items
+export const ZONE_REQUIRED_LEVELS = {
+  whisperwood: 1, dustwind: 10, shadowmire: 20, ironhold: 30,
+  emberfell: 45, frostpeak: 60, voidrift: 75
+};
+
+// Shop v2
+export const SHOP_SLOTS_V2 = 4;
+export const SHOP_REFRESH_INTERVAL_V2 = 900000; // 15 minutes
+export const SHOP_RARITY_WEIGHTS_V2 = { common: 55, uncommon: 35, rare: 10, epic: 0, legendary: 0 };
+export const SHOP_REFRESH_COSTS = {
+  whisperwood: 200, dustwind: 800, shadowmire: 2000, ironhold: 6000,
+  emberfell: 15000, frostpeak: 40000, voidrift: 100000
+};
+export const SHOP_BUY_ZONE_BASE = {
+  whisperwood: 100, dustwind: 400, shadowmire: 1000, ironhold: 3000,
+  emberfell: 8000, frostpeak: 20000, voidrift: 50000
+};
+export const SHOP_BUY_RARITY_MULT = { common: 1.0, uncommon: 2.5, rare: 6.0 };
+
+// Reforge
+export const REFORGE_ZONE_BASE = {
+  whisperwood: 200, dustwind: 600, shadowmire: 1500, ironhold: 4000,
+  emberfell: 10000, frostpeak: 25000, voidrift: 60000
+};
+export const REFORGE_RARITY_MULT = { uncommon: 1.0, rare: 1.5, epic: 2.5, legendary: 4.0 };
+export const REFORGE_ESCALATION = 2.2;
+
+// Imbue
+export const IMBUE_ZONE_BASE = {
+  whisperwood: 500, dustwind: 1500, shadowmire: 4000, ironhold: 10000,
+  emberfell: 25000, frostpeak: 60000, voidrift: 150000
+};
+export const IMBUE_RARITY_MULT = { uncommon: 1.0, rare: 2.0, epic: 4.0 };
+
+// Temper
+export const TEMPER_LEVEL_BASE = [1000, 1500, 2000, 3000, 5000, 7000, 10000, 15000, 25000, 35000, 50000, 75000];
+export const TEMPER_ZONE_MULT = {
+  whisperwood: 0.3, dustwind: 0.5, shadowmire: 0.8, ironhold: 1.0,
+  emberfell: 1.5, frostpeak: 2.5, voidrift: 4.0
+};
+export const TEMPER_RARITY_MULT = { rare: 1.0, epic: 1.5, legendary: 2.5 };
+export const TEMPER_BOOST_PER_CYCLE = [0.05, 0.07, 0.10]; // cycles 1, 2, 3
+export const TEMPER_SELECTION_LEVELS = [1, 5, 9];
+export const TEMPER_MAX_LEVEL = 12;
+export const TEMPER_BRICK_THRESHOLD = 5; // full resets before bricking
+
+// Drop rates
+export const DROP_CHANCE_BY_ZONE = {
+  whisperwood: 0.04, dustwind: 0.035, shadowmire: 0.03, ironhold: 0.025,
+  emberfell: 0.025, frostpeak: 0.02, voidrift: 0.02
+};
+export const DROP_RARITY_WEIGHTS_BY_ZONE = {
+  whisperwood: { common: 70, uncommon: 25, rare: 5, epic: 0 },
+  dustwind:    { common: 65, uncommon: 28, rare: 7, epic: 0 },
+  shadowmire:  { common: 60, uncommon: 30, rare: 8, epic: 2 },
+  ironhold:    { common: 55, uncommon: 30, rare: 10, epic: 5 },
+  emberfell:   { common: 50, uncommon: 30, rare: 12, epic: 8 },
+  frostpeak:   { common: 45, uncommon: 30, rare: 15, epic: 10 },
+  voidrift:    { common: 40, uncommon: 28, rare: 18, epic: 14 }
+};
+export const BOSS_DROP_RARITY_WEIGHTS = { rare: 60, epic: 35, legendary: 5 };
+export const BOSS_SECOND_DROP_CHANCE = 0.40;
+export const BOSS_MATERIAL_RETURN = { min: 2, max: 4 };
+
+// Materials
+export const ZONE_MATERIALS = {
+  whisperwood: { id: 'mat_whisperwood', name: 'Whisperwood Sap',  dropRate: 0.10, bossCost: 5 },
+  dustwind:    { id: 'mat_dustwind',    name: 'Dustwind Crystal', dropRate: 0.08, bossCost: 6 },
+  shadowmire:  { id: 'mat_shadowmire',  name: 'Shadow Essence',  dropRate: 0.07, bossCost: 7 },
+  ironhold:    { id: 'mat_ironhold',    name: 'Iron Core',       dropRate: 0.06, bossCost: 8 },
+  emberfell:   { id: 'mat_emberfell',   name: 'Ember Shard',     dropRate: 0.05, bossCost: 9 },
+  frostpeak:   { id: 'mat_frostpeak',   name: 'Frost Fragment',  dropRate: 0.04, bossCost: 10 },
+  voidrift:    { id: 'mat_voidrift',    name: 'Void Particle',   dropRate: 0.03, bossCost: 12 }
+};
+export const MATERIAL_DECAY_FACTOR = 0.7;
+
+// Boss scaling
+export const BOSS_HP_SCALING_FACTOR = 0.12;
+export const BOSS_DAMAGE_SCALING_FACTOR = 0.10;
+export const BOSS_LEVEL_BUFFER = 5;
+export const BOSS_AFFIX_TIER_DIVISOR = 14;
+
+// Skill level from items
+export const BEYOND_MAX_SKILL_BONUS_PER_LEVEL = 0.20;
+
+// Naming
+export const EPIC_RARITY_PREFIX_CHANCE = 0.50;
+
+// Sell price (base only — modifications don't increase sell value)
+export const SELL_PRICE_RATIO_V2 = 0.25;
+
+// Legendary Effects (Phase 12.8)
+export const LEGENDARY_EFFECTS = {
+  DOUBLE_HIT_MULT: 0.6,
+  DODGE_CHANCE: 0.2,
+  STATUS_DURATION_BONUS: 0.4,
+  ARMOR_TO_MR_RATIO: 0.5,
+  HIGH_HP_THRESHOLD: 0.8,
+  HIGH_HP_DAMAGE_BONUS: 0.25,
+  LOW_HP_THRESHOLD: 0.3,
+  BLEED_SLOW_BONUS: 0.5,
+  CRIT_FREEZE_DURATION: 0.5,
+  SHIELD_REGEN_RATE: 0.05,
+  SHIELD_REGEN_IDLE_TIME: 3.0,
+  KILL_SHIELD_CHANCE: 0.1,
+  DAMAGE_TO_SHIELD_RATIO: 0.05,
+  CDR_ON_KILL: 1.0
+};
+
