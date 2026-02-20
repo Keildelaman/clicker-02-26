@@ -947,8 +947,7 @@
   white-space: nowrap;
   max-width: 100%;
   overflow: hidden;
-  mask-image: linear-gradient(to right, black 75%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to right, black 75%, transparent 100%);
+  text-overflow: ellipsis;
   text-align: center;
   margin-top: 2px;
 }
@@ -995,8 +994,6 @@
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  mask-image: linear-gradient(to right, black 90%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%);
 }
 
 .inv-toolbar__scroll::-webkit-scrollbar {
@@ -1007,6 +1004,7 @@
   display: flex;
   gap: var(--spacing-xs);
   flex-wrap: nowrap;
+  padding-right: var(--spacing-sm);
 }
 
 .inv-filter {

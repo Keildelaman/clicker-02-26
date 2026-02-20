@@ -435,7 +435,16 @@ function renderInventory() {
     }
   }
 
+  // Save filter scroll position before replacing DOM
+  const scrollEl = inventoryContent.querySelector('.inv-toolbar__scroll');
+  const savedScrollLeft = scrollEl ? scrollEl.scrollLeft : 0;
+
   inventoryContent.innerHTML = html;
+
+  // Restore filter scroll position
+  const newScrollEl = inventoryContent.querySelector('.inv-toolbar__scroll');
+  if (newScrollEl) newScrollEl.scrollLeft = savedScrollLeft;
+
   wireInventoryHandlers();
 }
 
