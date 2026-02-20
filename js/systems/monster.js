@@ -21,6 +21,7 @@ import {
   MONSTER_ARMOR_DEFAULT, MONSTER_MAGIC_RESIST_DEFAULT,
   DAMAGE_TYPES
 } from '../data/constants.js';
+import { bossEffectiveLevel, bossScaledHP, bossAffixTier } from '../data/balance.js';
 import { randomInt } from '../services/utils.js';
 
 let spawnTimer = 0;
@@ -176,6 +177,21 @@ export function spawnBoss(bossId) {
   spawnTimer = 0;
 
   const monster = createMonsterInstance(definition);
+
+  // Phase 12.5: Boss scaling — HP scales with player level
+  const effLevel = bossEffectiveLevel(definition.levelMin, state.player.level);
+  monster.level = effLevel;
+  monster.maxHealth = bossScaledHP(definition.baseHealth, effLevel);
+  monster.currentHealth = monster.maxHealth;
+  monster.affixTier = bossAffixTier(effLevel);
+
+  // Re-init shielded type (shield scales with new maxHealth)
+  if (definition.type.includes('shielded')) {
+    const pct = definition.shieldPercent || SHIELD_PERCENT_DEFAULT;
+    monster.shield = Math.floor(monster.maxHealth * pct);
+    monster.maxShield = monster.shield;
+  }
+
   state.currentMonster = monster;
   state.combatState = 'active';
 

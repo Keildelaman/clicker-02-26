@@ -27,7 +27,8 @@ import {
   POISON_DAMAGE_PERCENT,
   BURN_DURATION, BURN_TICK_INTERVAL, BURN_DAMAGE_TYPE, BURN_DAMAGE_PERCENT,
   SLOW_DURATION, SLOW_STRENGTH,
-  FREEZE_DURATION, FREEZE_REAPPLY_COOLDOWN
+  FREEZE_DURATION, FREEZE_REAPPLY_COOLDOWN,
+  LEGENDARY_EFFECTS
 } from '../data/constants.js';
 import { calcDamageReduction, checkStatusImmunity } from '../data/balance.js';
 
@@ -114,15 +115,27 @@ function applyToMonster(effectId, def, stacks, source, sourceAttack, sourceMagic
     return;
   }
 
+  // Legendary: Venom Lord's Grip — unlimited poison stacks
+  let maxStacks = def.maxStacks;
+  if (effectId === STATUS_EFFECTS.POISON && state.activeLegendaryEffects?.has('unlimited_poison_stacks')) {
+    maxStacks = 9999;
+  }
+
+  // Legendary: Shadowmire Cowl — 40% longer status effect durations on monsters
+  let duration = def.duration;
+  if (state.activeLegendaryEffects?.has('status_duration_bonus')) {
+    duration *= (1 + LEGENDARY_EFFECTS.STATUS_DURATION_BONUS);
+  }
+
   const effects = state.monsterStatusEffects;
   const existing = effects.find(e => e.id === effectId);
 
   if (existing) {
     if (def.stacking) {
-      existing.stacks = Math.min(existing.stacks + stacks, def.maxStacks);
-      existing.remaining = def.duration;
+      existing.stacks = Math.min(existing.stacks + stacks, maxStacks);
+      existing.remaining = duration;
     } else {
-      existing.remaining = def.duration;
+      existing.remaining = duration;
     }
     emit('statusEffect:applied', {
       target: 'monster', effectId, stacks: existing.stacks, refreshed: true
@@ -130,8 +143,8 @@ function applyToMonster(effectId, def, stacks, source, sourceAttack, sourceMagic
   } else {
     const effect = {
       id: effectId,
-      stacks: Math.min(stacks, def.maxStacks || 1),
-      remaining: def.duration,
+      stacks: Math.min(stacks, maxStacks || 1),
+      remaining: duration,
       tickTimer: 0,
       source
     };

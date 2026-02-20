@@ -24,6 +24,7 @@ import * as loot from './systems/loot.js';
 import * as statusEffects from './systems/status-effects.js';
 import * as zones from './systems/zones.js';
 import * as skills from './systems/skills.js';
+import * as items from './systems/items.js';
 import * as tutorial from './systems/tutorial.js';
 
 // Debug
@@ -48,14 +49,40 @@ if (savedData) {
 // 2. Initialize systems (inject cross-system dependencies)
 player.init();
 monster.init();
-combat.init({ getComputedStats: player.getComputedStats, damagePlayer: health.damagePlayer });
+combat.init({
+  getComputedStats: player.getComputedStats,
+  damagePlayer: health.damagePlayer,
+  getWeaponDamageType: items.getWeaponDamageType,
+  getStatusProcChances: items.getStatusProcChances
+});
 health.init({ getComputedStats: player.getComputedStats });
 energy.init({ getComputedStats: player.getComputedStats });
 progression.init({ getComputedStats: player.getComputedStats, invalidateStatCache: player.invalidateStatCache });
-economy.init();
-loot.init();
-zones.init();
-skills.init({ getComputedStats: player.getComputedStats, damagePlayer: health.damagePlayer, invalidateStatCache: player.invalidateStatCache });
+economy.init({
+  generateShopItem: items.generateShopItem,
+  addItem: items.addItem
+});
+items.init({
+  getComputedStats: player.getComputedStats,
+  invalidateStatCache: player.invalidateStatCache,
+  deductGold: economy.deductGold,
+  addGold: economy.addGold
+});
+loot.init({
+  generateItem: items.generateItem,
+  generateLegendaryItem: items.generateLegendaryItem,
+  addItem: items.addItem
+});
+zones.init({
+  canAffordBoss: items.canAffordBoss,
+  spendBossMaterials: items.spendBossMaterials
+});
+skills.init({
+  getComputedStats: player.getComputedStats,
+  damagePlayer: health.damagePlayer,
+  invalidateStatCache: player.invalidateStatCache,
+  getItemSkillLevelBonus: items.getItemSkillLevelBonus
+});
 statusEffects.init({ damagePlayer: health.damagePlayer });
 tutorial.init();
 
@@ -69,6 +96,7 @@ registerTickSystem(health.update);
 registerTickSystem(energy.update);
 registerTickSystem(progression.update);
 registerTickSystem(economy.update);
+registerTickSystem(items.update);
 registerTickSystem(skills.update);
 registerTickSystem(statusEffects.update);
 registerTickSystem(renderer.update);
@@ -177,5 +205,9 @@ initDebug({
   refreshShop: economy.refreshShop,
   travelToZone: zones.travelToZone,
   challengeBoss: zones.challengeBoss,
-  useSkill: skills.useSkill
+  useSkill: skills.useSkill,
+  generateItem: items.generateItem,
+  generateLegendaryItem: items.generateLegendaryItem,
+  addItem: items.addItem,
+  getEffectiveSkillLevel: skills.getEffectiveSkillLevel
 });

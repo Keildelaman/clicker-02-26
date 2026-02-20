@@ -1,47 +1,35 @@
 /**
- * shop-ui.js - Shop & Inventory UI
+ * shop-ui.js - Shop & Inventory UI (v2)
  *
- * Renders shop items, inventory, and equipment slots.
- * Emits intent events for mutations; economy.js handles them.
- * Reads shop state from state.shopItems / state.shopRefreshCost / state.shopRefreshTimer.
+ * Renders shop items, inventory, equipment slots, and overflow.
+ * Tapping any item opens the item-detail-ui panel.
+ * Emits intent events for mutations; economy.js / items.js handle them.
  *
  * @see docs/systems/economy.system.md
+ * @see docs/design/item-system-v2.md
  */
 
 import { on, emit } from '../core/event-bus.js';
 import { state, getPlayer } from '../core/game-state.js';
-import { ITEMS } from '../data/items.data.js';
-import { RARITIES, SELL_PRICE_RATIO } from '../data/constants.js';
+import { AFFIXES } from '../data/affixes.data.js';
+import {
+  RARITIES, SELL_PRICE_RATIO_V2, EQUIPMENT_SLOTS_V2, ZONE_MATERIALS
+} from '../data/constants.js';
 import { showToast } from './toasts.js';
+import * as itemDetailUI from './item-detail-ui.js';
 
 let shopContent;
 let inventoryContent;
 let shopGoldDisplay;
 let activeTab = 'shop';
-let refreshTimerEl = null;
 
 // Inventory filter/sort state (persists across re-renders)
-let activeFilter = 'all';   // 'all' | 'weapon' | 'armor' | 'accessory'
-let activeSort = 'rarity';  // 'rarity' | 'name' | 'level'
+let activeFilter = 'all';   // 'all' | slot name
+let activeSort = 'rarity';  // 'rarity' | 'name' | 'level' | 'slot' | 'newest'
 let bulkPanelOpen = false;
 
-const STAT_LABELS = {
-  attack: 'ATK',
-  magicPower: 'Magic',
-  critChance: 'Crit',
-  critDamage: 'CritDmg',
-  maxHP: 'HP',
-  hpRegen: 'HP Regen',
-  armor: 'Armor',
-  magicResist: 'MR',
-  armorPen: 'Armor Pen',
-  magicPen: 'Magic Pen',
-  goldFind: 'Gold Find',
-  xpBonus: 'XP Bonus',
-  energyGain: 'Energy'
-};
-
 const RARITY_ORDER = { legendary: 0, epic: 1, rare: 2, uncommon: 3, common: 4 };
+const SLOT_ORDER = { weapon: 0, helmet: 1, chest: 2, gloves: 3, boots: 4, accessory: 5 };
 
 // Track bulk sell confirmation timers
 let confirmTimers = {};
@@ -61,15 +49,11 @@ export function init() {
     emit('nav:navigate', { screen: 'combat' });
   });
 
-  // Listen for state changes (result events from economy system)
+  // Listen for state changes (result events from economy / items systems)
   on('shop:refreshed', renderShop);
   on('item:purchased', ({ item }) => {
     showToast(`Purchased ${item.emoji} ${item.name}!`, 'success');
     renderShop(); renderInventory(); updateGold();
-  });
-  on('item:sold', ({ item }) => {
-    showToast(`Sold ${item.emoji} ${item.name}`, 'info');
-    renderInventory(); updateGold();
   });
   on('item:equipped', ({ item }) => {
     showToast(`Equipped ${item.emoji} ${item.name}!`, 'success');
@@ -90,10 +74,57 @@ export function init() {
   on('player:levelUp', () => {
     if (activeTab === 'inventory') renderInventory();
   });
-  on('items:bulkSold', ({ rarity, count, totalGold }) => {
-    showToast(`Sold ${count} ${rarity} items for ${formatGold(totalGold)}g`, 'info');
+  on('item:bulkScrapped', ({ rarity, count, totalGold }) => {
+    showToast(`Scrapped ${count} ${rarity} items for ${formatGold(totalGold)}g`, 'info');
     renderInventory();
     updateGold();
+  });
+  on('item:scrapped', ({ item, goldValue }) => {
+    showToast(`Scrapped ${item.name} for ${formatGold(goldValue)}g`, 'info');
+    renderInventory();
+    updateGold();
+  });
+
+  // Crafting toasts
+  on('item:reforged', ({ item, oldValue, newValue }) => {
+    const dir = newValue > oldValue ? '\u2191' : newValue < oldValue ? '\u2193' : '=';
+    showToast(`Reforged ${item.name}: ${dir}`, newValue >= oldValue ? 'success' : 'warning');
+    if (activeTab === 'inventory') renderInventory();
+  });
+  on('item:imbued', ({ item, newAffix }) => {
+    const affixDef = AFFIXES[newAffix.id];
+    const affixName = affixDef ? affixDef.name.replace('X', '') : newAffix.id;
+    showToast(`Imbued ${item.name} with ${affixName.trim()}!`, 'success');
+    if (activeTab === 'inventory') renderInventory();
+  });
+  on('item:tempered', ({ item, result }) => {
+    const msg = result.type === 'selection'
+      ? `Temper Lv${item.temperLevel}: Selected affix!`
+      : `Temper Lv${item.temperLevel}: Boosted!`;
+    showToast(msg, 'success');
+    if (activeTab === 'inventory') renderInventory();
+  });
+  on('item:temperReset', ({ item, bricked }) => {
+    if (bricked) {
+      showToast(`${item.name} is now BRICKED!`, 'error', 4000);
+    } else {
+      showToast('Temper reset', 'info');
+    }
+    if (activeTab === 'inventory') renderInventory();
+  });
+  on('item:craftFailed', ({ reason, cost }) => {
+    if (reason === 'gold') showToast(`Not enough gold! (${formatGold(cost)}g needed)`, 'error');
+    else if (reason === 'ineligible') showToast('Item cannot be crafted', 'warning');
+    else if (reason === 'bricked') showToast('Item is permanently locked', 'error');
+    else showToast('Crafting failed', 'warning');
+  });
+  on('item:autoScrapped', ({ item, goldValue }) => {
+    showToast(`${item.name} auto-scrapped for ${formatGold(goldValue)}g (inventory full)`, 'warning', 3000);
+  });
+  on('materials:added', ({ materialId, amount }) => {
+    const matEntry = Object.values(ZONE_MATERIALS).find(m => m.id === materialId);
+    const name = matEntry ? matEntry.name : materialId;
+    showToast(`+${amount} ${name}`, 'info', 2000);
   });
 
   // Live timer update (no full re-render)
@@ -151,8 +182,9 @@ function renderShop() {
   </div>`;
 
   // Item cards
-  for (const item of items) {
-    html += createShopItemCard(item, player);
+  for (let i = 0; i < items.length; i++) {
+    if (!items[i]) continue; // null = already purchased
+    html += createShopItemCard(items[i], player, i);
   }
 
   if (items.length === 0) {
@@ -169,39 +201,49 @@ function renderShop() {
     });
   }
 
-  // Wire buy buttons
-  shopContent.querySelectorAll('[data-buy]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      emit('shop:requestPurchase', { itemId: btn.dataset.buy });
+  // Wire shop item card taps → detail panel
+  shopContent.querySelectorAll('[data-shop-index]').forEach(card => {
+    card.addEventListener('click', () => {
+      const idx = parseInt(card.dataset.shopIndex);
+      const item = items[idx];
+      if (item) itemDetailUI.show(item, { source: 'shop', shopIndex: idx });
     });
   });
 }
 
-function createShopItemCard(item, player) {
+function createShopItemCard(item, player, shopIndex) {
   const canAfford = player.gold >= item.buyPrice;
-  const meetsLevel = player.level >= item.requiredLevel;
-  const canBuy = canAfford && meetsLevel;
+  const meetsLevel = player.level >= (item.requiredLevel || 1);
 
-  let actionsHtml = '';
+  let priceHtml = '';
   if (!meetsLevel) {
-    actionsHtml += `<span class="item-card__level-req">Req. Lv ${item.requiredLevel}</span>`;
+    priceHtml += `<span class="item-card__level-req">Req. Lv ${item.requiredLevel}</span>`;
   }
-  actionsHtml += `<span class="item-card__price ${canAfford ? '' : 'item-card__price--unaffordable'}">${formatGold(item.buyPrice)}g</span>`;
-  actionsHtml += `<button class="item-card__btn" data-buy="${item.id}" ${canBuy ? '' : 'disabled'}>Buy</button>`;
+  priceHtml += `<span class="item-card__price ${canAfford ? '' : 'item-card__price--unaffordable'}">${formatGold(item.buyPrice)}g</span>`;
 
-  return createItemCardHTML(item, actionsHtml);
+  return `<div class="item-card item-card--${item.rarity}" data-shop-index="${shopIndex}">
+    <div class="item-card__header">
+      <span class="item-card__emoji">${item.emoji || ''}</span>
+      <div class="item-card__info">
+        <div class="item-card__name">${item.name}</div>
+        <div class="item-card__rarity item-card__rarity--${item.rarity}">${item.rarity} ${item.slot}</div>
+      </div>
+    </div>
+    <div class="item-card__stats">${buildAffixTags(item)}</div>
+    <div class="item-card__actions">${priceHtml}</div>
+  </div>`;
 }
 
 // --- Inventory Filter / Sort Helpers ---
 
 function getFilteredSortedItems(player) {
   let items = player.inventory
-    .map(id => ({ id, item: ITEMS[id] }))
+    .map(entry => ({ id: entry.id, item: entry }))
     .filter(e => e.item);
 
-  // Filter by type
+  // Filter by slot
   if (activeFilter !== 'all') {
-    items = items.filter(e => e.item.type === activeFilter);
+    items = items.filter(e => e.item.slot === activeFilter);
   }
 
   // Sort
@@ -215,9 +257,18 @@ function getFilteredSortedItems(player) {
       return a.item.name.localeCompare(b.item.name);
     }
     if (activeSort === 'level') {
-      const diff = b.item.requiredLevel - a.item.requiredLevel;
+      const diff = (b.item.requiredLevel || 0) - (a.item.requiredLevel || 0);
       if (diff !== 0) return diff;
       return a.item.name.localeCompare(b.item.name);
+    }
+    if (activeSort === 'slot') {
+      const diff = (SLOT_ORDER[a.item.slot] ?? 9) - (SLOT_ORDER[b.item.slot] ?? 9);
+      if (diff !== 0) return diff;
+      return (RARITY_ORDER[a.item.rarity] ?? 5) - (RARITY_ORDER[b.item.rarity] ?? 5);
+    }
+    if (activeSort === 'newest') {
+      // Items added later have higher IDs (timestamp-based)
+      return (b.id || '').localeCompare(a.id || '');
     }
     return 0;
   });
@@ -229,7 +280,10 @@ function buildToolbarHTML() {
   const filters = [
     { key: 'all', label: 'All' },
     { key: 'weapon', label: 'Wpn' },
-    { key: 'armor', label: 'Arm' },
+    { key: 'helmet', label: 'Helm' },
+    { key: 'chest', label: 'Chest' },
+    { key: 'gloves', label: 'Glvs' },
+    { key: 'boots', label: 'Boots' },
     { key: 'accessory', label: 'Acc' }
   ];
 
@@ -240,7 +294,9 @@ function buildToolbarHTML() {
   const sortOptions = [
     { key: 'rarity', label: 'Rarity' },
     { key: 'name', label: 'Name' },
-    { key: 'level', label: 'Level' }
+    { key: 'level', label: 'Level' },
+    { key: 'slot', label: 'Slot' },
+    { key: 'newest', label: 'Newest' }
   ];
 
   const sortSelect = sortOptions.map(s =>
@@ -254,19 +310,20 @@ function buildToolbarHTML() {
 }
 
 function buildBulkSellHTML(player) {
-  // Count items per rarity in inventory (unequipped only — inventory doesn't include equipped)
+  // Count items per rarity in inventory + overflow (unequipped only)
   const counts = {};
   const totals = {};
-  for (const itemId of player.inventory) {
-    const item = ITEMS[itemId];
+
+  const allItems = [...player.inventory, ...(player.inventoryOverflow || [])];
+  for (const item of allItems) {
     if (!item) continue;
-    if (activeFilter !== 'all' && item.type !== activeFilter) continue;
+    if (activeFilter !== 'all' && item.slot !== activeFilter) continue;
     if (!counts[item.rarity]) {
       counts[item.rarity] = 0;
       totals[item.rarity] = 0;
     }
     counts[item.rarity]++;
-    totals[item.rarity] += item.sellPrice || Math.floor(item.buyPrice * SELL_PRICE_RATIO);
+    totals[item.rarity] += item.sellPrice || Math.floor(item.buyPrice * SELL_PRICE_RATIO_V2);
   }
 
   // Only show rarities that have items, ordered common-first (safest to sell first)
@@ -275,7 +332,7 @@ function buildBulkSellHTML(player) {
 
   if (available.length === 0) return '';
 
-  const toggleText = bulkPanelOpen ? 'Hide Bulk Sell' : 'Sell All...';
+  const toggleText = bulkPanelOpen ? 'Hide Bulk Scrap' : 'Scrap All...';
 
   let html = `<button class="inv-bulk-toggle" data-bulk-toggle>${toggleText}</button>`;
 
@@ -283,8 +340,8 @@ function buildBulkSellHTML(player) {
     html += '<div class="inv-bulk-panel">';
     for (const rarity of available) {
       const rarityInfo = RARITIES[rarity];
-      const typeLabel = activeFilter !== 'all' ? ` ${activeFilter}s` : '';
-      const label = `Sell ${counts[rarity]} ${rarityInfo.name}${typeLabel}`;
+      const slotLabel = activeFilter !== 'all' ? ` ${activeFilter}` : '';
+      const label = `Scrap ${counts[rarity]} ${rarityInfo.name}${slotLabel}`;
       const goldLabel = `${formatGold(totals[rarity])}g`;
       html += `<button class="inv-bulk-btn inv-bulk-btn--${rarity}" data-bulk-sell="${rarity}">
         ${label} &mdash; ${goldLabel}
@@ -305,17 +362,17 @@ function renderInventory() {
   const player = getPlayer();
   let html = '';
 
-  // Equipment slots
+  // Equipment slots (6 v2 object slots)
   html += '<div class="equipment-slots">';
-  for (const slot of ['weapon', 'armor', 'accessory']) {
-    const itemId = player.equipment[slot];
-    const item = itemId ? ITEMS[itemId] : null;
+  for (const slot of EQUIPMENT_SLOTS_V2) {
+    const item = player.equipment[slot];
 
     if (item) {
-      html += `<div class="equipment-slot equipment-slot--filled" data-unequip="${slot}">
-        <span class="equipment-slot__emoji">${item.emoji}</span>
+      const rarityColor = RARITIES[item.rarity]?.color || '#9d9d9d';
+      html += `<div class="equipment-slot equipment-slot--filled equipment-slot--${item.rarity}" data-equip-slot="${slot}">
+        <span class="equipment-slot__emoji">${item.emoji || ''}</span>
         <span class="equipment-slot__name">${item.name}</span>
-        <span class="equipment-slot__label">tap to unequip</span>
+        <span class="equipment-slot__label">tap to view</span>
       </div>`;
     } else {
       html += `<div class="equipment-slot">
@@ -325,8 +382,26 @@ function renderInventory() {
   }
   html += '</div>';
 
+  // Overflow section (amber highlight, at top of inventory)
+  const overflow = player.inventoryOverflow || [];
+  if (overflow.length > 0) {
+    html += `<div class="inventory-overflow-label">Overflow (${overflow.length}/3) &mdash; Scrap to make room!</div>`;
+    for (const item of overflow) {
+      html += `<div class="item-card item-card--${item.rarity} item-card--overflow" data-overflow-id="${item.id}">
+        <div class="item-card__header">
+          <span class="item-card__emoji">${item.emoji || ''}</span>
+          <div class="item-card__info">
+            <div class="item-card__name">${item.name}</div>
+            <div class="item-card__rarity item-card__rarity--${item.rarity}">${item.rarity} ${item.slot}</div>
+          </div>
+        </div>
+        <div class="item-card__stats">${buildAffixTags(item)}</div>
+      </div>`;
+    }
+  }
+
   // Inventory label
-  html += '<div class="inventory-label">Inventory</div>';
+  html += `<div class="inventory-label">Inventory (${player.inventory.length}/30)</div>`;
 
   // Toolbar (filter pills + sort)
   html += buildToolbarHTML();
@@ -345,16 +420,16 @@ function renderInventory() {
     }
 
     for (const { id: itemId, item } of filtered) {
-      const sellPrice = item.sellPrice || Math.floor(item.buyPrice * SELL_PRICE_RATIO);
-      const meetsLevel = player.level >= item.requiredLevel;
-      let actionsHtml = '';
-      if (!meetsLevel) {
-        actionsHtml += `<span class="item-card__level-req">Req. Lv ${item.requiredLevel}</span>`;
-      }
-      actionsHtml += `<button class="item-card__btn item-card__btn--equip" data-equip="${itemId}" ${meetsLevel ? '' : 'disabled'}>Equip</button>`;
-      actionsHtml += `<button class="item-card__btn item-card__btn--sell" data-sell="${itemId}">Sell (${formatGold(sellPrice)}g)</button>`;
-
-      html += createItemCardHTML(item, actionsHtml);
+      html += `<div class="item-card item-card--${item.rarity}" data-inv-id="${itemId}">
+        <div class="item-card__header">
+          <span class="item-card__emoji">${item.emoji || ''}</span>
+          <div class="item-card__info">
+            <div class="item-card__name">${item.name}</div>
+            <div class="item-card__rarity item-card__rarity--${item.rarity}">${item.rarity} ${item.slot}</div>
+          </div>
+        </div>
+        <div class="item-card__stats">${buildAffixTags(item)}</div>
+      </div>`;
     }
   }
 
@@ -363,24 +438,33 @@ function renderInventory() {
 }
 
 function wireInventoryHandlers() {
-  // Wire unequip
-  inventoryContent.querySelectorAll('[data-unequip]').forEach(el => {
+  // Wire equipment slot taps → detail panel
+  inventoryContent.querySelectorAll('[data-equip-slot]').forEach(el => {
     el.addEventListener('click', () => {
-      emit('shop:requestUnequip', { slot: el.dataset.unequip });
+      const slot = el.dataset.equipSlot;
+      const player = getPlayer();
+      const item = player.equipment[slot];
+      if (item) itemDetailUI.show(item, { source: 'equipment', slot });
     });
   });
 
-  // Wire equip
-  inventoryContent.querySelectorAll('[data-equip]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      emit('shop:requestEquip', { itemId: btn.dataset.equip });
+  // Wire inventory item taps → detail panel
+  inventoryContent.querySelectorAll('[data-inv-id]').forEach(card => {
+    card.addEventListener('click', () => {
+      const itemId = card.dataset.invId;
+      const player = getPlayer();
+      const item = player.inventory.find(i => i.id === itemId);
+      if (item) itemDetailUI.show(item, { source: 'inventory' });
     });
   });
 
-  // Wire sell
-  inventoryContent.querySelectorAll('[data-sell]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      emit('shop:requestSell', { itemId: btn.dataset.sell });
+  // Wire overflow item taps → detail panel
+  inventoryContent.querySelectorAll('[data-overflow-id]').forEach(card => {
+    card.addEventListener('click', () => {
+      const itemId = card.dataset.overflowId;
+      const player = getPlayer();
+      const item = (player.inventoryOverflow || []).find(i => i.id === itemId);
+      if (item) itemDetailUI.show(item, { source: 'inventory' });
     });
   });
 
@@ -423,9 +507,7 @@ function handleBulkSell(btn, rarity) {
   if (btn.classList.contains('inv-bulk-btn--confirming')) {
     clearTimeout(confirmTimers[rarity]);
     delete confirmTimers[rarity];
-    const typeFilter = activeFilter !== 'all' ? activeFilter : null;
-    emit('shop:requestBulkSell', { rarity, typeFilter });
-    // renderInventory is triggered by items:bulkSold event
+    emit('item:requestBulkScrap', { rarity });
     return;
   }
 
@@ -447,28 +529,26 @@ function handleBulkSell(btn, rarity) {
 
 // --- Shared Helpers ---
 
-function createItemCardHTML(item, actionsHtml) {
-  const statsHtml = Object.entries(item.stats)
-    .map(([key, val]) => {
-      const label = STAT_LABELS[key] || key;
-      const display = typeof val === 'number' && val < 1 && val > 0
-        ? `+${Math.round(val * 100)}%`
-        : `+${val}`;
-      return `<span class="item-card__stat">${display} ${label}</span>`;
-    })
-    .join('');
-
-  return `<div class="item-card item-card--${item.rarity}">
-    <div class="item-card__header">
-      <span class="item-card__emoji">${item.emoji}</span>
-      <div class="item-card__info">
-        <div class="item-card__name">${item.name}</div>
-        <div class="item-card__rarity item-card__rarity--${item.rarity}">${item.rarity} ${item.type}</div>
-      </div>
-    </div>
-    <div class="item-card__stats">${statsHtml}</div>
-    <div class="item-card__actions">${actionsHtml}</div>
-  </div>`;
+/**
+ * Build compact affix tag HTML for item cards.
+ * Uses AFFIXES[id].name formatting.
+ */
+function buildAffixTags(item) {
+  if (!item.affixes || item.affixes.length === 0) return '';
+  return item.affixes.map((affix, i) => {
+    const def = AFFIXES[affix.id];
+    let text;
+    if (def) {
+      const val = def.scaleType === 'percentage'
+        ? `${Math.round(affix.value * 100)}`
+        : `${Math.round(affix.value)}`;
+      text = def.name.replace('X', val);
+    } else {
+      text = `+${affix.value} ${affix.id.replace(/_/g, ' ')}`;
+    }
+    const lockIcon = item.reforgedAffix === i ? '&#x1F512; ' : '';
+    return `<span class="item-card__stat">${lockIcon}${text}</span>`;
+  }).join('');
 }
 
 function formatGold(amount) {

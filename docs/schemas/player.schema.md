@@ -4,7 +4,7 @@
 
 ## Overview
 
-The player object contains all persistent state: identity, progression, stats, inventory, skills, and ascension data.
+The player object contains all persistent state: identity, progression, equipment, inventory, materials, skills, zones, ascension, and settings. Stats are computed at runtime from base values + equipment + buffs (not stored).
 
 ---
 
@@ -13,7 +13,7 @@ The player object contains all persistent state: identity, progression, stats, i
 ```typescript
 interface Player {
   // === Meta ===
-  saveVersion: number;          // For migration support
+  saveVersion: number;          // Current: 5
   createdAt: number;            // Unix timestamp of first save
   lastSavedAt: number;          // Unix timestamp of last save
   totalPlayTime: number;        // Milliseconds of active play
@@ -32,58 +32,53 @@ interface Player {
   totalGoldEarned: number;      // Lifetime gold (for stats)
   totalGoldSpent: number;       // Lifetime spent (for stats)
 
-  // === Health & Energy (NEW) ===
+  // === Health & Energy ===
   hp: number;                   // Current HP
-  maxHP: number;                // Calculated max HP
+  maxHP: number;                // Calculated max HP (base + level + equipment)
   energy: number;               // Current Energy (0-100)
-  maxEnergy: number;            // Max Energy (100, can increase)
+  maxEnergy: number;            // Max Energy (100)
 
-  // === Combat Stats ===
-  stats: {
-    attack: number;             // Base attack power
-    critChance: number;         // 0.0 to 1.0 (5% base)
-    critDamage: number;         // Multiplier (2.0 = 200%)
-    goldFind: number;           // 0.0 to X (bonus %)
-    xpBonus: number;            // 0.0 to X (bonus %)
-    hpRegen: number;            // % of max HP per second (0.005 = 0.5%)
-    damageReduction: number;    // 0.0 to 1.0 (reduction %)
-    energyGain: number;         // Bonus % to energy from clicks
-    armorPen: number;           // % of armor ignored
-  };
-
-  // === Equipment ===
+  // === Equipment (v2 — 6 object slots) ===
   equipment: {
-    weapon: string | null;      // Item ID or null
-    armor: string | null;       // Item ID or null
-    accessory: string | null;   // Item ID or null
+    weapon: Item | null;        // Full item object or null
+    helmet: Item | null;
+    chest: Item | null;
+    gloves: Item | null;
+    boots: Item | null;
+    accessory: Item | null;
   };
 
-  // === Inventory ===
-  inventory: string[];          // Array of owned Item IDs
+  // === Inventory (v2 — item objects, not IDs) ===
+  inventory: Item[];            // Array of item objects (max 30)
+  inventoryOverflow: Item[];    // Overflow slots for drops (max 3)
 
-  // === Skill System (Mastery Points) ===
-  unlockedSkills: string[];       // Skills unlocked THIS run (bought with MP)
-  masteryPoints: number;          // Current available MP
-  masterySpent: number;           // Total MP spent this run
-
-  // === Skills (per-skill state) ===
-  skills: {
-    [skillId: string]: {
-      level: number;            // Current skill level (1-5, or 1-10 with ascension)
-      lastUsed: number | null;  // Timestamp for cooldown (active skills)
-    };
+  // === Materials ===
+  materials: {                  // Zone materials for boss challenges
+    [materialId: string]: number;  // e.g. { mat_whisperwood: 5 }
   };
 
-  // === Equipped Skills ===
-  equippedActiveSkills: (string | null)[];   // 4 slots for active skills
-  equippedPassiveSkills: (string | null)[];  // 3 slots for passive skills
+  // === Skill System (v2 — SP-based) ===
+  skillPoints: number;          // Current available SP
+  totalSPEarned: number;        // Lifetime SP earned
+  respecCount: number;          // Times respecced (drives cost escalation)
+  unlockedSkills: {             // Map of skill ID → level (not an array)
+    [skillId: string]: number;  // e.g. { power_strike: 1, flurry: 3 }
+  };
+  equippedActive: (string | null)[];    // 4 slots for active skills
+  equippedPassive: (string | null)[];   // 3 slots for passive skills
+  skillCooldowns: {             // Tick-based cooldowns in seconds
+    [skillId: string]: number;  // Decremented by dt each tick
+  };
 
   // === Zone Progress ===
   currentZone: string;          // Zone ID where player is
   unlockedZones: string[];      // Array of unlocked Zone IDs
   bossesDefeated: string[];     // Array of defeated Boss IDs
+  zoneKills: {                  // Kill counts per zone
+    [zoneId: string]: number;
+  };
 
-  // === Ascension (NEW) ===
+  // === Ascension ===
   ascension: {
     level: number;              // Current ascension level (0 = never ascended)
     totalAscensions: number;    // Lifetime count
@@ -96,7 +91,7 @@ interface Player {
   };
 
   // === Vault (for ascension) ===
-  vault: string[];              // Item IDs stored in vault
+  vault: Item[];                // Item objects stored in vault (max 8)
 
   // === Statistics ===
   statistics: {
@@ -106,36 +101,24 @@ interface Player {
     highestDamage: number;
     totalCriticals: number;
     timePlayed: number;
-    totalDeaths: number;        // NEW
-    totalHealingDone: number;   // NEW
-    totalDamageTaken: number;   // NEW
+    totalDeaths: number;
+    totalHealingDone: number;
+    totalDamageTaken: number;
   };
 
   // === Settings ===
   settings: {
-    soundVolume: number;
-    musicVolume: number;
+    soundVolume: number;        // 0.0-1.0
+    musicVolume: number;        // 0.0-1.0
     showDamageNumbers: boolean;
     screenShake: boolean;
     autoSave: boolean;
   };
 
-  // === Tutorial State (EXPANDED) ===
+  // === Tutorial State ===
   tutorial: {
-    completed: {
-      first_load: boolean;
-      first_kill: boolean;
-      first_level_up: boolean;
-      first_skill_unlock: boolean;
-      first_skill_use: boolean;
-      first_energy_full: boolean;
-      first_shop_visit: boolean;
-      first_item_bought: boolean;
-      first_aggressive_monster: boolean;
-      first_damage_taken: boolean;
-      first_zone_unlock: boolean;
-      first_boss_killed: boolean;
-      first_death: boolean;
+    completed: {                // Map of tutorial flag → boolean
+      [flagId: string]: boolean;
     };
     tipsShown: number;
     lastTipTime: number | null;
@@ -154,54 +137,61 @@ interface AscensionRecord {
 
 ## Runtime State (Not Saved)
 
-These fields exist during gameplay but are NOT persisted:
+These fields exist in `game-state.js` during gameplay but are NOT persisted:
 
 ```typescript
 interface RuntimeState {
-  // === Active Buffs ===
-  buffs: {
-    [buffId: string]: {
-      stat: string;
-      value: number;
-      duration: number;
-      expiresAt: number;
-      // Additional buff-specific data
-      damageMultiplier?: number;
-      damageTakenMultiplier?: number;
-      damageReduction?: number;
-      reflectMultiplier?: number;
-      survivePercent?: number;
-      invulnerable?: boolean;
+  player: Player;                       // The saved player object
+
+  // === Combat ===
+  currentMonster: MonsterInstance | null;
+  combatState: 'idle' | 'spawning' | 'active' | 'dying' | 'waiting' | 'dead';
+  overkillCarry: number;                // Overflow damage for overkill chains
+
+  // === UI ===
+  currentScreen: string;                // 'combat' | 'shop' | 'skills' | etc.
+
+  // === Skill v2 Runtime ===
+  activeBuffs: {                        // Map of skill ID → buff state
+    [skillId: string]: {
+      remaining: number;                // Seconds remaining
+      effects: { [key: string]: any };  // Buff-specific effect data
     };
   };
-
-  // === Combat Modifiers ===
-  nextAttackModifier: number | null;
-
-  // === Current Combat ===
-  currentMonster: MonsterInstance | null;
-  combatState: 'idle' | 'spawning' | 'active' | 'monster_attacking' | 'dying' | 'waiting';
-
-  // === Timing Mode (Perfect Strike) ===
-  timingMode: {
-    active: boolean;
-    expiresAt: number | null;
-    goodMultiplier: number;
-    perfectMultiplier: number;
-    missMultiplier: number;
+  hitModifier: {                        // Single queued hit modifier (consumed on click)
+    skillId: string;
+    multiplier: number;
   } | null;
+  clickModifiers: {                     // Per-click modifiers with charges
+    [skillId: string]: { charges: number };
+  };
+  toggleStates: {                       // Active toggle skills
+    [skillId: string]: {
+      active: boolean;
+      stacks: number;
+      // ... toggle-specific state
+    };
+  };
+  channelState: {                       // Active channel skill
+    skillId: string;
+    startTime: number;
+    // ... channel-specific state
+  } | null;
+  playerShield: {                       // Temporary shield from skills
+    amount: number;
+    maxAmount: number;
+    remaining: number;
+  } | null;
+  passiveStates: {                      // Passive-specific runtime state
+    [skillId: string]: { /* varies */ };
+  };
+  lastClickTime: number;                // performance.now() of last combat click
 
-  // === Shield (temporary) ===
-  shield: number;
-  maxShield: number;
-
-  // === UI State ===
-  currentScreen: 'combat' | 'shop' | 'skills' | 'zones' | 'stats';
-  isModalOpen: boolean;
-  activeModal: string | null;
-
-  // === Energy Tracking ===
-  lastEnergyGain: number;       // Timestamp for internal cooldown
+  // === Item v2 Runtime ===
+  computedStats: { [stat: string]: number }; // Cached stat totals
+  equipmentStats: { [stat: string]: number }; // Sum of equipment affixes
+  shopItems: Item[];                    // Current shop inventory (regenerated)
+  activeLegendaryEffects: Set<string>;  // Active legendary effect IDs (rebuilt from equipment)
 }
 ```
 
@@ -209,14 +199,16 @@ interface RuntimeState {
 
 ## Default New Player
 
+From `js/systems/player.js` → `createNewPlayer()`:
+
 ```javascript
 const DEFAULT_PLAYER = {
-  saveVersion: 2,
+  saveVersion: 5,
   createdAt: Date.now(),
   lastSavedAt: Date.now(),
   totalPlayTime: 0,
 
-  name: "Hero",
+  name: 'Hero',
 
   level: 1,
   xp: 0,
@@ -227,47 +219,31 @@ const DEFAULT_PLAYER = {
   totalGoldEarned: 0,
   totalGoldSpent: 0,
 
-  hp: 100,
+  hp: 100,         // BASE_PLAYER_HP
   maxHP: 100,
   energy: 0,
-  maxEnergy: 100,
-
-  stats: {
-    attack: 5,
-    critChance: 0.05,
-    critDamage: 2.0,
-    goldFind: 0.0,
-    xpBonus: 0.0,
-    hpRegen: 0.005,      // 0.5% per second
-    damageReduction: 0.0,
-    energyGain: 0.0,
-    armorPen: 0.0
-  },
+  maxEnergy: 100,  // MAX_ENERGY
 
   equipment: {
-    weapon: null,
-    armor: null,
-    accessory: null
+    weapon: null, helmet: null, chest: null,
+    gloves: null, boots: null, accessory: null
   },
-
   inventory: [],
+  inventoryOverflow: [],
+  materials: {},
 
-  // Skill System (Mastery Points)
-  unlockedSkills: ["skill_power_strike"],  // Power Strike free at start
-  masteryPoints: 0,                        // Earned from levels + bosses
-  masterySpent: 0,
+  skillPoints: 0,
+  totalSPEarned: 0,
+  respecCount: 0,
+  unlockedSkills: { 'power_strike': 1 },   // Power Strike free at level 1
+  equippedActive: ['power_strike', null, null, null],
+  equippedPassive: [null, null, null],
+  skillCooldowns: {},
 
-  skills: {
-    // Power Strike is discovered at level 1
-    "skill_power_strike": { level: 1, lastUsed: null }
-  },
-
-  equippedActiveSkills: ["skill_power_strike", null, null, null],
-  equippedPassiveSkills: [null, null, null],
-
-  currentZone: "whisperwood",
-  unlockedZones: ["whisperwood"],
+  currentZone: 'whisperwood',
+  unlockedZones: ['whisperwood'],
   bossesDefeated: [],
+  zoneKills: {},
 
   ascension: {
     level: 0,
@@ -303,21 +279,7 @@ const DEFAULT_PLAYER = {
   },
 
   tutorial: {
-    completed: {
-      first_load: false,
-      first_kill: false,
-      first_level_up: false,
-      first_skill_unlock: false,
-      first_skill_use: false,
-      first_energy_full: false,
-      first_shop_visit: false,
-      first_item_bought: false,
-      first_aggressive_monster: false,
-      first_damage_taken: false,
-      first_zone_unlock: false,
-      first_boss_killed: false,
-      first_death: false
-    },
+    completed: {},
     tipsShown: 0,
     lastTipTime: null,
     tutorialEnabled: true
@@ -327,186 +289,66 @@ const DEFAULT_PLAYER = {
 
 ---
 
+## Stat Computation
+
+Stats are computed at runtime, not stored. `getComputedStats()` in `player.js` aggregates:
+
+1. **Base stats** from level (attack + level bonuses, armor/MR per level)
+2. **Equipment stats** summed from all equipped item affixes (`equipmentStats`)
+3. **Passive skill bonuses** (stat-only passives like heavy_handed, berserker)
+4. **Active buffs** (temporary multipliers from skills)
+5. **Ascension bonuses** (permanent % bonuses)
+
+The stat cache is invalidated on equip/unequip, level-up, skill change, buff change, or HP change (for berserker conditional).
+
+---
+
 ## HP Calculation
 
 ```javascript
-function calculateMaxHP(player) {
-  const BASE_HP = 100;
-  const HP_PER_LEVEL = 10;
-
-  // Base HP from level
-  let maxHP = BASE_HP + (HP_PER_LEVEL * (player.level - 1));
-
-  // Add ascension flat HP
-  maxHP += player.ascension.flatHP;
-
-  // Apply Thick Skin passive (if equipped)
-  const thickSkinBonus = getPassiveBonus(player, 'skill_thick_skin', 'maxHP');
-  maxHP = Math.floor(maxHP * (1 + thickSkinBonus));
-
-  // Apply equipment bonuses
-  maxHP = Math.floor(maxHP * (1 + getEquipmentBonus(player, 'maxHP')));
-
-  return maxHP;
-}
+maxHP = BASE_PLAYER_HP + (HP_PER_LEVEL * (level - 1))
+       + ascension.flatHP
+       + equipmentBonus('maxHP')
 ```
 
 ---
 
-## Skill Slot Management
+## Skill System (v2)
 
+### Key differences from v1
+- `unlockedSkills` is a **map** `{ id: level }`, not an array
+- Skill IDs have **no prefix**: `'power_strike'` not `'skill_power_strike'`
+- `skillPoints` replaces `masteryPoints` (earned every 3 levels)
+- `equippedActive`/`equippedPassive` (not `equippedActiveSkills`/`equippedPassiveSkills`)
+- Cooldowns are tick-based seconds in `skillCooldowns`, not timestamps
+
+### Equip
 ```javascript
-// Equip active skill (must be discovered)
-function equipActiveSkill(player, skillId, slotIndex) {
-  if (slotIndex < 0 || slotIndex >= 4) return false;
-  if (!player.unlockedSkills.includes(skillId)) return false;
-
-  // Remove from current slot if already equipped
-  const currentSlot = player.equippedActiveSkills.indexOf(skillId);
-  if (currentSlot !== -1) {
-    player.equippedActiveSkills[currentSlot] = null;
-  }
-
-  player.equippedActiveSkills[slotIndex] = skillId;
-  return true;
-}
-
-// Equip passive skill (must be discovered)
-function equipPassiveSkill(player, skillId, slotIndex) {
-  if (slotIndex < 0 || slotIndex >= 3) return false;
-  if (!player.unlockedSkills.includes(skillId)) return false;
-
-  const skill = getSkill(skillId);
-  if (skill.type !== 'passive') return false;
-
-  const currentSlot = player.equippedPassiveSkills.indexOf(skillId);
-  if (currentSlot !== -1) {
-    player.equippedPassiveSkills[currentSlot] = null;
-  }
-
-  player.equippedPassiveSkills[slotIndex] = skillId;
-  return true;
+function equipActiveSkill(skillId, slotIndex) {
+  // slotIndex: 0-3
+  // skillId must exist in unlockedSkills
+  // Apply SKILL_SWAP_COOLDOWN_PENALTY (50% of base CD) on equip
 }
 ```
 
----
-
-## Skill Purchase System
-
+### Unlock & Upgrade
 ```javascript
-// Purchase a skill with Mastery Points
-function purchaseSkill(player, skillId) {
-  const skillDef = getSkillDefinition(skillId);
-  if (!skillDef) return false;
-
-  // Check if already unlocked
-  if (player.unlockedSkills.includes(skillId)) return false;
-
-  // Check MP cost
-  const cost = skillDef.mpCost;  // 3-10 MP depending on skill tier
-  const availableMP = player.masteryPoints - player.masterySpent;
-  if (availableMP < cost) return false;
-
-  // Purchase!
-  player.masterySpent += cost;
-  player.unlockedSkills.push(skillId);
-  player.skills[skillId] = { level: 1, lastUsed: null };
-
-  return true;
+function unlockSkill(skillId) {
+  // Costs 1 SP, requires player level >= skill.unlockLevel
+  // Adds to unlockedSkills map at level 1
 }
-
-// Upgrade a skill (costs Mastery Points only)
-function upgradeSkill(player, skillId) {
-  if (!player.unlockedSkills.includes(skillId)) return false;
-
-  const skill = player.skills[skillId];
-  const targetLevel = skill.level + 1;
-  const maxLevel = getMaxSkillLevel(player.ascension.level);
-
-  if (targetLevel > maxLevel) return false;
-
-  // Upgrade cost: 1 MP per level (Lv 2 = 1 MP, Lv 3 = 1 MP, etc.)
-  const mpCost = 1;
-  const availableMP = player.masteryPoints - player.masterySpent;
-
-  if (availableMP < mpCost) return false;
-
-  player.masterySpent += mpCost;
-  skill.level = targetLevel;
-
-  return true;
-}
-
-// Get available MP for display
-function getAvailableMasteryPoints(player) {
-  return player.masteryPoints - player.masterySpent;
+function upgradeSkill(skillId) {
+  // Costs 1 SP per level, max level 5
+  // Increments unlockedSkills[skillId]
 }
 ```
 
----
-
-## Ascension Functions
-
+### Respec
 ```javascript
-function performAscension(player) {
-  // Record history
-  player.ascension.history.push({
-    level: player.ascension.level + 1,
-    timestamp: Date.now(),
-    runTime: player.totalPlayTime
-  });
-
-  // Increment ascension
-  player.ascension.level++;
-  player.ascension.totalAscensions++;
-
-  // Add permanent bonuses
-  player.ascension.damageBonus += 0.05;
-  player.ascension.goldBonus += 0.05;
-  player.ascension.xpBonus += 0.05;
-  player.ascension.flatHP += 50;
-
-  // Track fastest run
-  if (!player.ascension.fastestRun ||
-      player.totalPlayTime < player.ascension.fastestRun) {
-    player.ascension.fastestRun = player.totalPlayTime;
-  }
-
-  // Move equipment to vault
-  for (const slot of Object.keys(player.equipment)) {
-    if (player.equipment[slot]) {
-      player.vault.push(player.equipment[slot]);
-      player.equipment[slot] = null;
-    }
-  }
-  for (const itemId of player.inventory) {
-    player.vault.push(itemId);
-  }
-  player.inventory = [];
-
-  // Reset progress
-  player.level = 1;
-  player.xp = 0;
-  player.gold = 0;
-  player.totalPlayTime = 0;
-
-  // Reset skills (fresh build each run!)
-  player.unlockedSkills = ["skill_power_strike"];  // Power Strike always free
-  player.masteryPoints = player.ascension.level * 3;  // Ascension bonus MP
-  player.masterySpent = 0;
-
-  // Reset skills to just Power Strike
-  player.skills = {
-    "skill_power_strike": { level: 1, lastUsed: null }
-  };
-
-  // Reset equipped skills
-  player.equippedActiveSkills = ["skill_power_strike", null, null, null];
-  player.equippedPassiveSkills = [null, null, null];
-
-  // Full heal
-  player.hp = calculateMaxHP(player);
-  player.energy = 0;
+function respecSkills() {
+  // Cost: RESPEC_COSTS[min(respecCount, 5)]
+  // [1000, 3000, 8000, 20000, 50000, 100000]
+  // Refunds all SP, clears all unlocks/equips, cleans up passives
 }
 ```
 
@@ -516,40 +358,20 @@ function performAscension(player) {
 
 ### LocalStorage Key
 ```
-SAVE_KEY = "clickoria_save_v2"
+SAVE_KEY = "clickoria_save_v5"
 ```
 
-### Migration
-```javascript
-function migrate(oldSave) {
-  if (oldSave.saveVersion === 1) {
-    // Migrate from v1 to v2
-    return {
-      ...oldSave,
-      saveVersion: 2,
-      hp: 100,
-      maxHP: 100,
-      energy: 0,
-      maxEnergy: 100,
-      stats: {
-        ...oldSave.stats,
-        hpRegen: 0.005,
-        damageReduction: 0,
-        energyGain: 0,
-        armorPen: 0
-      },
-      equippedActiveSkills: [null, null, null, null],
-      equippedPassiveSkills: [null, null, null],
-      ascension: { level: 0, totalAscensions: 0, damageBonus: 0, goldBonus: 0, xpBonus: 0, flatHP: 0, fastestRun: null, history: [] },
-      vault: [],
-      tutorial: { completed: {}, tipsShown: 0, lastTipTime: null, tutorialEnabled: true }
-    };
-  }
-  return oldSave;
-}
+### Migration Chain
 ```
+v1 → v2: Add HP, Energy, skills, ascension, tutorial
+v2 → v3: Equipment system expansion
+v3 → v4: Skill v2 (SP replaces MP, new skill schema, refund SP = floor(level/3))
+v4 → v5: Item v2 (6 slots, wipe all items, compensate 50% gold from LEGACY_ITEM_PRICES)
+```
+
+Each migration step is applied sequentially. The save key is always `clickoria_save_v5` (latest). Old save keys are checked as fallbacks during load.
 
 ---
 
-*Referenced by: storage.js, game.js, combat.js, skills.js*
-*References: _INDEX.md, item.schema.md, zone.schema.md, skill.schema.md*
+*Referenced by: storage.js, player.js, combat.js, skills.js, items.js*
+*References: _INDEX.md, item.schema.md, zone.schema.md, docs/design/skill-system-v2.md*

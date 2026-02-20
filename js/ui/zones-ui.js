@@ -13,6 +13,7 @@ import { on, emit } from '../core/event-bus.js';
 import { getPlayer } from '../core/game-state.js';
 import { ZONES, ZONE_ORDER } from '../data/zones.data.js';
 import { MONSTERS } from '../data/monsters.data.js';
+import { ZONE_MATERIALS } from '../data/constants.js';
 import { showToast } from './toasts.js';
 
 let zonesList = null;
@@ -45,6 +46,8 @@ export function init() {
   on('zone:bossLocked', ({ current, required }) => {
     showToast(`Defeat ${required - current} more monsters!`, 'warning');
   });
+  on('materials:added', updateBossButton);
+  on('materials:spent', updateBossButton);
 
   // Apply initial theme from player's current zone
   const player = getPlayer();
@@ -201,6 +204,9 @@ function updateBossButton() {
     }
   }
 
+  // Update material cost display
+  updateMaterialDisplay(player);
+
   // Update kill progress bar
   if (bossKillProgress) {
     if (defeated || progress.met) {
@@ -213,6 +219,35 @@ function updateBossButton() {
       if (fillEl) fillEl.style.width = `${pct}%`;
       if (textEl) textEl.textContent = `${progress.current} / ${progress.required} kills`;
     }
+  }
+}
+
+/**
+ * Show material cost below the boss button.
+ * @param {Object} player
+ */
+function updateMaterialDisplay(player) {
+  const zone = ZONES[player.currentZone];
+  const matInfo = ZONE_MATERIALS[player.currentZone];
+
+  // Remove existing material display
+  const existing = document.getElementById('boss-material-display');
+  if (existing) existing.remove();
+
+  if (!matInfo || !zone || !zone.bossId) return;
+
+  const current = player.materials[matInfo.id] || 0;
+  const required = matInfo.bossCost;
+  const sufficient = current >= required;
+  const cls = sufficient ? 'boss-material--sufficient' : 'boss-material--insufficient';
+
+  const el = document.createElement('div');
+  el.id = 'boss-material-display';
+  el.className = `boss-material ${cls}`;
+  el.textContent = `${matInfo.name}: ${current}/${required}`;
+
+  if (bossChallenge) {
+    bossChallenge.appendChild(el);
   }
 }
 

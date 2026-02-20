@@ -11,7 +11,7 @@
 import { on, emit } from '../core/event-bus.js';
 import { state, getPlayer } from '../core/game-state.js';
 import {
-  DEATH_GOLD_LOSS, DEATH_RESPAWN_DELAY, DAMAGE_TYPES
+  DEATH_GOLD_LOSS, DEATH_RESPAWN_DELAY, DAMAGE_TYPES, LEGENDARY_EFFECTS
 } from '../data/constants.js';
 import { xpToNextLevel, calcDamageReduction } from '../data/balance.js';
 /* Note: state.activeBuffs and state.playerShield accessed for skill interactions */
@@ -80,6 +80,21 @@ export function damagePlayer(amount, source, damageType) {
   // Invulnerable (Transcendence buff)
   if (stats.invulnerable) {
     emit('player:damaged', { damage: 0, source, damageType: type, blocked: true });
+    return;
+  }
+
+  // Ashen Plate: fire damage (burn DoT) heals instead of hurting
+  if (source === 'dot:burn' && state.activeLegendaryEffects?.has('fire_damage_heals')) {
+    player.hp = Math.min(player.hp + amount, player.maxHP);
+    player.statistics.totalHealingDone += amount;
+    emit('player:damaged', { damage: 0, source, damageType: type, healed: true });
+    emitHPChanged();
+    return;
+  }
+
+  // Mirage Band: 20% chance to dodge incoming damage
+  if (state.activeLegendaryEffects?.has('dodge_chance') && Math.random() < LEGENDARY_EFFECTS.DODGE_CHANCE) {
+    emit('player:damaged', { damage: 0, source, damageType: type, dodged: true });
     return;
   }
 

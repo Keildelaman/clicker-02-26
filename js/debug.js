@@ -13,9 +13,10 @@ import { emit } from './core/event-bus.js';
 import { clearSave } from './services/storage.js';
 
 // Data
-import { ITEMS } from './data/items.data.js';
 import { ZONES, ZONE_ORDER } from './data/zones.data.js';
 import { SKILLS } from './data/skills.data.js';
+import { ZONE_MATERIALS } from './data/constants.js';
+import { LEGENDARIES } from './data/legendaries.data.js';
 
 /**
  * Initialize debug tools. Receives system references from main.js
@@ -23,7 +24,7 @@ import { SKILLS } from './data/skills.data.js';
  * @param {Object} deps - System function references
  */
 export function initDebug(deps) {
-  const { grantXP, damagePlayer, handleClick, refreshShop, travelToZone, challengeBoss, useSkill } = deps;
+  const { grantXP, damagePlayer, handleClick, refreshShop, travelToZone, challengeBoss, useSkill, generateItem, addItem, getEffectiveSkillLevel, generateLegendaryItem } = deps;
 
   window.DEBUG = {
     state: () => JSON.parse(JSON.stringify(state)),
@@ -54,18 +55,20 @@ export function initDebug(deps) {
         handleClick();
       }
     },
-    giveItem: (id) => {
-      if (!ITEMS[id]) { console.error('Unknown item:', id); return; }
-      state.player.inventory.push(id);
-      emit('loot:itemDropped', { itemId: id, item: ITEMS[id] });
+    giveItem: (zone = 'whisperwood', rarity = 'rare') => {
+      const item = generateItem(zone, 'weapon', rarity);
+      addItem(item);
+      console.log('Gave item:', item.name, item);
     },
     refreshShop: () => {
       refreshShop(false);
     },
     listItems: () => {
-      console.table(Object.values(ITEMS).map(i => ({
-        id: i.id, name: i.name, type: i.type, rarity: i.rarity, zone: i.zone
-      })));
+      const p = state.player;
+      console.log('Equipment:', p.equipment);
+      console.log('Inventory:', p.inventory);
+      console.log('Overflow:', p.inventoryOverflow);
+      console.log('Materials:', p.materials);
     },
     travelZone: (id) => {
       if (!ZONES[id]) { console.error('Unknown zone:', id); return; }
@@ -101,6 +104,32 @@ export function initDebug(deps) {
       }
       emit('skill:unlocked', {});
       console.log('All skills unlocked. Remaining SP:', state.player.skillPoints);
+    },
+    giveMaterial: (zone = 'whisperwood', amount = 10) => {
+      const matInfo = ZONE_MATERIALS[zone];
+      if (!matInfo) { console.error('Unknown zone:', zone); return; }
+      if (!state.player.materials) state.player.materials = {};
+      state.player.materials[matInfo.id] = (state.player.materials[matInfo.id] || 0) + amount;
+      emit('materials:added', { materialId: matInfo.id, amount, total: state.player.materials[matInfo.id] });
+      console.log('Gave', amount, matInfo.name, '→ total:', state.player.materials[matInfo.id]);
+    },
+    effectiveLevel: (skillId) => {
+      return getEffectiveSkillLevel ? getEffectiveSkillLevel(skillId) : 'N/A';
+    },
+    giveLegendary: (id) => {
+      const leg = LEGENDARIES[id];
+      if (!leg) { console.error('Unknown legendary:', id, 'Options:', Object.keys(LEGENDARIES)); return; }
+      const item = generateLegendaryItem(id, leg.zone);
+      addItem(item);
+      console.log('Gave legendary:', item.name, item);
+    },
+    legendaries: () => {
+      console.log('Active effects:', [...(state.activeLegendaryEffects || [])]);
+      const p = state.player;
+      for (const slot of ['weapon', 'helmet', 'chest', 'gloves', 'boots', 'accessory']) {
+        const item = p.equipment[slot];
+        if (item?.uniqueEffect) console.log(`[${slot}] ${item.name}: ${item.uniqueEffect.description}`);
+      }
     },
     reset: () => {
       clearSave();

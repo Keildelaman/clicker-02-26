@@ -19,7 +19,7 @@ import { state, getPlayer } from '../core/game-state.js';
 import {
   MIN_DAMAGE, DEATH_ANIMATION_DURATION, BOSS_TIMERS,
   OVERKILL_CARRY_PERCENT, OVERKILL_CHAIN_MAX,
-  DAMAGE_TYPES
+  DAMAGE_TYPES, LEGENDARY_EFFECTS
 } from '../data/constants.js';
 import { calcDamageReduction } from '../data/balance.js';
 import { SKILLS as SKILLS_REF } from '../data/skills.data.js';
@@ -27,6 +27,8 @@ import { SKILLS as SKILLS_REF } from '../data/skills.data.js';
 let dyingTimer = 0;
 let computeStats = null;    // Injected dependency
 let hurtPlayer = null;      // Injected dependency: damagePlayer(amount, source)
+let getWeaponDamageType = null;  // Injected: items.getWeaponDamageType
+let getStatusProcChances = null; // Injected: items.getStatusProcChances
 
 // Boss timer state
 let bossTimer = null;  // { remaining, duration, bossId } or null
@@ -165,12 +167,17 @@ export function handleClick() {
     passiveMultiplier *= (1 + (momState.stacks * momState.dmgPerStack / 100));
   }
 
+  // Sandstorm Fang: double hit at 60% damage each
+  const doubleHit = state.activeLegendaryEffects?.has('double_hit');
+  const legendaryHitMult = doubleHit ? 2 : 1;
+  const legendaryDmgMod = doubleHit ? LEGENDARY_EFFECTS.DOUBLE_HIT_MULT : 1.0;
+
   // Track if any hit was a crit (for statistics)
   let anyKilled = false;
   let totalDamage = 0;
   let anyCrit = false;
 
-  for (let i = 0; i < hitsPerClick; i++) {
+  for (let i = 0; i < hitsPerClick * legendaryHitMult; i++) {
     // Roll crit
     let critChance = stats.critChance;
 
@@ -198,7 +205,7 @@ export function handleClick() {
 
     // PRIMARY hit only (i === 0): apply hitModifier
     let shatterBonus = 0;
-    let hitDamageType = DAMAGE_TYPES.PHYSICAL; // default; overridden by hitModifier skill type
+    let hitDamageType = getWeaponDamageType ? getWeaponDamageType() : DAMAGE_TYPES.PHYSICAL;
     if (i === 0 && state.hitModifier) {
       const mod = state.hitModifier;
       hitDamageType = mod.damageType || DAMAGE_TYPES.PHYSICAL;
@@ -234,10 +241,18 @@ export function handleClick() {
 
       state.hitModifier = null;
       emit('skill:effectEnded', { skillId: mod.skillId, type: 'hitModifier' });
+
+      // Equipment status procs on skill damage (hit modifier consumed)
+      rollEquipmentStatusProcs();
     }
 
     // Apply passive damage bonuses (Click Mastery + Momentum)
     damage = Math.floor(damage * passiveMultiplier);
+
+    // Sandstorm Fang: scale each hit by 60%
+    if (doubleHit) {
+      damage = Math.floor(damage * legendaryDmgMod);
+    }
 
     // Shield Breaker equipment bonus: bonus damage vs shielded monsters
     if (stats.bonusDamage > 0 && monster.shield > 0) {
@@ -314,6 +329,7 @@ function onInstantDamage({ hits, damagePerHit, skillId, hitDelay, damageType }) 
       dmg = Math.max(dmg, MIN_DAMAGE);
 
       const result = applyDamageToMonster(dmg, { isCrit, isSkillDamage: true, skillId, damageType: type });
+      rollEquipmentStatusProcs();
       if (result.killed) { killMonster(); return; }
     }
     return;
@@ -332,6 +348,7 @@ function onInstantDamage({ hits, damagePerHit, skillId, hitDelay, damageType }) 
       dmg = Math.max(dmg, MIN_DAMAGE);
 
       const result = applyDamageToMonster(dmg, { isCrit, isSkillDamage: true, skillId, damageType: type });
+      rollEquipmentStatusProcs();
       if (result.killed) killMonster();
     }, i * hitDelay);
   }
@@ -575,6 +592,33 @@ function updateMonsterTypes(monster, dt) {
 }
 
 /**
+ * Roll equipment-based status procs on skill damage.
+ * Status procs from equipment apply only on skill damage, not basic clicks.
+ */
+function rollEquipmentStatusProcs() {
+  if (!getStatusProcChances) return;
+
+  const monster = state.currentMonster;
+  if (!monster || state.combatState !== 'active') return;
+
+  const procs = getStatusProcChances();
+  const stats = computeStats();
+
+  for (const [effectId, chance] of Object.entries(procs)) {
+    if (chance > 0 && Math.random() < chance) {
+      emit('statusEffect:tryApply', {
+        target: 'monster',
+        effectId,
+        stacks: 1,
+        source: 'equipment',
+        sourceAttack: stats.attack || 0,
+        sourceMagicPower: stats.magicPower || 0
+      });
+    }
+  }
+}
+
+/**
  * Handle channel release damage (Charge Up).
  */
 function onChannelRelease({ damage, isCrit, skillId, damageType }) {
@@ -583,6 +627,7 @@ function onChannelRelease({ damage, isCrit, skillId, damageType }) {
     isCrit, isSkillDamage: true, skillId,
     damageType: damageType || DAMAGE_TYPES.PHYSICAL
   });
+  rollEquipmentStatusProcs();
   if (result.killed) killMonster();
 }
 
@@ -594,6 +639,8 @@ function onChannelRelease({ damage, isCrit, skillId, damageType }) {
 export function init(deps = {}) {
   computeStats = deps.getComputedStats;
   hurtPlayer = deps.damagePlayer;
+  getWeaponDamageType = deps.getWeaponDamageType || null;
+  getStatusProcChances = deps.getStatusProcChances || null;
 
   on('combat:monsterSpawned', onMonsterSpawned);
   on('skill:instantDamage', onInstantDamage);

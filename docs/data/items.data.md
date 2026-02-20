@@ -1,7 +1,13 @@
-# Item Data
+# Item Data (v1 — Superseded)
 
-> Complete definitions for all weapons, armor, and accessories.
-> Schema: `schemas/item.schema.md`
+> **SUPERSEDED:** This file contains v1 fixed item definitions that are no longer used.
+> Items are now procedurally generated with random affixes — see `docs/design/item-system-v2.md`.
+> Legacy prices are preserved in `js/data/items.data.js` (`LEGACY_ITEM_PRICES`) for v4→v5 save migration only.
+> The v2 item schema is documented in `docs/schemas/item.schema.md`.
+
+> Original spec for reference only. Do not use for new development.
+>
+> Schema: `schemas/item.schema.md` (updated for v2)
 > Health System: `systems/health.system.md`
 > Energy System: `systems/energy.system.md`
 

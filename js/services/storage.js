@@ -10,8 +10,9 @@
 import { SAVE_KEY, SAVE_VERSION, AUTO_SAVE_INTERVAL } from '../data/constants.js';
 import { getPlayer } from '../core/game-state.js';
 import { emit } from '../core/event-bus.js';
+import { LEGACY_ITEM_PRICES } from '../data/items.data.js';
 
-const PREVIOUS_SAVE_KEYS = ['clickoria_save_v3', 'clickoria_save_v2'];
+const PREVIOUS_SAVE_KEYS = ['clickoria_save_v4', 'clickoria_save_v3', 'clickoria_save_v2'];
 
 let autoSaveTimer = null;
 let savingDisabled = false;
@@ -97,6 +98,40 @@ export function loadGame() {
       delete data.equippedPassiveSkills;
       data.saveVersion = 4;
       console.log('Migrated save v3 -> v4 (skill system v2, SP:', earnedSP, ')');
+    }
+
+    // Migrate from v4 -> v5: item system v2 (complete item wipe + gold compensation)
+    if (data.saveVersion === 4) {
+      // 1. Gold compensation (50% of old item buyPrices)
+      let compensation = 0;
+      for (const slot of ['weapon', 'armor', 'accessory']) {
+        const itemId = data.equipment[slot];
+        if (itemId && LEGACY_ITEM_PRICES[itemId]) {
+          compensation += LEGACY_ITEM_PRICES[itemId];
+        }
+      }
+      if (data.inventory) {
+        for (const itemId of data.inventory) {
+          if (LEGACY_ITEM_PRICES[itemId]) {
+            compensation += LEGACY_ITEM_PRICES[itemId];
+          }
+        }
+      }
+      data.gold += Math.floor(compensation * 0.5);
+
+      // 2. Expand equipment to 6 empty slots
+      data.equipment = {
+        weapon: null, helmet: null, chest: null,
+        gloves: null, boots: null, accessory: null
+      };
+
+      // 3. Clear inventory + add new fields
+      data.inventory = [];
+      data.inventoryOverflow = [];
+      data.materials = {};
+
+      data.saveVersion = 5;
+      console.log('Migrated save v4 -> v5 (item system v2, compensation:', Math.floor(compensation * 0.5), 'gold)');
     }
 
     if (data.saveVersion !== SAVE_VERSION) {

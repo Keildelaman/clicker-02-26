@@ -17,6 +17,7 @@ import * as shopUI from './shop-ui.js';
 import * as zonesUI from './zones-ui.js';
 import * as skillsUI from './skills-ui.js';
 import * as tutorialUI from './tutorial-ui.js';
+import * as itemDetailUI from './item-detail-ui.js';
 
 let dirty = true;
 
@@ -35,6 +36,7 @@ export function init() {
   zonesUI.init();
   skillsUI.init();
   tutorialUI.init();
+  itemDetailUI.init();
 
   // Mark dirty on state-changing events
   on('combat:click', markDirty);
@@ -79,6 +81,14 @@ export function init() {
   on('skill:channelRelease', markDirty);
   on('skill:effectEnded', markDirty);
   on('tutorial:completed', markDirty);
+  on('item:reforged', markDirty);
+  on('item:imbued', markDirty);
+  on('item:tempered', markDirty);
+  on('item:temperReset', markDirty);
+  on('item:scrapped', markDirty);
+  on('item:bulkScrapped', markDirty);
+  on('item:autoScrapped', markDirty);
+  on('materials:added', markDirty);
 
   // Initial render
   statsUI.renderInitial();

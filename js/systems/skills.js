@@ -19,8 +19,9 @@ import { SKILLS } from '../data/skills.data.js';
 import {
   ACTIVE_SKILL_SLOTS, PASSIVE_SKILL_SLOTS,
   SP_PER_LEVEL_INTERVAL, SP_UPGRADE_COST, RESPEC_COSTS,
-  SKILL_SWAP_COOLDOWN_PENALTY
+  SKILL_SWAP_COOLDOWN_PENALTY, BASE_SKILL_MAX_LEVEL
 } from '../data/constants.js';
+import { beyondMaxSkillMultiplier } from '../data/balance.js';
 import { EFFECT_HANDLERS, initEffects, onCombatClickMomentum } from './skill-effects.js';
 import { PASSIVE_HANDLERS, initPassives } from './skill-passives.js';
 
@@ -28,11 +29,25 @@ import { PASSIVE_HANDLERS, initPassives } from './skill-passives.js';
 let computeStats = null;
 let hurtPlayer = null;
 let invalidateStats = null; // Injected: player.invalidateStatCache
+let getItemSkillLevelBonus = null; // Injected: items.getItemSkillLevelBonus
 
 // Track cooldown-ready notifications to avoid spam
 const cooldownReadyNotified = new Set();
 
 // --- Public API ---
+
+/**
+ * Get effective skill level = base level + item bonuses.
+ * @param {string} skillId
+ * @returns {number} Effective level (0 if not unlocked)
+ */
+export function getEffectiveSkillLevel(skillId) {
+  const player = getPlayer();
+  const baseLevel = player.unlockedSkills[skillId];
+  if (baseLevel === undefined) return 0;
+  const bonusLevels = getItemSkillLevelBonus ? getItemSkillLevelBonus(skillId) : 0;
+  return baseLevel + bonusLevels;
+}
 
 /**
  * Use an active skill by ID.
@@ -52,8 +67,11 @@ export function useSkill(skillId) {
   const skillDef = SKILLS[skillId];
   if (!skillDef || skillDef.type !== 'active') return false;
 
-  const level = player.unlockedSkills[skillId];
-  const levelData = skillDef.levels[level];
+  // Use effective level (base + item bonuses)
+  const effectiveLevel = getEffectiveSkillLevel(skillId);
+  const maxLevel = skillDef.maxLevel || BASE_SKILL_MAX_LEVEL;
+  const cappedLevel = Math.min(effectiveLevel, maxLevel);
+  const levelData = skillDef.levels[cappedLevel];
   if (!levelData) return false;
 
   // Validate: not on cooldown
@@ -73,10 +91,13 @@ export function useSkill(skillId) {
   player.skillCooldowns[skillId] = levelData.cooldown;
   cooldownReadyNotified.delete(skillId);
 
+  // Beyond-max skill multiplier (item bonuses pushing above max level)
+  const bmMult = beyondMaxSkillMultiplier(effectiveLevel, maxLevel);
+
   // Dispatch to effect handler
   const handler = EFFECT_HANDLERS[skillId];
   if (handler) {
-    handler(skillDef, levelData);
+    handler(skillDef, levelData, bmMult);
   }
 
   // Status effect application (Phase 5)
@@ -265,7 +286,7 @@ export function equipPassiveSkill(skillId, slotIndex) {
   // Subscribe new passive
   const handler = PASSIVE_HANDLERS[skillId];
   if (handler?.onEquip) {
-    handler.onEquip(skillId, player.unlockedSkills[skillId]);
+    handler.onEquip(skillId, getEffectiveSkillLevel(skillId));
   }
 
   invalidateStats();
@@ -601,10 +622,11 @@ export function init(deps = {}) {
   computeStats = deps.getComputedStats;
   hurtPlayer = deps.damagePlayer;
   invalidateStats = deps.invalidateStatCache;
+  getItemSkillLevelBonus = deps.getItemSkillLevelBonus || null;
 
   // Initialize extracted modules with shared deps
   initEffects({ invalidateStatCache: deps.invalidateStatCache, cooldownReadyNotified });
-  initPassives({ invalidateStatCache: deps.invalidateStatCache, cooldownReadyNotified });
+  initPassives({ invalidateStatCache: deps.invalidateStatCache, cooldownReadyNotified, getEffectiveSkillLevel });
 
   on('player:levelUp', onLevelUp);
   on('player:died', onPlayerDied);

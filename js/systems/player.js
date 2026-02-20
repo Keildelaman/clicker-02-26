@@ -14,10 +14,9 @@ import { state, getPlayer } from '../core/game-state.js';
 import {
   BASE_CRIT_CHANCE, BASE_CRIT_MULTIPLIER,
   BASE_PLAYER_HP, BASE_HP_REGEN,
-  MAX_ENERGY, SAVE_VERSION
+  MAX_ENERGY, SAVE_VERSION, LEGENDARY_EFFECTS
 } from '../data/constants.js';
 import { maxHPAtLevel, baseAttackAtLevel, baseArmorAtLevel, baseMagicResistAtLevel } from '../data/balance.js';
-import { ITEMS } from '../data/items.data.js';
 import { SKILLS } from '../data/skills.data.js';
 
 // --- Stat Cache ---
@@ -29,22 +28,14 @@ export function invalidateStatCache() {
 }
 
 /**
- * Sum a single stat across all equipped items.
- * @param {Object} player - Player state
- * @param {string} statName - Stat key to sum
+ * Read a single stat from the aggregated equipment stats (computed by items.js).
+ * @param {Object} player - Player state (unused, kept for API compat)
+ * @param {string} statName - Stat key to read
  * @returns {number} Total bonus from equipment
  */
 function getEquipmentBonus(player, statName) {
-  let total = 0;
-  for (const slot of ['weapon', 'armor', 'accessory']) {
-    const itemId = player.equipment[slot];
-    if (!itemId) continue;
-    const item = ITEMS[itemId];
-    if (item && item.stats[statName]) {
-      total += item.stats[statName];
-    }
-  }
-  return total;
+  const eqStats = state.equipmentStats || {};
+  return eqStats[statName] || 0;
 }
 
 /**
@@ -167,16 +158,23 @@ export function getComputedStats() {
 
   warningBonus += getPassiveSkillBonus(player, 'warningTime');
 
+  // Legendary: Ironforge Crown — 50% of armor as magic resist
+  if (state.activeLegendaryEffects?.has('armor_to_magic_resist')) {
+    magicResist += Math.floor(armor * LEGENDARY_EFFECTS.ARMOR_TO_MR_RATIO);
+  }
+
+  // Legendary: Titan's Greaves — +25% damage above 80% HP
+  if (state.activeLegendaryEffects?.has('high_hp_damage_bonus')) {
+    if (player.hp / player.maxHP > LEGENDARY_EFFECTS.HIGH_HP_THRESHOLD) {
+      attack = Math.floor(attack * (1 + LEGENDARY_EFFECTS.HIGH_HP_DAMAGE_BONUS));
+    }
+  }
+
   // Skill-enhancing stats from equipment + passive
   const skillCooldown = getEquipmentBonus(player, 'skillCooldown');
   const skillEnergyCostEquip = getEquipmentBonus(player, 'skillEnergyCost');
   const skillEnergyCostPassive = getPassiveSkillBonus(player, 'skillEnergyCost');
   const skillEnergyCost = skillEnergyCostEquip + skillEnergyCostPassive;
-  const skillBoost_power_strike = getEquipmentBonus(player, 'skillBoost_power_strike');
-  const skillBoost_heal = getEquipmentBonus(player, 'skillBoost_heal');
-  const skillBoost_execute = getEquipmentBonus(player, 'skillBoost_execute');
-  const skillBoost_berserk = getEquipmentBonus(player, 'skillBoost_berserk');
-
   // Active buff bonuses
   attack = Math.floor(attack * buffFx.damageMultiplier);
   critChance += buffFx.critBonus;
@@ -203,10 +201,6 @@ export function getComputedStats() {
     warningBonus,
     skillCooldown,
     skillEnergyCost,
-    skillBoost_power_strike,
-    skillBoost_heal,
-    skillBoost_execute,
-    skillBoost_berserk,
     damageMultiplier: buffFx.damageMultiplier,
     damageTakenMultiplier: buffFx.damageTakenMultiplier,
     reflectMultiplier: buffFx.reflectMultiplier,
@@ -263,8 +257,13 @@ export function createNewPlayer() {
     energy: 0,
     maxEnergy: MAX_ENERGY,
 
-    equipment: { weapon: null, armor: null, accessory: null },
+    equipment: {
+      weapon: null, helmet: null, chest: null,
+      gloves: null, boots: null, accessory: null
+    },
     inventory: [],
+    inventoryOverflow: [],
+    materials: {},
 
     skillPoints: 0,
     totalSPEarned: 0,

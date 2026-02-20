@@ -18,6 +18,7 @@ import { SKILLS } from '../data/skills.data.js';
 // Dependency injection — set during initPassives()
 let invalidateStats = null;
 let cooldownReadyNotified = null;
+let resolveSkillLevel = null; // Injected: skills.getEffectiveSkillLevel
 
 // Track event subscriptions for cleanup
 const passiveHandlerRefs = {}; // { skillId: [{ event, fn }, ...] }
@@ -211,7 +212,7 @@ function resubscribeAll() {
   for (const skillId of player.equippedPassive) {
     if (!skillId) continue;
     const handler = PASSIVE_HANDLERS[skillId];
-    const level = player.unlockedSkills[skillId];
+    const level = resolveSkillLevel ? resolveSkillLevel(skillId) : player.unlockedSkills[skillId];
     if (handler?.onEquip && level) {
       handler.onEquip(skillId, level);
     }
@@ -229,5 +230,6 @@ function resubscribeAll() {
 export function initPassives(deps) {
   invalidateStats = deps.invalidateStatCache;
   cooldownReadyNotified = deps.cooldownReadyNotified;
+  resolveSkillLevel = deps.getEffectiveSkillLevel || null;
   resubscribeAll();
 }

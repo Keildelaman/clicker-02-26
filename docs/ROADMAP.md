@@ -26,6 +26,7 @@
 | 9 | Ascension & Vault | ⬜ Not Started | — |
 | 10 | Save/Load Hardening | ⬜ Not Started | — |
 | 11 | Polish & Accessibility | ⬜ Not Started | — |
+| 12 | Item System v2 (8 sub-phases) | ✅ Complete | — |
 
 **Status key:** ⬜ Not Started | 🔨 In Progress | ✅ Complete
 
@@ -708,6 +709,47 @@
 - [ ] Level-up celebration looks great
 - [ ] All screens transition smoothly
 - [ ] Works on iOS Safari, Chrome Android, desktop Chrome/Firefox
+
+---
+
+## Phase 12: Item System v2
+
+**Goal:** Complete item system overhaul — 6 equipment slots, random affixes, 5 rarities, crafting (reforge/imbue/temper), boss materials, legendary items with unique effects.
+
+**Status:** ✅ Complete (all 8 sub-phases)
+
+**Detailed roadmap:** `docs/design/item-system-v2-roadmap.md` (8 sub-phases with verification checklists)
+**Architecture guide:** `docs/architecture/item-system-v2-architecture.md` (module structure, events, DI wiring)
+**Design doc:** `docs/design/item-system-v2.md` (canonical specification — all design questions resolved)
+
+### Sub-phases
+
+| Phase | Name | Est. Lines | Status |
+|-------|------|-----------|--------|
+| 12.1 | Data Layer Foundation | ~800 | ✅ |
+| 12.2 | Item Generation Engine | ~400 | ✅ |
+| 12.3 | Item Crafting Engine | ~350 | ✅ |
+| 12.4 | Core Item System + Migration | ~700 | ✅ |
+| 12.5 | System Integrations | ~600 | ✅ |
+| 12.6 | Crafting Integration | ~150 | ✅ |
+| 12.7 | UI | ~900 | ✅ |
+| 12.8 | Legendary Effects + Polish | ~600 | ✅ |
+
+**Total: ~5000 lines, 8-10 sessions**
+
+### What's new
+- 6 equipment slots (weapon, helmet, chest, gloves, boots, accessory)
+- 63 affixes across 7 categories with tier scaling
+- 5 rarities: Common (1 affix) → Legendary (4 + unique effect)
+- Random item generation with slot-weighted affix pools
+- 3 modification systems: Reforge (fix bad rolls), Imbue (add missing affix), Temper (push to perfection)
+- Boss material system: farm materials, spend to challenge bosses
+- Boss scaling: boss level = max(baseLv, playerLv - 5)
+- 15 legendary items with build-defining unique effects
+- Shop v2: 4 randomly generated items, 15-min refresh
+- Item skill level bonuses (+level to skills, beyond-max scaling)
+- Weapon base name determines click damage type (physical vs magic)
+- v4→v5 save migration: complete item wipe with 50% gold compensation
 
 ---
 

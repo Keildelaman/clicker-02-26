@@ -191,6 +191,18 @@
   75% { transform: translateX(2px); }
 }
 
+/* Reforge result flash (green = better) */
+@keyframes flash-green {
+  0% { background-color: rgba(76, 175, 80, 0.3); }
+  100% { background-color: transparent; }
+}
+
+/* Reforge result flash (red = worse) */
+@keyframes flash-red {
+  0% { background-color: rgba(244, 67, 54, 0.3); }
+  100% { background-color: transparent; }
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

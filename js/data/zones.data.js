@@ -25,17 +25,7 @@ export const ZONES = {
       accent: '#90EE90'
     },
     emoji: '\u{1F332}',
-    backgroundCSS: 'linear-gradient(180deg, #2d5a27 0%, #1a3518 100%)',
-    shopRefreshBase: 75,
-    shopItems: [
-      'weapon_whisperwood_common_01',
-      'weapon_whisperwood_common_02',
-      'weapon_whisperwood_uncommon_01',
-      'accessory_whisperwood_common_01',
-      'accessory_whisperwood_uncommon_01',
-      'armor_whisperwood_common_01',
-      'armor_whisperwood_uncommon_01'
-    ]
+    backgroundCSS: 'linear-gradient(180deg, #2d5a27 0%, #1a3518 100%)'
   },
 
   dustwind: {
@@ -55,18 +45,7 @@ export const ZONES = {
       accent: '#FFD700'
     },
     emoji: '\u{1F33E}',
-    backgroundCSS: 'linear-gradient(180deg, #6b5530 0%, #4a3a20 100%)',
-    shopRefreshBase: 225,
-    shopItems: [
-      'weapon_dustwind_common_01',
-      'weapon_dustwind_common_02',
-      'weapon_dustwind_uncommon_01',
-      'accessory_dustwind_common_01',
-      'accessory_dustwind_uncommon_01',
-      'armor_dustwind_common_01',
-      'armor_dustwind_uncommon_01',
-      'accessory_skillboost_berserk_01'
-    ]
+    backgroundCSS: 'linear-gradient(180deg, #6b5530 0%, #4a3a20 100%)'
   },
 
   shadowmire: {
@@ -86,18 +65,7 @@ export const ZONES = {
       accent: '#00ff88'
     },
     emoji: '\u{1F32B}\uFE0F',
-    backgroundCSS: 'linear-gradient(180deg, #2d4a3e 0%, #1a2f28 100%)',
-    shopRefreshBase: 525,
-    shopItems: [
-      'weapon_shadowmire_common_01',
-      'weapon_shadowmire_common_02',
-      'weapon_shadowmire_uncommon_01',
-      'accessory_shadowmire_common_01',
-      'accessory_shadowmire_uncommon_01',
-      'armor_shadowmire_common_01',
-      'armor_shadowmire_uncommon_01',
-      'accessory_skillboost_heal_01'
-    ]
+    backgroundCSS: 'linear-gradient(180deg, #2d4a3e 0%, #1a2f28 100%)'
   },
 
   ironhold: {
@@ -117,19 +85,7 @@ export const ZONES = {
       accent: '#A4DCF0'
     },
     emoji: '\u26F0\uFE0F',
-    backgroundCSS: 'linear-gradient(180deg, #5a5a5a 0%, #3d3d3d 100%)',
-    shopRefreshBase: 1500,
-    shopItems: [
-      'weapon_ironhold_common_01',
-      'weapon_ironhold_common_02',
-      'weapon_ironhold_uncommon_01',
-      'accessory_ironhold_common_01',
-      'accessory_ironhold_uncommon_01',
-      'armor_ironhold_common_01',
-      'armor_ironhold_uncommon_01',
-      'accessory_skillboost_power_strike_01',
-      'accessory_skillboost_execute_01'
-    ]
+    backgroundCSS: 'linear-gradient(180deg, #5a5a5a 0%, #3d3d3d 100%)'
   },
 
   emberfell: {
@@ -149,17 +105,7 @@ export const ZONES = {
       accent: '#FF8C42'
     },
     emoji: '\u{1F30B}',
-    backgroundCSS: 'linear-gradient(180deg, #8b2500 0%, #4a1200 100%)',
-    shopRefreshBase: 4500,
-    shopItems: [
-      'weapon_emberfell_common_01',
-      'weapon_emberfell_common_02',
-      'weapon_emberfell_uncommon_01',
-      'accessory_emberfell_common_01',
-      'accessory_emberfell_uncommon_01',
-      'armor_emberfell_common_01',
-      'armor_emberfell_uncommon_01'
-    ]
+    backgroundCSS: 'linear-gradient(180deg, #8b2500 0%, #4a1200 100%)'
   },
 
   frostpeak: {
@@ -179,18 +125,7 @@ export const ZONES = {
       accent: '#00BFFF'
     },
     emoji: '\u2744\uFE0F',
-    backgroundCSS: 'linear-gradient(180deg, #3a6575 0%, #2a4f5c 100%)',
-    shopRefreshBase: 12000,
-    shopItems: [
-      'weapon_frostpeak_common_01',
-      'weapon_frostpeak_common_02',
-      'weapon_frostpeak_uncommon_01',
-      'accessory_frostpeak_common_01',
-      'accessory_frostpeak_uncommon_01',
-      'armor_frostpeak_common_01',
-      'armor_frostpeak_uncommon_01',
-      'accessory_skillboost_general_01'
-    ]
+    backgroundCSS: 'linear-gradient(180deg, #3a6575 0%, #2a4f5c 100%)'
   },
 
   voidrift: {
@@ -210,17 +145,7 @@ export const ZONES = {
       accent: '#A88BE8'
     },
     emoji: '\u{1F300}',
-    backgroundCSS: 'linear-gradient(180deg, #2d1b4e 0%, #1a0f2e 100%)',
-    shopRefreshBase: 30000,
-    shopItems: [
-      'weapon_voidrift_common_01',
-      'weapon_voidrift_common_02',
-      'weapon_voidrift_uncommon_01',
-      'accessory_voidrift_common_01',
-      'accessory_voidrift_uncommon_01',
-      'armor_voidrift_common_01',
-      'armor_voidrift_uncommon_01'
-    ]
+    backgroundCSS: 'linear-gradient(180deg, #2d1b4e 0%, #1a0f2e 100%)'
   }
 };
 

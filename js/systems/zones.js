@@ -12,7 +12,11 @@ import { on, emit } from '../core/event-bus.js';
 import { state, getPlayer } from '../core/game-state.js';
 import { ZONES, ZONE_ORDER } from '../data/zones.data.js';
 import { MONSTERS } from '../data/monsters.data.js';
+import { ZONE_MATERIALS } from '../data/constants.js';
 import { saveGame } from '../services/storage.js';
+
+// --- DI Dependencies ---
+let deps = {};
 
 /**
  * Check if the player can travel to a zone.
@@ -95,6 +99,24 @@ export function challengeBoss() {
     return;
   }
 
+  // Material gate (all boss challenges cost materials)
+  if (deps.canAffordBoss && !deps.canAffordBoss(player.currentZone)) {
+    const matInfo = ZONE_MATERIALS[player.currentZone];
+    emit('zone:insufficientMaterials', {
+      zone,
+      materialId: matInfo?.id,
+      materialName: matInfo?.name,
+      required: matInfo?.bossCost || 0,
+      current: (player.materials && player.materials[matInfo?.id]) || 0
+    });
+    return;
+  }
+
+  // Spend materials
+  if (deps.spendBossMaterials) {
+    deps.spendBossMaterials(player.currentZone);
+  }
+
   emit('zone:bossIntro', { boss, zone });
 }
 
@@ -163,7 +185,9 @@ function findNextZone(bossId) {
 
 // --- System Contract ---
 
-export function init() {
+export function init(injected = {}) {
+  deps = injected;
+
   on('combat:monsterKilled', handleMonsterKilled);
   on('zone:autoTravel', ({ zoneId }) => travelToZone(zoneId));
 

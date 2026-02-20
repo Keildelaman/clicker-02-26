@@ -1,10 +1,21 @@
-# Item Schema
+# Item Schema (v2)
 
-> Defines the structure for all equipment and items in the game.
+> Defines the structure for all equipment items in the Item System v2.
+> Items are procedurally generated with random affixes — see `docs/design/item-system-v2.md`.
+
+---
 
 ## Overview
 
-Items are equipment pieces that boost player stats. Players acquire them through shops or monster drops.
+Items are equipment pieces that boost player stats via random affixes. Players acquire them through monster drops, boss kills, and the shop. Items can be modified via reforge, imbue, and temper crafting systems. Legendary items have unique build-defining effects.
+
+**Key differences from v1:**
+- 6 equipment slots (was 3)
+- Procedurally generated names, affixes, and pricing (was hardcoded)
+- 63 affixes across 7 categories with tier scaling
+- 3 crafting systems (reforge, imbue, temper)
+- 15 legendary items with unique effects
+- IDs are UUIDs (not `{type}_{zone}_{rarity}_{number}`)
 
 ---
 
@@ -13,58 +24,48 @@ Items are equipment pieces that boost player stats. Players acquire them through
 ```typescript
 interface Item {
   // === Identity ===
-  id: string;                   // Unique identifier (see naming convention)
-  name: string;                 // Display name
-  description: string;          // Flavor text
+  id: string;                    // UUID: "item_{timestamp}_{random}"
+  name: string;                  // Procedurally generated from slot + rarity + affixes
 
   // === Classification ===
-  type: ItemType;               // Equipment slot type
-  rarity: Rarity;               // Rarity tier
-  zone: string;                 // Zone where item is available
+  slot: EquipmentSlot;           // Equipment slot
+  zone: string;                  // Zone ID where item originated
+  rarity: Rarity;                // Rarity tier
+  requiredLevel: number;         // Minimum player level to equip (zone-based)
+  emoji: string;                 // Visual representation (slot-based)
 
-  // === Requirements ===
-  requiredLevel: number;        // Minimum player level to equip
+  // === Affixes ===
+  affixes: Affix[];              // Random stat bonuses (count depends on rarity)
 
-  // === Stats ===
-  stats: {
-    // Combat stats
-    attack?: number;            // Flat attack bonus
-    critChance?: number;        // Crit chance bonus (0.0 to 1.0)
-    critDamage?: number;        // Crit damage bonus
-    armorPen?: number;          // Armor penetration vs armored monsters
-
-    // Defensive stats (armor)
-    damageReduction?: number;   // % damage reduction (0.0 to 1.0)
-    maxHP?: number;             // Bonus to maximum HP
-    hpRegen?: number;           // % HP regen per second
-
-    // Utility stats (accessories)
-    goldFind?: number;          // Gold find bonus (0.0 to 1.0)
-    xpBonus?: number;           // XP bonus (0.0 to 1.0)
-    energyGain?: number;        // % bonus Energy from clicks
-
-    // Skill-enhancing stats (special items)
-    skillBoost_power_strike?: number;  // % bonus to Power Strike
-    skillBoost_heal?: number;          // % bonus to Heal
-    skillBoost_execute?: number;       // Threshold bonus for Execute
-    skillBoost_berserk?: number;       // % bonus to Berserk damage
-    skillCooldown?: number;            // % cooldown reduction
-    skillEnergyCost?: number;          // % energy cost reduction
-  };
+  // === Crafting State ===
+  reforgedAffix: number | null;  // Index of affix that was reforged (null = none)
+  reforgeCount: number;          // Times this item has been reforged (escalates cost)
+  imbued: boolean;               // Whether an affix was added via imbue (one-time)
+  temperLevel: number;           // Current temper level (0-12)
+  temperSelections: number[];    // Affix indices selected at temper milestones (levels 1, 5, 9)
+  temperBrickCount: number;      // Full resets before bricking (max 5)
 
   // === Economy ===
-  buyPrice: number;             // Cost to purchase from shop
-  sellPrice: number;            // Value when selling (auto-calculated)
+  buyPrice: number;              // Cost to purchase from shop
+  sellPrice: number;             // Scrap value (25% of buy price)
 
-  // === Availability ===
-  shopAvailable: boolean;       // Can be bought in shop
-  dropOnly: boolean;            // Only obtainable from monster drops
-
-  // === Visuals ===
-  emoji: string;                // Display emoji
+  // === Legendary ===
+  legendaryId: string | null;    // Legendary definition ID (e.g. 'soulreaver')
+  uniqueEffect: UniqueEffect | null; // Build-defining unique effect
 }
 
-type ItemType = "weapon" | "armor" | "accessory";
+interface Affix {
+  id: string;                    // Affix definition ID (e.g. 'flat_attack')
+  value: number;                 // Rolled value (within tier min/max range)
+  tier: number;                  // Zone tier when rolled (1-7)
+}
+
+interface UniqueEffect {
+  id: string;                    // Effect ID for handler lookup (e.g. 'double_hit')
+  description: string;           // Display text for UI
+}
+
+type EquipmentSlot = "weapon" | "helmet" | "chest" | "gloves" | "boots" | "accessory";
 
 type Rarity = "common" | "uncommon" | "rare" | "epic" | "legendary";
 ```
@@ -73,276 +74,233 @@ type Rarity = "common" | "uncommon" | "rare" | "epic" | "legendary";
 
 ## Field Details
 
-### Identity Fields
+### Equipment Slots
 
-| Field | Type | Constraints | Example |
-|-------|------|-------------|---------|
-| `id` | string | Unique, follows convention | `"weapon_whisperwood_common_01"` |
-| `name` | string | 1-50 characters | `"Rusty Sword"` |
-| `description` | string | 1-200 characters | `"A worn blade, but still sharp..."` |
+| Slot | Emoji | Primary Role |
+|------|-------|--------------|
+| `weapon` | Varies by base name | Offensive stats, determines damage type |
+| `helmet` | Varies | Mixed stats |
+| `chest` | Varies | Defensive stats |
+| `gloves` | Varies | Offensive/utility stats |
+| `boots` | Varies | Utility/defensive stats |
+| `accessory` | Varies | Utility/skill stats |
 
-### Classification Fields
+**Weapon damage type:** Determined by base name. Physical names (Blade, Sword, Axe, etc.) set click damage to physical. Magic names (Staff, Wand, Scepter) set click damage to magic.
 
-| Field | Type | Options | Notes |
-|-------|------|---------|-------|
-| `type` | ItemType | `weapon`, `armor`, `accessory` | Determines equip slot |
-| `rarity` | Rarity | See rarity table below | Affects stats and color |
-| `zone` | string | Valid zone ID | Where item is sold/dropped |
+### Rarity & Affix Counts
 
-### Item Types
+| Rarity | Max Affixes | Chance of max-1 | Unique Effect |
+|--------|-------------|-----------------|---------------|
+| `common` | 1 | — | No |
+| `uncommon` | 2 | 40% | No |
+| `rare` | 3 | 50% | No |
+| `epic` | 4 | 60% | No |
+| `legendary` | 4 | — | Yes (always) |
 
-| Type | Slot | Primary Stats | Notes |
-|------|------|---------------|-------|
-| `weapon` | Weapon | attack, critChance, critDamage, armorPen | Main damage source |
-| `armor` | Armor | damageReduction, maxHP, hpRegen | Defensive survivability |
-| `accessory` | Accessory | goldFind, xpBonus, skillBoosts | Utility and special effects |
+### Required Levels (by zone)
 
-### Rarity Details
-
-From `_INDEX.md`:
-
-| Rarity | Color | Stat Multiplier | Emoji Prefix |
-|--------|-------|-----------------|--------------|
-| `common` | `#9d9d9d` | 1.0x | (none) |
-| `uncommon` | `#1eff00` | 1.5x | ✦ |
-| `rare` | `#0070dd` | 2.0x | ★ |
-| `epic` | `#a335ee` | 3.0x | ✧ |
-| `legendary` | `#ff8000` | 5.0x | ✵ |
-
-### Requirements
-
-| Field | Type | Range | Notes |
-|-------|------|-------|-------|
-| `requiredLevel` | number | 1-100 | Player must be this level to equip |
-
-**Level Requirement Guidelines:**
-- Zone 1 items: Level 1-10
-- Zone 2 items: Level 10-20
-- ...matches zone level ranges
-
-### Stats Object
-
-All stats are optional. Only include stats the item provides.
-
-| Stat | Type | Range | Example Value |
-|------|------|-------|---------------|
-| `attack` | number | 1-1000+ | `10` (adds 10 attack) |
-| `critChance` | number | 0.01-0.50 | `0.05` (adds 5% crit) |
-| `critDamage` | number | 0.1-2.0 | `0.5` (adds 50% crit damage) |
-| `goldFind` | number | 0.05-1.0 | `0.10` (adds 10% gold find) |
-| `xpBonus` | number | 0.05-1.0 | `0.10` (adds 10% XP) |
-| `autoAttack` | number | 0.1-5.0 | `1.0` (adds 1 click/sec) |
-
-**Stat Stacking:**
-All equipment stats stack additively with player base stats.
-
-### Economy Fields
-
-| Field | Type | Calculation | Notes |
-|-------|------|-------------|-------|
-| `buyPrice` | number | See formula | Cost in shop |
-| `sellPrice` | number | `buyPrice × 0.25` | Auto-calculated |
-
-**Price Formula:**
-```javascript
-// Base price by zone
-const ZONE_BASE_PRICE = {
-  whisperwood: 50,
-  dustwind: 200,
-  shadowmire: 500,
-  ironhold: 1500,
-  emberfell: 4000,
-  frostpeak: 10000,
-  voidrift: 25000
-};
-
-// Rarity multiplier
-const RARITY_PRICE_MULT = {
-  common: 1.0,
-  uncommon: 2.5,
-  rare: 6.0,
-  epic: 15.0,
-  legendary: 50.0
-};
-
-buyPrice = ZONE_BASE_PRICE[zone] * RARITY_PRICE_MULT[rarity];
-sellPrice = floor(buyPrice * 0.25);
-```
-
-### Availability Fields
-
-| Field | Type | Default | Notes |
-|-------|------|---------|-------|
-| `shopAvailable` | boolean | `true` | Appears in zone shop |
-| `dropOnly` | boolean | `false` | Only from monster loot |
-
-**Availability Rules:**
-- `shopAvailable: true, dropOnly: false` → In shop AND can drop
-- `shopAvailable: false, dropOnly: true` → Drop only (rare finds)
-- `shopAvailable: true, dropOnly: true` → Invalid combination
-- `shopAvailable: false, dropOnly: false` → Not available (unused)
-
-### Visual Fields
-
-| Field | Type | Default | Notes |
-|-------|------|---------|-------|
-| `emoji` | string | By type | Visual representation |
-
-**Default Emoji by Type:**
-- `weapon`: ⚔️
-- `armor`: 🛡️
-- `accessory`: 💍
+| Zone | Required Level |
+|------|---------------|
+| `whisperwood` | 1 |
+| `dustwind` | 10 |
+| `shadowmire` | 20 |
+| `ironhold` | 30 |
+| `emberfell` | 45 |
+| `frostpeak` | 60 |
+| `voidrift` | 75 |
 
 ---
 
-## Stat Value Guidelines by Zone
+## Affix System
 
-### Weapons - Attack Values
+63 total affixes across 7 categories. Each affix has a `scaleType` determining how values scale by tier:
 
-| Zone | Common | Uncommon | Rare | Epic | Legendary |
-|------|--------|----------|------|------|-----------|
-| Whisperwood | 3-5 | 6-8 | 10-12 | 15-18 | 25-30 |
-| Dustwind | 8-12 | 14-18 | 22-28 | 35-42 | 55-70 |
-| Shadowmire | 18-25 | 30-40 | 48-60 | 75-95 | 120-150 |
-| Ironhold | 35-50 | 60-80 | 100-130 | 160-200 | 260-330 |
-| Emberfell | 70-100 | 120-160 | 200-260 | 320-400 | 520-660 |
-| Frostpeak | 140-200 | 240-320 | 400-520 | 640-800 | 1040-1320 |
-| Voidrift | 280-400 | 480-640 | 800-1040 | 1280-1600 | 2080-2640 |
+- **flat**: Uses `FLAT_TIER_MULTIPLIERS` — values scale up to 30x from T1 to T7
+- **percentage**: Uses `PERCENT_TIER_MULTIPLIERS` — values scale up to 4.5x
+- **zoneBased**: Skill level affixes — gives +1/+2/+3 based on zone tier ranges
 
-### Accessories - Bonus Values
+### Affix Categories
 
-| Stat | Common | Uncommon | Rare | Epic | Legendary |
-|------|--------|----------|------|------|-----------|
-| goldFind | 5% | 8% | 12% | 18% | 30% |
-| xpBonus | 5% | 8% | 12% | 18% | 30% |
-| critChance | 2% | 3% | 5% | 8% | 12% |
+| Category | Count | Examples |
+|----------|-------|---------|
+| offensive | 6 | flat_attack, flat_magic_power, crit_chance, crit_damage, armor_pen, magic_pen |
+| defensive | 5 | flat_max_hp, hp_regen, flat_armor, flat_magic_resist, flat_max_shield |
+| utility | 4 | gold_find, xp_bonus, energy_gain, cooldown_reduction |
+| statusChance | 5 | bleed_chance, poison_chance, burn_chance, slow_chance, freeze_chance |
+| statusPotency | 5 | bleed_potency, poison_potency, burn_potency, slow_potency, freeze_potency |
+| skillBoost | 5 | General skill boost affixes |
+| skillCategory | 33 | Category-level and individual skill-level affixes |
+
+### Slot Category Weights
+
+Each slot has weighted probabilities for which affix categories appear. Weapons favor offensive, chest favors defensive, accessories favor utility/skill.
+
+### Validation Rules
+
+1. Max 2 status effect affixes per item (`MAX_STATUS_AFFIXES_PER_ITEM`)
+2. Max 1 skill level affix per item (`MAX_SKILL_LEVEL_AFFIXES_PER_ITEM`)
+3. No duplicate affix IDs on the same item
+4. Affixes re-roll up to 10 times if validation fails (`AFFIX_REROLL_MAX_ATTEMPTS`)
+
+---
+
+## Crafting State
+
+### Reforge
+Re-rolls one affix to a new random affix+value of the same tier. Cost escalates by 2.2x per reforge.
+
+| Field | Meaning |
+|-------|---------|
+| `reforgedAffix` | Index of last reforged affix (null = never reforged) |
+| `reforgeCount` | Total reforges on this item (drives cost escalation) |
+
+### Imbue
+Adds one additional affix to items with fewer than their rarity max. One-time operation per item.
+
+| Field | Meaning |
+|-------|---------|
+| `imbued` | `true` if item has been imbued (cannot imbue again) |
+
+### Temper
+12 levels across 3 cycles of 4. At levels 1, 5, and 9 the player selects an affix to boost. Boost amounts: +5% (cycle 1), +7% (cycle 2), +10% (cycle 3).
+
+| Field | Meaning |
+|-------|---------|
+| `temperLevel` | 0–12, current temper level |
+| `temperSelections` | Affix indices selected at milestone levels [1, 5, 9] |
+| `temperBrickCount` | Full reset count; at 5 resets the item bricks (cannot temper further) |
+
+---
+
+## Legendary Items
+
+15 legendary items (2-3 per zone), boss-only drops. Each has a fixed name, a unique effect, and random affixes.
+
+### Legendary-specific Fields
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `legendaryId` | string | References the legendary definition ID (e.g. `'soulreaver'`) |
+| `uniqueEffect` | `{ id, description }` | Build-defining effect, active when equipped |
+
+Legendary effects are categorized:
+- **Event-based**: Subscribe to events (e.g. "50% bonus bleed vs slowed targets")
+- **System-checked**: Checked by systems via `state.activeLegendaryEffects` Set
+- **Stat pipeline**: Modify computed stats in player.js
+- **Tick-based**: Updated each game tick (e.g. shield regen while idle)
 
 ---
 
 ## Example Items
 
-### Common Weapon
+### Common Weapon (generated)
 ```javascript
 {
-  id: "weapon_whisperwood_common_01",
-  name: "Rusty Sword",
-  description: "A weathered blade found in the forest. It's seen better days.",
-  type: "weapon",
+  id: "item_1708905432_7a3f",
+  name: "Whispering Blade",
+  slot: "weapon",
+  zone: "whisperwood",
   rarity: "common",
-  zone: "whisperwood",
   requiredLevel: 1,
-  stats: {
-    attack: 4
-  },
-  buyPrice: 50,
-  sellPrice: 12,
-  shopAvailable: true,
-  dropOnly: false,
-  emoji: "🗡️"
+  emoji: "🗡️",
+  affixes: [
+    { id: "flat_attack", value: 4, tier: 1 }
+  ],
+  reforgedAffix: null,
+  reforgeCount: 0,
+  imbued: false,
+  temperLevel: 0,
+  temperSelections: [],
+  temperBrickCount: 0,
+  buyPrice: 100,
+  sellPrice: 25,
+  legendaryId: null,
+  uniqueEffect: null
 }
 ```
 
-### Rare Weapon
+### Rare Chest Armor (generated)
 ```javascript
 {
-  id: "weapon_whisperwood_rare_01",
-  name: "Mossback's Branch",
-  description: "A branch torn from the ancient treant. It pulses with nature magic.",
-  type: "weapon",
+  id: "item_1708906100_b2c1",
+  name: "Ironhold Sentinel Plate of Vitality",
+  slot: "chest",
+  zone: "ironhold",
   rarity: "rare",
-  zone: "whisperwood",
-  requiredLevel: 8,
-  stats: {
-    attack: 11,
-    critChance: 0.03
-  },
-  buyPrice: 300,
-  sellPrice: 75,
-  shopAvailable: false,
-  dropOnly: true,  // Boss drop only
-  emoji: "🌿"
+  requiredLevel: 30,
+  emoji: "🛡️",
+  affixes: [
+    { id: "flat_max_hp", value: 78, tier: 4 },
+    { id: "flat_armor", value: 26, tier: 4 },
+    { id: "hp_regen", value: 0.022, tier: 4 }
+  ],
+  reforgedAffix: null,
+  reforgeCount: 0,
+  imbued: false,
+  temperLevel: 0,
+  temperSelections: [],
+  temperBrickCount: 0,
+  buyPrice: 18000,
+  sellPrice: 4500,
+  legendaryId: null,
+  uniqueEffect: null
 }
 ```
 
-### Accessory
+### Legendary Item (boss drop)
 ```javascript
 {
-  id: "accessory_whisperwood_uncommon_01",
-  name: "Lucky Rabbit's Foot",
-  description: "The previous owner wasn't so lucky, but you might be.",
-  type: "accessory",
-  rarity: "uncommon",
-  zone: "whisperwood",
-  requiredLevel: 3,
-  stats: {
-    goldFind: 0.08,
-    critChance: 0.02
-  },
-  buyPrice: 125,
-  sellPrice: 31,
-  shopAvailable: true,
-  dropOnly: false,
-  emoji: "🐾"
+  id: "item_1708910000_d4e5",
+  name: "Soulreaver",
+  slot: "weapon",
+  zone: "shadowmire",
+  rarity: "legendary",
+  requiredLevel: 20,
+  emoji: "💀",
+  affixes: [
+    { id: "flat_attack", value: 25, tier: 3 },
+    { id: "crit_chance", value: 0.034, tier: 3 },
+    { id: "crit_damage", value: 0.34, tier: 3 },
+    { id: "bleed_chance", value: 0.136, tier: 3 }
+  ],
+  reforgedAffix: null,
+  reforgeCount: 0,
+  imbued: false,
+  temperLevel: 0,
+  temperSelections: [],
+  temperBrickCount: 0,
+  buyPrice: 30000,
+  sellPrice: 7500,
+  legendaryId: "soulreaver",
+  uniqueEffect: {
+    id: "bleed_bonus_vs_slowed",
+    description: "Bleed deals 50% bonus damage to slowed targets"
+  }
 }
 ```
 
 ---
 
-## Shop Organization
+## Item Name Generation
 
-Items in shops are organized by:
-1. **Zone** - Each zone has its own shop section
-2. **Type** - Weapons, Armor, Accessories tabs
-3. **Rarity** - Sorted common → legendary
+Names are procedurally generated based on slot, rarity, and affixes:
 
-**Shop Unlock Rules:**
-- Zone shop unlocks when zone is unlocked
-- Items with `shopAvailable: false` never appear
-- Items above player level shown but grayed out
+- **Common**: `"{prefix} {baseName}"` — e.g. "Whispering Blade"
+- **Uncommon**: `"{prefix} {baseName} of {suffix}"` — e.g. "Iron Blade of the Bear"
+- **Rare**: `"{prefix} {baseName} of {suffix}"` — e.g. "Radiant Plate of Vitality"
+- **Epic**: 50% chance of epic prefix — e.g. "Infernal Demonforged Axe of Destruction"
+- **Legendary**: Fixed name from legendary definition — e.g. "Soulreaver"
 
----
-
-## Validation Rules
-
-1. `id` must be unique across all items
-2. `id` must follow convention: `{type}_{zone}_{rarity}_{number}`
-3. `type` must be valid ItemType
-4. `rarity` must be valid Rarity
-5. `zone` must reference valid zone ID
-6. `requiredLevel` must be within zone's level range
-7. Stats must be positive numbers
-8. `buyPrice` must be > 0
-9. Cannot have both `shopAvailable: true` and `dropOnly: true`
-10. `emoji` must be a valid emoji character
+Base names are determined by slot. Suffixes are derived from affix types present on the item.
 
 ---
 
-## Future Considerations
+## Pricing
 
-### Item Sets (v2.0)
-```typescript
-interface ItemSet {
-  id: string;
-  name: string;
-  items: string[];  // Item IDs in set
-  bonuses: {
-    2: StatBonus;   // Bonus for 2 pieces
-    3: StatBonus;   // Bonus for 3 pieces
-  };
-}
-```
-
-### Item Upgrade (v2.0)
-```typescript
-interface UpgradeRecipe {
-  inputItem: string;
-  outputItem: string;
-  goldCost: number;
-  materials: { itemId: string; count: number }[];
-}
-```
+Buy price is calculated from zone base price, rarity multiplier, and affix values.
+Sell price (scrap) is always 25% of buy price. Crafting modifications do not increase sell value.
 
 ---
 
-*Referenced by: items.js, shop.js, player.js, ui.js*
-*References: _INDEX.md (rarities, stats), zone.schema.md*
+*Referenced by: items.js, item-gen.js, item-crafting.js, item-effects.js, shop-ui.js, item-detail-ui.js*
+*References: _INDEX.md (rarities, tiers), docs/design/item-system-v2.md (canonical spec)*

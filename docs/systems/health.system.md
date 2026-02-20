@@ -199,7 +199,7 @@ When player HP reaches 0:
 │     You've been forced to retreat...    │
 │                                         │
 │  LOST:                                  │
-│  ├── Level progress (37 → 30)           │
+│  ├── Current XP progress (reset to 0)   │
 │  ├── 50% of current gold (1,240g lost)  │
 │  └── Current monster escaped            │
 │                                         │
@@ -216,38 +216,26 @@ When player HP reaches 0:
 
 ```javascript
 function handlePlayerDeath(player) {
-  // 1. Reset to last milestone level
-  const milestone = Math.floor(player.level / 10) * 10;
-  player.level = Math.max(milestone, 1);
+  // 1. Lose current XP progress (reset to 0, keep level)
+  player.xp = 0;
 
   // 2. Lose 50% of current gold
-  const goldLost = Math.floor(player.gold * 0.5);
+  const goldLost = Math.floor(player.gold * DEATH_GOLD_LOSS);
   player.gold -= goldLost;
 
   // 3. Current monster escapes (no loot)
-  player.currentMonster = null;
+  // combatState → 'dead'
 
-  // 4. Full heal on respawn, but no free Energy
+  // 4. Respawn after DEATH_RESPAWN_DELAY (1500ms)
+  // Full heal on respawn, energy resets to 0
   player.hp = player.maxHP;
-  player.energy = 0;  // Energy resets to 0 on death
+  player.energy = 0;
 
   // 5. Stay in same zone
   // (player can choose to go back if zone is too hard)
 
-  return { goldLost, levelLost: player.level - milestone };
+  // 6. Clear all buffs, modifiers, toggles, channels
 }
-```
-
-### Milestone Levels
-
-```
-Milestones: 1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100
-
-Examples:
-- Die at level 7 → Back to level 1
-- Die at level 15 → Back to level 10
-- Die at level 37 → Back to level 30
-- Die at level 99 → Back to level 90
 ```
 
 ### Undying Skill
@@ -408,7 +396,7 @@ const HEALTH_CONSTANTS = {
 
   // Death
   DEATH_GOLD_LOSS: 0.5,             // 50%
-  DEATH_LEVEL_MILESTONE: 10,        // Round down to nearest 10
+  DEATH_RESPAWN_DELAY: 1500,        // ms before respawn
 
   // Visual thresholds
   HP_CAUTION_THRESHOLD: 0.5,        // Yellow below 50%
