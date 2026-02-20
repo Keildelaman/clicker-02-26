@@ -141,9 +141,6 @@ export function unlockSkill(skillId) {
   const skillDef = SKILLS[skillId];
   if (!skillDef) return false;
 
-  // Level requirement
-  if (player.level < skillDef.unlockLevel) return false;
-
   const cost = skillDef.unlockCost;
   if (player.skillPoints < cost) return false;
 

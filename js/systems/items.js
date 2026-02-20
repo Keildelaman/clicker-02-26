@@ -121,8 +121,9 @@ export function init(injected) {
     if (!deps.deductGold(cost)) return emit('item:craftFailed', { operation: 'reforge', reason: 'gold', cost, item });
 
     const result = reforge(item, affixIndex);
+    if (!result) return emit('item:craftFailed', { operation: 'reforge', reason: 'roll_failed', item });
     if (found.equipped) recomputeEquipmentStats();
-    emit('item:reforged', { item, affixIndex, oldValue: result.oldValue, newValue: result.newValue, cost });
+    emit('item:reforged', { item, affixIndex, oldAffix: result.oldAffix, newAffix: result.newAffix, cost });
     saveGame();
   });
 
@@ -237,6 +238,7 @@ export function scrapItem(itemId) {
 
   removeItemFromSource(source, index);
   deps.addGold(goldValue);
+  promoteOverflow();
 
   emit('item:scrapped', { item, goldValue });
   saveGame();
@@ -274,6 +276,7 @@ export function bulkScrap(rarity) {
   if (count === 0) return false;
 
   deps.addGold(totalGold);
+  promoteOverflow();
   emit('item:bulkScrapped', { count, totalGold, rarity });
   saveGame();
   return { count, totalGold };
@@ -332,6 +335,7 @@ export function equipItem(itemId) {
     if (handler?.onEquip) handler.onEquip(item);
   }
 
+  promoteOverflow();
   emit('item:equipped', { item, slot, previousItem });
   saveGame();
   return true;
@@ -633,6 +637,18 @@ function findItemById(itemId) {
  */
 function removeItemFromSource(source, index) {
   source.splice(index, 1);
+}
+
+/**
+ * Move items from overflow into inventory until inventory is full or overflow is empty.
+ */
+function promoteOverflow() {
+  const player = getPlayer();
+  while (player.inventoryOverflow.length > 0 && player.inventory.length < INVENTORY_MAX) {
+    const item = player.inventoryOverflow.shift();
+    player.inventory.push(item);
+    emit('item:promoted', { item });
+  }
 }
 
 /**

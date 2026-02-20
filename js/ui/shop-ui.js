@@ -304,7 +304,9 @@ function buildToolbarHTML() {
   ).join('');
 
   return `<div class="inv-toolbar">
-    <div class="inv-toolbar__filters">${filterPills}</div>
+    <div class="inv-toolbar__scroll">
+      <div class="inv-toolbar__filters">${filterPills}</div>
+    </div>
     <select class="inv-toolbar__sort" data-inv-sort>${sortSelect}</select>
   </div>`;
 }
@@ -362,21 +364,21 @@ function renderInventory() {
   const player = getPlayer();
   let html = '';
 
-  // Equipment slots (6 v2 object slots)
-  html += '<div class="equipment-slots">';
+  // Equipment grid (2×3 RPG layout)
+  html += '<div class="equip-grid">';
   for (const slot of EQUIPMENT_SLOTS_V2) {
     const item = player.equipment[slot];
+    const slotLabel = slot.charAt(0).toUpperCase() + slot.slice(1);
 
     if (item) {
-      const rarityColor = RARITIES[item.rarity]?.color || '#9d9d9d';
-      html += `<div class="equipment-slot equipment-slot--filled equipment-slot--${item.rarity}" data-equip-slot="${slot}">
-        <span class="equipment-slot__emoji">${item.emoji || ''}</span>
-        <span class="equipment-slot__name">${item.name}</span>
-        <span class="equipment-slot__label">tap to view</span>
+      html += `<div class="equip-tile equip-tile--filled equip-tile--${item.rarity}" data-equip-slot="${slot}">
+        <span class="equip-tile__icon">${item.emoji || ''}</span>
+        <span class="equip-tile__name">${item.name}</span>
+        <span class="equip-tile__slot">${slotLabel}</span>
       </div>`;
     } else {
-      html += `<div class="equipment-slot">
-        <span class="equipment-slot__label">${slot}</span>
+      html += `<div class="equip-tile" data-equip-slot="${slot}">
+        <span class="equip-tile__slot">${slotLabel}</span>
       </div>`;
     }
   }

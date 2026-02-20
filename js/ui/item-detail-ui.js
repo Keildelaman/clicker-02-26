@@ -30,6 +30,8 @@ let currentItem = null;
 let currentContext = null; // { source: 'inventory'|'equipment'|'shop', shopIndex?, slot? }
 let temperResetConfirming = false;
 let temperResetTimer = null;
+let reforgeConfirmIndex = null;
+let reforgeConfirmTimer = null;
 
 // ============================================================
 // INITIALIZATION
@@ -80,6 +82,8 @@ export function show(item, context) {
   currentContext = context;
   temperResetConfirming = false;
   clearTimeout(temperResetTimer);
+  reforgeConfirmIndex = null;
+  clearTimeout(reforgeConfirmTimer);
 
   render();
   backdrop.style.display = 'flex';
@@ -91,6 +95,8 @@ export function hide() {
   currentContext = null;
   temperResetConfirming = false;
   clearTimeout(temperResetTimer);
+  reforgeConfirmIndex = null;
+  clearTimeout(reforgeConfirmTimer);
 }
 
 function refreshIfOpen() {
@@ -194,20 +200,31 @@ function formatAffix(affix) {
 }
 
 /**
- * Get boost text for a tempered affix (e.g., "+15%").
+ * Get boost text for a tempered affix showing the actual stat increase.
+ * e.g., "(+2)" for flat stats or "(+0.15%)" for percentage stats.
  */
 function getAffixBoostText(item, affixIndex) {
   if (!item.temperSelections || item.temperLevel === 0) return '';
-  let totalBoost = 0;
-  for (let cycle = 0; cycle < item.temperSelections.length; cycle++) {
-    if (item.temperSelections[cycle] !== affixIndex) continue;
-    const selLevel = TEMPER_SELECTION_LEVELS[cycle];
-    const TEMPER_BOOST_PER_CYCLE = [0.05, 0.07, 0.10];
-    const completedBoosts = Math.max(0, Math.min(3, item.temperLevel - selLevel));
-    totalBoost += completedBoosts * TEMPER_BOOST_PER_CYCLE[cycle];
+
+  const affix = item.affixes[affixIndex];
+  if (!affix || affix.baseValue === undefined) return '';
+
+  const diff = affix.value - affix.baseValue;
+  const def = AFFIXES[affix.id];
+  if (!def) return '';
+
+  // If diff is 0, only show (+0) if this affix is a temper target
+  if (diff <= 0) {
+    const isTemperTarget = item.temperSelections && item.temperSelections.includes(affixIndex);
+    if (!isTemperTarget) return '';
+    return def.scaleType === 'percentage' ? '(+0%)' : '(+0)';
   }
-  if (totalBoost <= 0) return '';
-  return `(+${Math.round(totalBoost * 100)}%)`;
+
+  if (def.scaleType === 'percentage') {
+    const diffPercent = Math.round(diff * 10000) / 100;
+    return `(+${diffPercent}%)`;
+  }
+  return `(+${Math.round(diff)})`;
 }
 
 // ============================================================
@@ -373,8 +390,11 @@ function buildReforgeHTML(item, player) {
     html += '<div class="item-detail__reforge-hint">Select an affix to reforge:</div>';
     reforgeableIndices.forEach(i => {
       const affix = item.affixes[i];
-      html += `<button class="item-detail__reforge-affix" data-reforge-index="${i}">
-        ${formatAffix(affix)}
+      const isConfirming = reforgeConfirmIndex === i;
+      const confirmCls = isConfirming ? ' item-detail__reforge-affix--confirm' : '';
+      const label = isConfirming ? `Confirm Reforge (${formatGold(cost)}g)` : formatAffix(affix);
+      html += `<button class="item-detail__reforge-affix${confirmCls}" data-reforge-index="${i}">
+        ${label}
       </button>`;
     });
   } else {
@@ -383,8 +403,11 @@ function buildReforgeHTML(item, player) {
     html += `<div class="item-detail__reforge-locked">
       &#x1F512; ${formatAffix(affix)}
     </div>`;
-    html += `<button class="item-detail__craft-btn" data-reforge-index="${item.reforgedAffix}" ${canPay ? '' : 'disabled'}>
-      Reforge
+    const isConfirming = reforgeConfirmIndex === item.reforgedAffix;
+    const confirmCls = isConfirming ? ' item-detail__craft-btn--confirm' : '';
+    const label = isConfirming ? 'Confirm Reforge' : 'Reforge';
+    html += `<button class="item-detail__craft-btn${confirmCls}" data-reforge-index="${item.reforgedAffix}" ${canPay ? '' : 'disabled'}>
+      ${label}
       <span class="item-detail__craft-cost${canPay ? '' : ' item-detail__craft-cost--unaffordable'}">${formatGold(cost)}g</span>
     </button>`;
   }
@@ -513,11 +536,24 @@ function wireDetailHandlers() {
     emit('shop:requestPurchase', { shopIndex: currentContext.shopIndex });
   });
 
-  // Reforge
+  // Reforge (two-click confirm)
   panel.querySelectorAll('[data-reforge-index]').forEach(btn => {
     btn.addEventListener('click', () => {
       const affixIndex = parseInt(btn.dataset.reforgeIndex);
-      emit('item:requestReforge', { itemId: currentItem.id, affixIndex });
+      if (reforgeConfirmIndex === affixIndex) {
+        // Confirmed — execute reforge
+        clearTimeout(reforgeConfirmTimer);
+        reforgeConfirmIndex = null;
+        emit('item:requestReforge', { itemId: currentItem.id, affixIndex });
+      } else {
+        // First click — enter confirm state
+        reforgeConfirmIndex = affixIndex;
+        render();
+        reforgeConfirmTimer = setTimeout(() => {
+          reforgeConfirmIndex = null;
+          if (currentItem) render();
+        }, 3000);
+      }
     });
   });
 

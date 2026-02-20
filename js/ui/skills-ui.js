@@ -267,7 +267,6 @@ function renderSkillCard(skillDef, player) {
   const level = player.unlockedSkills[skillDef.id];
   const isUnlocked = level !== undefined;
   const isMaxLevel = isUnlocked && level >= skillDef.maxLevel;
-  const meetsLevelReq = player.level >= skillDef.unlockLevel;
 
   // Check if equipped
   const isEquippedActive = player.equippedActive.includes(skillDef.id);
@@ -296,10 +295,7 @@ function renderSkillCard(skillDef, player) {
 
   // Action button
   let actionBtn = '';
-  if (!isUnlocked && !meetsLevelReq) {
-    // Not at required level — show lock message
-    actionBtn = `<button class="skill-card__btn skill-card__btn--unlock" disabled>UNLOCKS AT LV.${skillDef.unlockLevel}</button>`;
-  } else if (!isUnlocked) {
+  if (!isUnlocked) {
     const cost = skillDef.unlockCost;
     const canAfford = player.skillPoints >= cost;
     const costText = cost === 0 ? 'FREE' : `${cost} SP`;

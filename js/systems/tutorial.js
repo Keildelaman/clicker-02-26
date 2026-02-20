@@ -222,6 +222,39 @@ function onItemPurchased() {
   }
 }
 
+function onFirstReforge() {
+  if (isCompleted('first_reforge')) return;
+  markCompleted('first_reforge');
+  showModal({
+    icon: '\uD83D\uDD04',
+    title: 'REFORGE',
+    body: 'Reforging <strong>replaces</strong> one affix with a completely new one.<div class="tutorial-tip">Pick a slot to lock in. Future reforges only target that slot.<br>Cost escalates each time!</div>',
+    buttons: [{ label: 'GOT IT!', primary: true }]
+  });
+}
+
+function onFirstImbue() {
+  if (isCompleted('first_imbue')) return;
+  markCompleted('first_imbue');
+  showModal({
+    icon: '\u2728',
+    title: 'IMBUE',
+    body: 'Imbuing adds a <strong>random new affix</strong> to your item.<div class="tutorial-tip">One-time only per item \u2014 choose wisely!</div>',
+    buttons: [{ label: 'GOT IT!', primary: true }]
+  });
+}
+
+function onFirstTemper() {
+  if (isCompleted('first_temper')) return;
+  markCompleted('first_temper');
+  showModal({
+    icon: '\uD83D\uDD25',
+    title: 'TEMPER',
+    body: 'Tempering boosts affix values in <strong>3 cycles</strong> of 4 levels each.<div class="tutorial-tip">Each cycle picks a random affix, then boosts it.<br>You can <strong>Reset</strong> to start over \u2014 but too many resets will <strong>brick</strong> the item!</div>',
+    buttons: [{ label: 'GOT IT!', primary: true }]
+  });
+}
+
 function checkShopSuggestion() {
   if (isCompleted('shop_suggestion')) return;
   const p = state.player;
@@ -254,4 +287,7 @@ export function init() {
   on('zone:changed', onZoneChanged);
   on('player:died', onPlayerDied);
   on('item:purchased', onItemPurchased);
+  on('item:reforged', onFirstReforge);
+  on('item:imbued', onFirstImbue);
+  on('item:tempered', onFirstTemper);
 }

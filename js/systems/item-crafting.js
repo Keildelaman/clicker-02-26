@@ -59,7 +59,7 @@ function calculateAffixBoost(item, affixIndex) {
     if (cycle >= item.temperSelections.length) break;
     if (item.temperSelections[cycle] !== affixIndex) continue;
     const selLevel = TEMPER_SELECTION_LEVELS[cycle];
-    const completedBoosts = Math.max(0, Math.min(3, item.temperLevel - selLevel));
+    const completedBoosts = Math.max(0, Math.min(4, item.temperLevel - selLevel + 1));
     totalBoost += completedBoosts * TEMPER_BOOST_PER_CYCLE[cycle];
   }
   return totalBoost;
@@ -120,13 +120,13 @@ export function getReforgeCost(item) {
 }
 
 /**
- * Reforge an affix on the item, re-rolling its value.
+ * Reforge an affix on the item, replacing it with a completely new random affix.
  * On first reforge, permanently locks the chosen affix index.
- * Subsequent reforges can only target the locked affix.
+ * Subsequent reforges can only target the locked index.
  *
  * @param {Object} item
  * @param {number} affixIndex - Index of the affix to reforge
- * @returns {{ oldValue: number, newValue: number }|null} Result or null on failure
+ * @returns {{ oldAffix: Object, newAffix: Object }|null} Result or null on failure
  */
 export function reforge(item, affixIndex) {
   if (!canReforge(item)) return null;
@@ -139,23 +139,29 @@ export function reforge(item, affixIndex) {
     item.reforgedAffix = affixIndex;
   }
 
-  const affix = item.affixes[affixIndex];
-  const oldValue = affix.value;
-  const affixDef = AFFIXES[affix.id];
+  const oldAffix = { ...item.affixes[affixIndex] };
   const zoneTier = ZONE_TIERS[item.zone];
 
-  // Re-roll value using same logic as initial generation
-  let newValue;
-  if (affixDef.scaleType === 'zoneBased') {
-    newValue = Number(weightedRandom(SKILL_LEVEL_ZONE_RANGES[zoneTier].weights));
-  } else {
-    newValue = rollAffixValue(affixDef.t1Min, affixDef.t1Max, zoneTier, affixDef.scaleType);
+  // Build list of other affixes (exclude the one being reforged) for duplicate avoidance
+  const otherAffixes = item.affixes.filter((_, i) => i !== affixIndex);
+
+  // Roll a completely new affix
+  const newAffix = rollAffix(item.slot, otherAffixes, zoneTier);
+  if (!newAffix) return null;
+
+  // If item is tempered, apply existing temper boost to the new affix
+  if (item.temperLevel > 0 && item.temperSelections) {
+    newAffix.baseValue = newAffix.value;
+    const totalBoost = calculateAffixBoost(item, affixIndex);
+    if (totalBoost > 0) {
+      applyBoostToAffix(newAffix, totalBoost);
+    }
   }
 
-  affix.value = newValue;
+  item.affixes[affixIndex] = newAffix;
   item.reforgeCount++;
 
-  return { oldValue, newValue };
+  return { oldAffix, newAffix };
 }
 
 // ============================================================
@@ -259,7 +265,12 @@ export function temper(item) {
     // Randomly pick an affix to focus for this cycle
     const affixIndex = Math.floor(Math.random() * item.affixes.length);
     item.temperSelections.push(affixIndex);
-    return { type: 'selection', affixIndex };
+    // Also apply first boost (selection level gives value immediately)
+    const totalBoost = calculateAffixBoost(item, affixIndex);
+    const affix = item.affixes[affixIndex];
+    applyBoostToAffix(affix, totalBoost);
+    const cycle = getCycle(item.temperLevel);
+    return { type: 'selection', affixIndex, boostPercent: TEMPER_BOOST_PER_CYCLE[cycle], newValue: affix.value };
   }
 
   // Boost level: enhance the most recently selected affix
