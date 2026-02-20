@@ -23,7 +23,7 @@ import {
 } from '../data/constants.js';
 import { beyondMaxSkillMultiplier } from '../data/balance.js';
 import { EFFECT_HANDLERS, initEffects, onCombatClickMomentum } from './skill-effects.js';
-import { PASSIVE_HANDLERS, initPassives } from './skill-passives.js';
+import { PASSIVE_HANDLERS, initPassives, refreshAllPassives } from './skill-passives.js';
 
 // Dependency injection — set during init()
 let computeStats = null;
@@ -47,6 +47,25 @@ export function getEffectiveSkillLevel(skillId) {
   if (baseLevel === undefined) return 0;
   const bonusLevels = getItemSkillLevelBonus ? getItemSkillLevelBonus(skillId) : 0;
   return baseLevel + bonusLevels;
+}
+
+/**
+ * Update state with effective skill levels and bonus levels for UI consumption.
+ */
+function updateSkillLevelState() {
+  const player = getPlayer();
+  if (!player) return;
+  const effective = {};
+  const bonuses = {};
+  for (const skillId of Object.keys(player.unlockedSkills)) {
+    const eff = getEffectiveSkillLevel(skillId);
+    const base = player.unlockedSkills[skillId];
+    effective[skillId] = eff;
+    const bonus = eff - base;
+    if (bonus > 0) bonuses[skillId] = bonus;
+  }
+  state.effectiveSkillLevels = effective;
+  state.skillBonusLevels = bonuses;
 }
 
 /**
@@ -147,6 +166,7 @@ export function unlockSkill(skillId) {
   player.skillPoints -= cost;
   player.unlockedSkills[skillId] = 1;
 
+  updateSkillLevelState();
   emit('skill:unlocked', { skillId, spRemaining: player.skillPoints });
   return true;
 }
@@ -179,6 +199,7 @@ export function upgradeSkill(skillId) {
     invalidateStats();
   }
 
+  updateSkillLevelState();
   emit('skill:upgraded', { skillId, newLevel: level + 1, spRemaining: player.skillPoints });
   return true;
 }
@@ -458,6 +479,7 @@ export function respec() {
   player.respecCount++;
 
   invalidateStats();
+  updateSkillLevelState();
   emit('skill:respecced', { refundedSP, cost, respecCount: player.respecCount });
   emit('player:statsChanged', {});
   return true;
@@ -650,6 +672,18 @@ export function init(deps = {}) {
   on('skill:requestReleaseChannel', () => releaseChannel());
   on('skill:requestRespec', () => respec());
 
+  // Re-subscribe passives and update state when items change effective levels
+  on('item:equipped', () => {
+    refreshAllPassives();
+    invalidateStats();
+    updateSkillLevelState();
+  });
+  on('item:unequipped', () => {
+    refreshAllPassives();
+    invalidateStats();
+    updateSkillLevelState();
+  });
+
   // Cancel channel on tab hide (performance.now() would inflate elapsed time)
   document.addEventListener('visibilitychange', () => {
     if (document.hidden && state.channelState) {
@@ -657,4 +691,6 @@ export function init(deps = {}) {
     }
   });
 
+  // Build initial effective level state
+  updateSkillLevelState();
 }

@@ -1837,6 +1837,11 @@
 .skill-card__preview-arrow { color: #4caf50; font-weight: 700; }
 .skill-card__preview-val { color: #4caf50; }
 
+.skill-card__level-bonus {
+  color: #4caf50;
+  font-weight: 700;
+}
+
 /* === Tutorial Overlay (blocking welcome screen) === */
 .tutorial-overlay {
   position: fixed;

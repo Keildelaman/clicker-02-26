@@ -13,15 +13,17 @@ import { getPlayer } from '../core/game-state.js';
 import {
   MAX_ENERGY, ENERGY_PER_CLICK, ENERGY_ON_KILL,
   ENERGY_ON_BOSS_KILL, ENERGY_REGEN_PER_SECOND,
-  ENERGY_GAIN_COOLDOWN
+  ENERGY_GAIN_COOLDOWN, BASE_SKILL_MAX_LEVEL
 } from '../data/constants.js';
 import { SKILLS } from '../data/skills.data.js';
+import { beyondMaxSkillMultiplier } from '../data/balance.js';
 
 // 200ms cooldown between click-based energy gains (in seconds)
 const COOLDOWN_SEC = ENERGY_GAIN_COOLDOWN / 1000;
 let timeSinceLastGain = COOLDOWN_SEC; // Start ready
 let lastClickTime = 0;
 let computeStats = null; // Injected: player.getComputedStats
+let resolveEffectiveLevel = null; // Injected: skills.getEffectiveSkillLevel
 
 /**
  * @param {Object} deps - Injected dependencies
@@ -29,6 +31,7 @@ let computeStats = null; // Injected: player.getComputedStats
  */
 export function init(deps = {}) {
   computeStats = deps.getComputedStats;
+  resolveEffectiveLevel = deps.getEffectiveSkillLevel || null;
 
   on('combat:click', onCombatClick);
   on('combat:monsterKilled', onMonsterKilled);
@@ -45,10 +48,17 @@ function getEnergyPerClick() {
   const player = getPlayer();
   if (!player) return ENERGY_PER_CLICK;
   if (player.equippedPassive.includes('heavy_handed')) {
-    const level = player.unlockedSkills['heavy_handed'];
-    if (level) {
-      const data = SKILLS['heavy_handed']?.levels[level];
-      if (data?.energyPerClick !== undefined) return data.energyPerClick;
+    const baseLevel = player.unlockedSkills['heavy_handed'];
+    if (baseLevel) {
+      const effectiveLevel = resolveEffectiveLevel ? resolveEffectiveLevel('heavy_handed') : baseLevel;
+      const skillDef = SKILLS['heavy_handed'];
+      const maxLevel = skillDef?.maxLevel || BASE_SKILL_MAX_LEVEL;
+      const cappedLevel = Math.min(effectiveLevel, maxLevel);
+      const data = skillDef?.levels[cappedLevel];
+      if (data?.energyPerClick !== undefined) {
+        const bmMult = beyondMaxSkillMultiplier(effectiveLevel, maxLevel);
+        return Math.floor(data.energyPerClick * bmMult);
+      }
     }
   }
   return ENERGY_PER_CLICK;
@@ -94,11 +104,16 @@ export function update(dt) {
   if (player.equippedPassive.includes('focused_mind')) {
     const idleTime = lastClickTime > 0 ? (performance.now() - lastClickTime) / 1000 : 999;
     if (idleTime >= 0.5 && player.energy < MAX_ENERGY) {
-      const level = player.unlockedSkills['focused_mind'];
-      if (level) {
-        const data = SKILLS['focused_mind']?.levels[level];
+      const baseLevel = player.unlockedSkills['focused_mind'];
+      if (baseLevel) {
+        const effectiveLevel = resolveEffectiveLevel ? resolveEffectiveLevel('focused_mind') : baseLevel;
+        const skillDef = SKILLS['focused_mind'];
+        const maxLevel = skillDef?.maxLevel || BASE_SKILL_MAX_LEVEL;
+        const cappedLevel = Math.min(effectiveLevel, maxLevel);
+        const data = skillDef?.levels[cappedLevel];
         if (data) {
-          player.energy = Math.min(player.energy + data.idleRegen * dt, MAX_ENERGY);
+          const bmMult = beyondMaxSkillMultiplier(effectiveLevel, maxLevel);
+          player.energy = Math.min(player.energy + data.idleRegen * bmMult * dt, MAX_ENERGY);
           emitChanged();
         }
       }

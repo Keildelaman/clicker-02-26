@@ -14,14 +14,18 @@ import { state, getPlayer } from '../core/game-state.js';
 import {
   BASE_CRIT_CHANCE, BASE_CRIT_MULTIPLIER,
   BASE_PLAYER_HP, BASE_HP_REGEN,
-  MAX_ENERGY, SAVE_VERSION, LEGENDARY_EFFECTS
+  MAX_ENERGY, SAVE_VERSION, LEGENDARY_EFFECTS,
+  BASE_SKILL_MAX_LEVEL
 } from '../data/constants.js';
-import { maxHPAtLevel, baseAttackAtLevel, baseArmorAtLevel, baseMagicResistAtLevel } from '../data/balance.js';
+import { maxHPAtLevel, baseAttackAtLevel, baseArmorAtLevel, baseMagicResistAtLevel, beyondMaxSkillMultiplier } from '../data/balance.js';
 import { SKILLS } from '../data/skills.data.js';
 
 // --- Stat Cache ---
 let statCache = null;
 let cacheValid = false;
+
+// Dependency injection — set during init()
+let resolveEffectiveLevel = null;
 
 export function invalidateStatCache() {
   cacheValid = false;
@@ -50,25 +54,29 @@ function getPassiveSkillBonus(player, statName) {
   let total = 0;
   for (const skillId of player.equippedPassive) {
     if (!skillId) continue;
-    const level = player.unlockedSkills[skillId];
-    if (!level) continue;
+    const baseLevel = player.unlockedSkills[skillId];
+    if (!baseLevel) continue;
     const skillDef = SKILLS[skillId];
     if (!skillDef) continue;
-    const data = skillDef.levels[level];
+    const effectiveLevel = resolveEffectiveLevel ? resolveEffectiveLevel(skillId) : baseLevel;
+    const maxLevel = skillDef.maxLevel || BASE_SKILL_MAX_LEVEL;
+    const cappedLevel = Math.min(effectiveLevel, maxLevel);
+    const data = skillDef.levels[cappedLevel];
     if (!data) continue;
+    const bmMult = beyondMaxSkillMultiplier(effectiveLevel, maxLevel);
 
     switch (skillId) {
       case 'heavy_handed':
-        if (statName === 'damage') total += data.dmgBonus / 100;
+        if (statName === 'damage') total += (data.dmgBonus / 100) * bmMult;
         break;
       case 'berserker':
         if (player.hp / player.maxHP < data.hpThreshold / 100) {
-          if (statName === 'damage') total += data.dmgBonus / 100;
-          if (statName === 'critChance') total += data.critBonus / 100;
+          if (statName === 'damage') total += (data.dmgBonus / 100) * bmMult;
+          if (statName === 'critChance') total += (data.critBonus / 100) * bmMult;
         }
         break;
       case 'efficient_casting':
-        if (statName === 'skillEnergyCost') total += data.costReduction / 100;
+        if (statName === 'skillEnergyCost') total += (data.costReduction / 100) * bmMult;
         break;
     }
   }
@@ -322,7 +330,9 @@ export function createNewPlayer() {
 
 // --- Initialization ---
 
-export function init() {
+export function init(deps = {}) {
+  resolveEffectiveLevel = deps.getEffectiveSkillLevel || null;
+
   on('player:levelUp', invalidateStatCache);
   on('item:equipped', invalidateStatCache);
   on('item:unequipped', invalidateStatCache);

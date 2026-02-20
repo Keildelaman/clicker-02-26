@@ -47,7 +47,7 @@ if (savedData) {
 }
 
 // 2. Initialize systems (inject cross-system dependencies)
-player.init();
+player.init({ getEffectiveSkillLevel: skills.getEffectiveSkillLevel });
 monster.init();
 combat.init({
   getComputedStats: player.getComputedStats,
@@ -56,7 +56,7 @@ combat.init({
   getStatusProcChances: items.getStatusProcChances
 });
 health.init({ getComputedStats: player.getComputedStats });
-energy.init({ getComputedStats: player.getComputedStats });
+energy.init({ getComputedStats: player.getComputedStats, getEffectiveSkillLevel: skills.getEffectiveSkillLevel });
 progression.init({ getComputedStats: player.getComputedStats, invalidateStatCache: player.invalidateStatCache });
 economy.init({
   generateShopItem: items.generateShopItem,

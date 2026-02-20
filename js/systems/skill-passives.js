@@ -204,6 +204,23 @@ function cleanupPassive(skillId) {
 }
 
 /**
+ * Refresh all equipped passives: unequip then re-subscribe.
+ * Called when item changes affect effective skill levels.
+ */
+export function refreshAllPassives() {
+  const player = getPlayer();
+  if (!player) return;
+  // Unsubscribe all currently equipped passives
+  for (const skillId of player.equippedPassive) {
+    if (!skillId) continue;
+    const handler = PASSIVE_HANDLERS[skillId];
+    if (handler?.onUnequip) handler.onUnequip(skillId);
+  }
+  // Re-subscribe with updated effective levels
+  resubscribeAll();
+}
+
+/**
  * Re-subscribe all currently equipped passives (called on game load).
  */
 function resubscribeAll() {

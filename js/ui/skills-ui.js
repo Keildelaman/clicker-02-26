@@ -12,8 +12,9 @@ import { state, getPlayer } from '../core/game-state.js';
 import { SKILLS } from '../data/skills.data.js';
 import {
   ACTIVE_SKILL_SLOTS, PASSIVE_SKILL_SLOTS,
-  SP_UPGRADE_COST, RESPEC_COSTS
+  SP_UPGRADE_COST, RESPEC_COSTS, BASE_SKILL_MAX_LEVEL
 } from '../data/constants.js';
+import { beyondMaxSkillMultiplier } from '../data/balance.js';
 import { showToast } from './toasts.js';
 
 // Category grouping constants
@@ -113,6 +114,8 @@ export function init() {
   on('skill:channelRelease', () => { renderSkillBar(); });
   on('skill:channelCancelled', () => { renderSkillBar(); });
   on('skill:effectEnded', () => { renderSkillBar(); });
+  on('item:equipped', () => { renderSkillsScreen(); renderSkillBar(); });
+  on('item:unequipped', () => { renderSkillsScreen(); renderSkillBar(); });
 
   // Start cooldown timer update
   cooldownIntervalId = setInterval(updateCooldowns, 100);
@@ -267,6 +270,9 @@ function renderSkillCard(skillDef, player) {
   const level = player.unlockedSkills[skillDef.id];
   const isUnlocked = level !== undefined;
   const isMaxLevel = isUnlocked && level >= skillDef.maxLevel;
+  const bonus = (state.skillBonusLevels && state.skillBonusLevels[skillDef.id]) || 0;
+  const effectiveLevel = (state.effectiveSkillLevels && state.effectiveSkillLevels[skillDef.id]) || level || 0;
+  const maxLevel = skillDef.maxLevel || BASE_SKILL_MAX_LEVEL;
 
   // Check if equipped
   const isEquippedActive = player.equippedActive.includes(skillDef.id);
@@ -281,14 +287,22 @@ function renderSkillCard(skillDef, player) {
 
   const catColor = CATEGORY_COLORS[skillDef.category] || '#fff';
 
-  // Description with current level values
+  // Description with effective level values (scaled by bmMult for numeric values)
   let desc = skillDef.description;
-  const displayLevel = isUnlocked ? level : 1;
-  const displayData = skillDef.levels[displayLevel];
+  const cappedEffective = isUnlocked ? Math.min(effectiveLevel, maxLevel) : 1;
+  const displayData = skillDef.levels[cappedEffective] || skillDef.levels[1];
+  const bmMult = isUnlocked ? beyondMaxSkillMultiplier(effectiveLevel, maxLevel) : 1;
   if (displayData) {
     desc = desc.replace(/\{(\w+)\}/g, (_, key) => {
       const val = displayData[key];
       if (val === undefined) return `{${key}}`;
+      if (typeof val !== 'number') return val;
+      // Don't scale cooldown/energyCost in descriptions
+      if (key === 'cooldown' || key === 'energyCost') return val;
+      if (bmMult !== 1) {
+        const scaled = Number.isInteger(val) ? Math.floor(val * bmMult) : +(val * bmMult).toFixed(1);
+        return scaled;
+      }
       return val;
     });
   }
@@ -323,10 +337,10 @@ function renderSkillCard(skillDef, player) {
     dtypeBadge = `<span class="skill-card__dtype skill-card__dtype--${skillDef.damageType}">${dtLabel}</span>`;
   }
 
-  // Info line for active skills
+  // Info line for active skills (use effective level for cost/cd lookup)
   let infoLine = '';
   if (skillDef.type === 'active') {
-    const infoLevel = isUnlocked ? level : 1;
+    const infoLevel = isUnlocked ? Math.min(effectiveLevel, maxLevel) : 1;
     const infoData = skillDef.levels[infoLevel];
     if (infoData) {
       infoLine = `<div class="skill-card__info-line">
@@ -337,19 +351,30 @@ function renderSkillCard(skillDef, player) {
     }
   }
 
-  // Next-level stat preview
+  // Next-level stat preview (reflects effective levels with item bonuses)
   let previewLine = '';
   if (isUnlocked && !isMaxLevel) {
-    const nextLevel = level + 1;
-    const nextData = skillDef.levels[nextLevel];
-    const currentData = skillDef.levels[level];
+    // Current: effective level values (matches description)
+    const currCapped = Math.min(effectiveLevel, maxLevel);
+    const currentData = skillDef.levels[currCapped];
+    const currBmMult = bmMult;
+
+    // Next: after SP upgrade, base+1 with same item bonus
+    const nextEffective = (level + 1) + bonus;
+    const nextCapped = Math.min(nextEffective, maxLevel);
+    const nextData = skillDef.levels[nextCapped];
+    const nextBmMult = beyondMaxSkillMultiplier(nextEffective, maxLevel);
+
     if (nextData && currentData) {
       const diffs = [];
       for (const key of Object.keys(nextData)) {
         if (key === 'cooldown' || key === 'energyCost') continue;
-        const curr = currentData[key];
-        const next = nextData[key];
-        if (typeof next === 'number' && curr !== next) {
+        const rawCurr = currentData[key];
+        const rawNext = nextData[key];
+        if (typeof rawNext !== 'number' || typeof rawCurr !== 'number') continue;
+        const curr = Number.isInteger(rawCurr) ? Math.floor(rawCurr * currBmMult) : +(rawCurr * currBmMult).toFixed(1);
+        const next = Number.isInteger(rawNext) ? Math.floor(rawNext * nextBmMult) : +(rawNext * nextBmMult).toFixed(1);
+        if (curr !== next) {
           const arrow = next > curr ? '\u2191' : '\u2193';
           diffs.push(`${key}: ${curr} <span class="skill-card__preview-arrow">${arrow}</span> <span class="skill-card__preview-val">${next}</span>`);
         }
@@ -367,7 +392,7 @@ function renderSkillCard(skillDef, player) {
         <span class="skill-card__name">${skillDef.name}</span>
         <span class="skill-card__tier" style="color: ${catColor};">${skillDef.category}</span>
       </div>
-      <span class="skill-card__level">${isUnlocked ? (isMaxLevel ? 'MAX' : `Lv.${level}/${skillDef.maxLevel}`) : 'LOCKED'}</span>
+      <span class="skill-card__level">${isUnlocked ? (isMaxLevel && !bonus ? 'MAX' : `Lv.${level}/${skillDef.maxLevel}${bonus > 0 ? ` <span class="skill-card__level-bonus">(+${bonus})</span>` : ''}`) : 'LOCKED'}</span>
       <span class="skill-card__badge">${MECHANIC_LABELS[skillDef.mechanic] || ''}</span>
     </div>
     <div class="skill-card__desc">${desc}</div>
@@ -443,8 +468,10 @@ function renderSkillBar() {
     const skillDef = SKILLS[skillId];
     if (!skillDef) continue;
 
-    const level = player.unlockedSkills[skillId];
-    const levelData = skillDef.levels[level];
+    const effLevel = (state.effectiveSkillLevels && state.effectiveSkillLevels[skillId]) || player.unlockedSkills[skillId] || 1;
+    const barMaxLevel = skillDef.maxLevel || BASE_SKILL_MAX_LEVEL;
+    const barCappedLevel = Math.min(effLevel, barMaxLevel);
+    const levelData = skillDef.levels[barCappedLevel];
     const energyCost = levelData ? levelData.energyCost : 0;
 
     // Toggle active state (Momentum)
