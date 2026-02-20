@@ -19,11 +19,9 @@ import { LEGENDARIES } from '../data/legendaries.data.js';
 import {
   DROP_CHANCE_BY_ZONE, DROP_RARITY_WEIGHTS_BY_ZONE,
   BOSS_DROP_RARITY_WEIGHTS, BOSS_SECOND_DROP_CHANCE,
-  BOSS_MATERIAL_RETURN, ZONE_MATERIALS,
-  EQUIPMENT_SLOTS_V2
+  ZONE_MATERIALS, EQUIPMENT_SLOTS_V2
 } from '../data/constants.js';
 import { materialDropRate } from '../data/balance.js';
-import { randomInt } from '../services/utils.js';
 
 let deps = {};
 
@@ -45,9 +43,8 @@ function handleMonsterKilled({ monster, isBoss }) {
     handleBossLoot(monster, zoneId);
   } else {
     handleNormalLoot(zoneId);
+    handleMaterialDrop(zoneId);
   }
-
-  handleMaterialDrop(zoneId);
 }
 
 // --- Normal Monster Loot ---
@@ -86,13 +83,6 @@ function handleBossLoot(monster, zoneId) {
     const item2 = generateBossDropItem(rarity2, zoneId, affixTier);
     const result2 = deps.addItem(item2);
     items.push({ item: item2, destination: result2.destination });
-  }
-
-  // Return 2-4 materials
-  const matInfo = ZONE_MATERIALS[zoneId];
-  if (matInfo) {
-    const matCount = randomInt(BOSS_MATERIAL_RETURN.min, BOSS_MATERIAL_RETURN.max);
-    emit('materials:dropped', { materialId: matInfo.id, amount: matCount });
   }
 
   emit('loot:bossLoot', { items, zoneId });

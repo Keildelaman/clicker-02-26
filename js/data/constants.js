@@ -285,7 +285,6 @@ export const DROP_RARITY_WEIGHTS_BY_ZONE = {
 };
 export const BOSS_DROP_RARITY_WEIGHTS = { rare: 60, epic: 35, legendary: 5 };
 export const BOSS_SECOND_DROP_CHANCE = 0.40;
-export const BOSS_MATERIAL_RETURN = { min: 2, max: 4 };
 
 // Materials
 export const ZONE_MATERIALS = {
