@@ -15,6 +15,7 @@ import { AFFIXES } from '../data/affixes.data.js';
 import {
   RARITIES, SELL_PRICE_RATIO_V2, EQUIPMENT_SLOTS_V2, ZONE_MATERIALS
 } from '../data/constants.js';
+import { formatGold } from '../services/utils.js';
 import { showToast } from './toasts.js';
 import * as itemDetailUI from './item-detail-ui.js';
 
@@ -560,12 +561,6 @@ function buildAffixTags(item) {
     const lockIcon = item.reforgedAffix === i ? '&#x1F512; ' : '';
     return `<span class="item-card__stat">${lockIcon}${text}</span>`;
   }).join('');
-}
-
-function formatGold(amount) {
-  if (amount >= 1000000) return (amount / 1000000).toFixed(1) + 'M';
-  if (amount >= 1000) return (amount / 1000).toFixed(1) + 'K';
-  return amount.toString();
 }
 
 /**

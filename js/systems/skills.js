@@ -4,7 +4,7 @@
  * Owns: SP tracking, unlock/upgrade, cooldowns (tick-based), buff management,
  *       active/passive equip/unequip, channel/toggle tick logic, respec.
  * Delegates: effect execution to skill-effects.js, passive lifecycle to skill-passives.js.
- * Listens to: player:levelUp, player:died, visibilitychange
+ * Listens to: player:levelUp, player:died
  * Emits: skill:unlocked, skill:upgraded, skill:used, skill:equipped,
  *        skill:unequipped, skill:buffApplied, skill:buffExpired,
  *        skill:cooldownReady, sp:gained, player:statsChanged,
@@ -687,13 +687,6 @@ export function init(deps = {}) {
     refreshAllPassives();
     invalidateStats();
     updateSkillLevelState();
-  });
-
-  // Cancel channel on tab hide (performance.now() would inflate elapsed time)
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden && state.channelState) {
-      cancelChannel();
-    }
   });
 
   // Build initial effective level state

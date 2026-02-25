@@ -18,6 +18,7 @@ import {
   TEMPER_MAX_LEVEL, TEMPER_SELECTION_LEVELS, TEMPER_BRICK_THRESHOLD,
   RARITY_AFFIX_COUNTS
 } from '../data/constants.js';
+import { formatGold } from '../services/utils.js';
 import {
   canReforge, getReforgeableAffixes, getReforgeCost,
   canImbue, getImbueCost,
@@ -602,8 +603,3 @@ function showInlineError(message) {
 // HELPERS
 // ============================================================
 
-function formatGold(amount) {
-  if (amount >= 1000000) return (amount / 1000000).toFixed(1) + 'M';
-  if (amount >= 1000) return (amount / 1000).toFixed(1) + 'K';
-  return amount.toString();
-}

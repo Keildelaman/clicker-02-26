@@ -90,6 +90,8 @@ export const PASSIVE_HANDLERS = {
     onUnequip(skillId) { cleanupPassive(skillId); }
   },
 
+  // Stat-only passive: bonus applied via getPassiveSkillBonus() in player.js
+  // and getEnergyPerClick() in energy.js. No event subscriptions needed.
   heavy_handed: {
     onEquip(skillId, level) {},
     onUnequip(skillId) {}
@@ -126,11 +128,15 @@ export const PASSIVE_HANDLERS = {
     }
   },
 
+  // Stat-only passive: bonus applied via getPassiveSkillBonus() in player.js.
+  // Conditionally active when HP < threshold. No event subscriptions needed.
   berserker: {
     onEquip(skillId, level) {},
     onUnequip(skillId) {}
   },
 
+  // Stat-only passive: bonus applied via getPassiveSkillBonus() in player.js.
+  // Reduces energy cost of skills. No event subscriptions needed.
   efficient_casting: {
     onEquip(skillId, level) {},
     onUnequip(skillId) {}
@@ -185,6 +191,8 @@ export const PASSIVE_HANDLERS = {
     onUnequip(skillId) { cleanupPassive(skillId); }
   },
 
+  // System-checked passive: read directly in energy.js getEnergyRegenRate().
+  // No event subscriptions needed.
   focused_mind: {
     onEquip(skillId, level) {},
     onUnequip(skillId) {}

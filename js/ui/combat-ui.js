@@ -114,7 +114,9 @@ export function init() {
   on('combat:bossTimeout', clearMonsterStatusUI);
   on('player:died', clearPlayerStatusUI);
 
-  // Buff timer refresh (also updates channel charge indicator)
+  // Buff/status countdown display refresh. Event subscriptions above handle
+  // immediate state changes; this interval only updates duration countdowns
+  // and channel charge indicators that tick continuously.
   setInterval(() => {
     if (buffRow && (buffRow.children.length > 0 || state.channelState)) renderBuffRow();
     renderStatusEffects();

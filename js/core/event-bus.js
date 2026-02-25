@@ -40,7 +40,7 @@ export function emit(event, data) {
     try {
       cb(data);
     } catch (error) {
-      console.error(`EventBus error in "${event}" handler:`, error);
+      console.error(`EventBus error in "${event}" handler (${cb.name || 'anonymous'}):`, error);
     }
   }
 }

@@ -92,6 +92,10 @@ tutorial.init();
 renderer.init();
 
 // 4. Register tick systems
+// Order matters: combat processes clicks/damage first, then monster handles
+// spawning/death, health/energy regen next, progression awards XP, economy
+// updates shop timers, items/skills tick buffs/cooldowns, status effects
+// apply DoT/timers, and renderer runs last to reflect the final frame state.
 registerTickSystem(combat.update);
 registerTickSystem(monster.update);
 registerTickSystem(health.update);
@@ -138,6 +142,13 @@ monsterArea.addEventListener('keydown', (e) => {
   if (e.key === ' ' || e.key === 'Enter') {
     e.preventDefault();
     combat.handleClick();
+  }
+});
+
+// Cancel channel on tab hide (performance.now() would inflate elapsed time)
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    skills.cancelChannel();
   }
 });
 

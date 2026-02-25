@@ -13,6 +13,8 @@
   --color-border: #2a2e36;
   --color-text: #e8e8e8;
   --color-text-dim: #8a8f98;
+  --color-text-secondary: #8a8f98;
+  --success-color: #4caf50;
 
   /* HP Colors */
   --hp-healthy: #4caf50;
@@ -43,6 +45,12 @@
   /* Damage Type Colors */
   --damage-physical: #ffa726;
   --damage-magic: #7c4dff;
+
+  /* Skill Category Colors */
+  --skill-color-power: #ff8000;
+  --skill-color-mage: #64b5f6;
+  --skill-color-crit: #a335ee;
+  --skill-color-speed: #1eff00;
 
   /* Status Effect Colors */
   --effect-bleed: #e53935;

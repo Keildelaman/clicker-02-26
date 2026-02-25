@@ -33,3 +33,14 @@ export function clamp(value, min, max) {
 export function formatNumber(n) {
   return Math.floor(n).toLocaleString();
 }
+
+/**
+ * Format gold amounts for compact display (e.g., 1500 → "1.5K", 2000000 → "2.0M").
+ * @param {number} amount
+ * @returns {string}
+ */
+export function formatGold(amount) {
+  if (amount >= 1000000) return (amount / 1000000).toFixed(1) + 'M';
+  if (amount >= 1000) return (amount / 1000).toFixed(1) + 'K';
+  return amount.toString();
+}

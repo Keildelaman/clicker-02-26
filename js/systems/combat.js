@@ -35,6 +35,25 @@ let getStatusPotency = null;     // Injected: items.getStatusPotency
 let bossTimer = null;  // { remaining, duration, bossId } or null
 
 /**
+ * Roll a status effect chance and emit tryApply if successful.
+ * Deduplicates the repeated pattern of checking statusEffect, rolling chance, and emitting.
+ */
+function tryApplyStatusEffect(target, statusEffect, source, stats, potencyBonus = 0) {
+  if (!statusEffect) return;
+  if (Math.random() < statusEffect.chance) {
+    emit('statusEffect:tryApply', {
+      target,
+      effectId: statusEffect.type,
+      stacks: statusEffect.stacks || 1,
+      source,
+      sourceAttack: stats.attack || 0,
+      sourceMagicPower: stats.magicPower || 0,
+      potencyBonus
+    });
+  }
+}
+
+/**
  * Check if a monster has a given type (supports multi-type "type1+type2").
  */
 function hasType(monster, typeName) {
@@ -121,19 +140,7 @@ export function handleClick() {
     hurtPlayer(dmg, 'aggressive', monster.damageType || DAMAGE_TYPES.PHYSICAL);
 
     // Monster status effect on player (Phase 6)
-    if (monster.statusEffectOnHit) {
-      const se = monster.statusEffectOnHit;
-      if (Math.random() < se.chance) {
-        emit('statusEffect:tryApply', {
-          target: 'player',
-          effectId: se.type,
-          stacks: se.stacks || 1,
-          source: monster.definitionId,
-          sourceAttack: dmg,
-          sourceMagicPower: dmg
-        });
-      }
-    }
+    tryApplyStatusEffect('player', monster.statusEffectOnHit, monster.definitionId, { attack: dmg, magicPower: dmg });
 
     emit('combat:click', {
       damage: 0,
@@ -226,20 +233,7 @@ export function handleClick() {
       emit('skill:effectTriggered', { skillId: mod.skillId, result: 'applied', damage });
 
       // Status effect from hit modifier skill (Phase 5)
-      if (mod.statusEffect) {
-        const se = mod.statusEffect;
-        if (Math.random() < se.chance) {
-          emit('statusEffect:tryApply', {
-            target: 'monster',
-            effectId: se.type,
-            stacks: se.stacks || 1,
-            source: mod.skillId,
-            sourceAttack: stats.attack || 0,
-            sourceMagicPower: stats.magicPower || 0,
-            potencyBonus: mod.statusPotencyBonus || 0
-          });
-        }
-      }
+      tryApplyStatusEffect('monster', mod.statusEffect, mod.skillId, stats, mod.statusPotencyBonus || 0);
 
       state.hitModifier = null;
       emit('skill:effectEnded', { skillId: mod.skillId, type: 'hitModifier' });
@@ -482,19 +476,7 @@ function handleMonsterEscape(monster) {
   hurtPlayer(dmg, 'swift_escape', monster.damageType || DAMAGE_TYPES.PHYSICAL);
 
   // Monster status effect on player (Phase 6)
-  if (monster.statusEffectOnHit) {
-    const se = monster.statusEffectOnHit;
-    if (Math.random() < se.chance) {
-      emit('statusEffect:tryApply', {
-        target: 'player',
-        effectId: se.type,
-        stacks: se.stacks || 1,
-        source: monster.definitionId,
-        sourceAttack: dmg,
-        sourceMagicPower: dmg
-      });
-    }
-  }
+  tryApplyStatusEffect('player', monster.statusEffectOnHit, monster.definitionId, { attack: dmg, magicPower: dmg });
 
   emit('combat:monsterEscaped', { monster });
 

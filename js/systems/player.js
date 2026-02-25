@@ -340,7 +340,47 @@ export function init(deps = {}) {
   on('skill:unequipped', invalidateStatCache);
   on('skill:buffApplied', invalidateStatCache);
   on('skill:buffExpired', invalidateStatCache);
-  on('player:hpChanged', invalidateStatCache);
+  // Only invalidate stat cache when HP crosses a threshold that affects stats.
+  // Berserker passive: bonus below hpThreshold%. Titan's Greaves legendary: bonus above 80% HP.
+  let lastBerserkerActive = false;
+  let lastHighHPActive = false;
+  on('player:hpChanged', ({ hp, maxHP }) => {
+    const player = getPlayer();
+    const hpRatio = maxHP > 0 ? hp / maxHP : 1;
+
+    // Check berserker threshold crossing
+    let berserkerChanged = false;
+    if (player?.equippedPassive?.includes('berserker')) {
+      const baseLevel = player.unlockedSkills['berserker'];
+      const skillDef = SKILLS['berserker'];
+      if (baseLevel && skillDef) {
+        const effectiveLevel = resolveEffectiveLevel ? resolveEffectiveLevel('berserker') : baseLevel;
+        const maxLevel = skillDef.maxLevel || BASE_SKILL_MAX_LEVEL;
+        const cappedLevel = Math.min(effectiveLevel, maxLevel);
+        const data = skillDef.levels[cappedLevel];
+        const threshold = data ? data.hpThreshold / 100 : 0.3;
+        const nowActive = hpRatio < threshold;
+        if (nowActive !== lastBerserkerActive) {
+          lastBerserkerActive = nowActive;
+          berserkerChanged = true;
+        }
+      }
+    }
+
+    // Check Titan's Greaves (high_hp_damage_bonus) threshold crossing
+    let highHPChanged = false;
+    if (state.activeLegendaryEffects?.has('high_hp_damage_bonus')) {
+      const nowActive = hpRatio > LEGENDARY_EFFECTS.HIGH_HP_THRESHOLD;
+      if (nowActive !== lastHighHPActive) {
+        lastHighHPActive = nowActive;
+        highHPChanged = true;
+      }
+    }
+
+    if (berserkerChanged || highHPChanged) {
+      invalidateStatCache();
+    }
+  });
 }
 
 export function update(dt) {
