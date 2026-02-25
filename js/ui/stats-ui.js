@@ -13,7 +13,7 @@ import { formatNumber } from '../services/utils.js';
 import { ZONES } from '../data/zones.data.js';
 import { showToast } from './toasts.js';
 
-let attackDisplay, magicDisplay, armorDisplay, goldDisplay, levelDisplay, xpFill, xpText, zoneNameDisplay;
+let attackDisplay, magicDisplay, armorDisplay, goldDisplay, levelDisplay, xpFill, zoneNameDisplay;
 
 export function init() {
   attackDisplay = document.getElementById('attack-display');
@@ -22,7 +22,6 @@ export function init() {
   goldDisplay = document.getElementById('gold-display');
   levelDisplay = document.getElementById('level-display');
   xpFill = document.getElementById('xp-fill');
-  xpText = document.getElementById('xp-text');
   zoneNameDisplay = document.getElementById('zone-name');
 
   on('gold:earned', renderGold);
@@ -61,7 +60,6 @@ function renderXP() {
 
   const pct = (player.xp / player.xpToNextLevel) * 100;
   xpFill.style.width = `${Math.min(pct, 100)}%`;
-  if (xpText) xpText.textContent = `${formatNumber(player.xp)} / ${formatNumber(player.xpToNextLevel)}`;
 }
 
 function renderLevel() {

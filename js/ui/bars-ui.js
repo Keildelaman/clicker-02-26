@@ -12,17 +12,14 @@ import { getPlayer } from '../core/game-state.js';
 import { state } from '../core/game-state.js';
 import { HP_CAUTION_THRESHOLD, HP_CRITICAL_THRESHOLD, MAX_ENERGY } from '../data/constants.js';
 
-let hpFill, hpText, energyFill, energyText;
-let shieldBar, shieldFill, shieldText;
+let hpFill, energyFill;
+let shieldBar, shieldFill;
 
 export function init() {
   hpFill = document.getElementById('player-hp-fill');
-  hpText = document.getElementById('player-hp-text');
   energyFill = document.getElementById('energy-fill');
-  energyText = document.getElementById('energy-text');
   shieldBar = document.getElementById('player-shield-bar');
   shieldFill = document.getElementById('player-shield-fill');
-  shieldText = document.getElementById('player-shield-text');
 
   on('player:hpChanged', renderHP);
   on('player:hpChanged', renderShield);
@@ -52,7 +49,6 @@ function renderHP() {
 
   const pct = (player.hp / player.maxHP) * 100;
   hpFill.style.width = `${Math.min(pct, 100)}%`;
-  hpText.textContent = `${Math.ceil(player.hp)} / ${player.maxHP}`;
 
   // Color thresholds
   hpFill.classList.remove('hp-fill--caution', 'hp-fill--critical');
@@ -74,7 +70,6 @@ function renderShield() {
     shieldBar.style.display = '';
     const pct = (shield.amount / shield.max) * 100;
     if (shieldFill) shieldFill.style.width = `${Math.min(pct, 100)}%`;
-    if (shieldText) shieldText.textContent = `${Math.ceil(shield.amount)} / ${shield.max}`;
     return;
   }
 
@@ -82,7 +77,6 @@ function renderShield() {
   if (maxShield > 0) {
     shieldBar.style.display = '';
     if (shieldFill) shieldFill.style.width = '0%';
-    if (shieldText) shieldText.textContent = `0 / ${maxShield}`;
     return;
   }
 
@@ -96,5 +90,4 @@ function renderEnergy() {
 
   const pct = (player.energy / MAX_ENERGY) * 100;
   energyFill.style.width = `${Math.min(pct, 100)}%`;
-  energyText.textContent = `${Math.floor(player.energy)} / ${MAX_ENERGY}`;
 }

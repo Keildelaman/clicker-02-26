@@ -140,7 +140,7 @@ export function getComputedStats() {
   let armorPen = getEquipmentBonus(player, 'armorPen');
   let magicPen = getEquipmentBonus(player, 'magicPen');
   let maxShield = getEquipmentBonus(player, 'maxShield');
-  let energyGainMult = 1.0;
+  let energyGainMult = 1.0 + getEquipmentBonus(player, 'energyGain');
   let warningBonus = 0;
 
   // Passive skill bonuses

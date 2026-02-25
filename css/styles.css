@@ -2,6 +2,14 @@
 
 @import url('./variables.css');
 @import url('./layout.css');
-@import url('./components.css');
+@import url('./components/bars.css');
+@import url('./components/combat.css');
+@import url('./components/toasts.css');
+@import url('./components/modals.css');
+@import url('./components/shop.css');
+@import url('./components/zones.css');
+@import url('./components/skills.css');
+@import url('./components/items.css');
+@import url('./components/stats.css');
 @import url('./animations.css');
 @import url('./responsive.css');

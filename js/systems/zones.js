@@ -112,11 +112,6 @@ export function challengeBoss() {
     return;
   }
 
-  // Spend materials
-  if (deps.spendBossMaterials) {
-    deps.spendBossMaterials(player.currentZone);
-  }
-
   emit('zone:bossIntro', { boss, zone });
 }
 
@@ -194,6 +189,14 @@ export function init(injected = {}) {
   // Intent events from UI
   on('zone:requestTravel', ({ zoneId }) => travelToZone(zoneId));
   on('zone:requestBoss', () => challengeBoss());
+
+  // Deduct materials only when the player commits to fighting (clicks "BEGIN BATTLE")
+  on('zone:bossStart', () => {
+    const player = getPlayer();
+    if (player && deps.spendBossMaterials) {
+      deps.spendBossMaterials(player.currentZone);
+    }
+  });
 }
 
 export function update(dt) {

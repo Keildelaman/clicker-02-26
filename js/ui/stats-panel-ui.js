@@ -23,7 +23,7 @@ export function init() {
   panel = document.getElementById('stats-panel');
   statsBar = document.getElementById('stats-bar');
 
-  // Toggle on stats bar tap
+  // Toggle on stats bar tap (if it exists)
   statsBar?.addEventListener('click', toggle);
   statsBar?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -31,6 +31,15 @@ export function init() {
       toggle();
     }
   });
+
+  // Toggle on header stats button
+  const headerStatsBtn = document.getElementById('header-stats-btn');
+  if (headerStatsBtn) {
+    headerStatsBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggle();
+    });
+  }
 
   // Dismiss on backdrop tap
   backdrop?.addEventListener('click', (e) => {
@@ -60,14 +69,12 @@ function show() {
   render();
   backdrop.style.display = 'flex';
   isOpen = true;
-  statsBar?.classList.add('stats-bar--open');
 }
 
 function hide() {
   if (!backdrop) return;
   backdrop.style.display = 'none';
   isOpen = false;
-  statsBar?.classList.remove('stats-bar--open');
 }
 
 function refreshIfOpen() {
@@ -107,7 +114,7 @@ function render() {
   // --- Defense ---
   html += buildCategory('Defense', [
     row('Max HP', stats.maxHP, 'flat'),
-    row('HP Regen', stats.hpRegen, 'perSec'),
+    row('HP Regen', stats.hpRegen, 'percentPerSec'),
     row('Armor', stats.armor, 'flat'),
     row('Magic Resist', stats.magicResist, 'flat'),
     row('Damage Reduction', stats.damageReduction, 'percent'),
@@ -249,6 +256,8 @@ function formatStatValue(value, format, prefix) {
       return `${prefix}${value.toFixed(2)}x`;
     case 'perSec':
       return `${prefix}${value.toFixed(1)}/s`;
+    case 'percentPerSec':
+      return `${prefix}${(value * 100).toFixed(1)}%/s`;
     case 'flat':
     default:
       return `${prefix}${formatNumber(value)}`;

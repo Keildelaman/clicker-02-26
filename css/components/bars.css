@@ -1,0 +1,44 @@
+/* === Progress Bars === */
+.progress-bar {
+  width: 100%;
+  height: var(--bar-height);
+  background: var(--color-surface-raised);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar--sm {
+  height: var(--bar-height-sm);
+}
+
+.progress-bar__fill {
+  height: 100%;
+  border-radius: 10px;
+  transition: width var(--transition-normal);
+  position: relative;
+}
+
+/* HP bar fills */
+.hp-fill {
+  background: var(--hp-healthy);
+}
+
+.hp-fill--caution {
+  background: var(--hp-caution);
+}
+
+.hp-fill--critical {
+  background: var(--hp-critical);
+  animation: pulse-bar 1s infinite;
+}
+
+/* XP bar fill */
+.xp-fill {
+  background: var(--xp-color);
+}
+
+/* Energy bar fill */
+.energy-fill {
+  background: var(--energy-color);
+}

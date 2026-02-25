@@ -14,7 +14,11 @@
     <!-- Header -->
     <header class="game-header">
       <span class="game-header__zone" id="zone-name">Whisperwood Glen</span>
-      <span class="game-header__level" id="level-display">Lv. 1</span>
+      <div class="game-header__right">
+        <span class="game-header__gold">&#x1F4B0; <span id="gold-display">0</span></span>
+        <button class="game-header__stats-btn" id="header-stats-btn" aria-label="View stats">&#x2139;&#xFE0F;</button>
+        <span class="game-header__level" id="level-display">Lv. 1</span>
+      </div>
     </header>
 
     <!-- Combat Screen -->
@@ -22,6 +26,19 @@
 
       <!-- Monster Area (tappable) -->
       <div class="monster-area" id="monster-area" role="button" tabindex="0" aria-label="Attack monster">
+
+        <!-- Player Overlay Bars (HP, Shield, Energy) -->
+        <div class="player-overlay-bars" id="player-overlay-bars">
+          <div class="player-overlay-bar player-overlay-bar--hp">
+            <div class="player-overlay-bar__fill hp-fill" id="player-hp-fill" style="width: 100%"></div>
+          </div>
+          <div class="player-overlay-bar player-overlay-bar--shield" id="player-shield-bar" style="display: none;">
+            <div class="player-overlay-bar__fill player-shield-fill" id="player-shield-fill" style="width: 0%"></div>
+          </div>
+          <div class="player-overlay-bar player-overlay-bar--energy">
+            <div class="player-overlay-bar__fill energy-fill" id="energy-fill" style="width: 0%"></div>
+          </div>
+        </div>
 
         <!-- Type Badge -->
         <div class="monster-type-badge" id="monster-type-badge" style="display: none;"></div>
@@ -43,10 +60,17 @@
           <span class="monster-escape-timer__text" id="escape-timer-text">8.0s</span>
         </div>
 
+        <!-- Boss Badge (floating) -->
+        <div class="boss-badge" id="boss-challenge" style="display: none;">
+          <div class="boss-badge__progress" id="boss-kill-progress" style="display: none;">
+            <span class="boss-badge__progress-text"></span>
+          </div>
+          <button class="boss-badge__btn" id="boss-challenge-btn" aria-label="Challenge boss">&#x1F480; BOSS</button>
+        </div>
+
         <div class="monster-display">
           <span class="monster-display__emoji" id="monster-emoji">...</span>
           <div class="monster-display__name" id="monster-name">Loading...</div>
-          <div class="monster-display__level" id="monster-level"></div>
         </div>
 
         <!-- Monster Shield Bar (shielded type) -->
@@ -54,7 +78,6 @@
           <div class="progress-bar" id="monster-shield-bar">
             <div class="progress-bar__fill shield-fill" id="monster-shield-fill" style="width: 100%"></div>
           </div>
-          <div class="monster-shield__text" id="monster-shield-text">0 / 0</div>
         </div>
 
         <!-- Monster HP Bar -->
@@ -62,7 +85,6 @@
           <div class="progress-bar" id="monster-hp-bar">
             <div class="progress-bar__fill hp-fill" id="monster-hp-fill" style="width: 100%"></div>
           </div>
-          <div class="monster-hp__text" id="monster-hp-text">0 / 0</div>
         </div>
 
         <!-- Monster Status Effects -->
@@ -70,49 +92,14 @@
 
         <!-- Floating Damage Numbers -->
         <div class="damage-container" id="damage-container"></div>
+
+        <!-- Player Status Effects (overlay) -->
+        <div class="status-effects-row status-effects-row--player-overlay" id="player-status-effects"></div>
+
+        <!-- Buff & Hit Modifier Indicators (overlay) -->
+        <div class="buff-row buff-row--overlay" id="buff-row"></div>
       </div>
 
-      <!-- Player Resource Bars -->
-      <div class="player-bars">
-        <div class="player-bar">
-          <span class="player-bar__icon">&#x2764;&#xFE0F;</span>
-          <div class="progress-bar">
-            <div class="progress-bar__fill hp-fill" id="player-hp-fill" style="width: 100%"></div>
-          </div>
-          <span class="player-bar__text" id="player-hp-text">100 / 100</span>
-        </div>
-        <div class="player-bar player-shield-bar" id="player-shield-bar" style="display: none;">
-          <span class="player-bar__icon">&#x1F6E1;&#xFE0F;</span>
-          <div class="progress-bar">
-            <div class="progress-bar__fill player-shield-fill" id="player-shield-fill" style="width: 0%"></div>
-          </div>
-          <span class="player-bar__text player-shield-text" id="player-shield-text">0 / 0</span>
-        </div>
-        <div class="player-bar">
-          <span class="player-bar__icon">&#x26A1;</span>
-          <div class="progress-bar">
-            <div class="progress-bar__fill energy-fill" id="energy-fill" style="width: 0%"></div>
-          </div>
-          <span class="player-bar__text" id="energy-text">0 / 100</span>
-        </div>
-      </div>
-
-      <!-- Player Status Effects -->
-      <div class="status-effects-row" id="player-status-effects"></div>
-
-      <!-- Buff & Hit Modifier Indicators -->
-      <div class="buff-row" id="buff-row"></div>
-
-      <!-- Boss Challenge Button -->
-      <div class="boss-challenge" id="boss-challenge" style="display: none;">
-        <div class="boss-kill-progress" id="boss-kill-progress" style="display: none;">
-          <div class="progress-bar progress-bar--sm">
-            <div class="progress-bar__fill boss-kill-progress__fill" style="width: 0%; background: var(--aggressive-color);"></div>
-          </div>
-          <div class="boss-kill-progress__text">0 / 0 kills</div>
-        </div>
-        <button class="boss-challenge__btn" id="boss-challenge-btn">CHALLENGE BOSS</button>
-      </div>
 
       <!-- Skill Bar (4 active skill slots) -->
       <div class="skill-bar" id="skill-bar">
@@ -120,44 +107,11 @@
         <button class="skill-btn skill-btn--empty" id="skill-slot-1"></button>
         <button class="skill-btn skill-btn--empty" id="skill-slot-2"></button>
         <button class="skill-btn skill-btn--empty" id="skill-slot-3"></button>
+        <div class="passive-indicator-row" id="passive-indicator-row"></div>
       </div>
 
-      <!-- Bottom Section -->
-      <div class="bottom-section">
-
-        <!-- Stats Bar (tappable to expand full stats) -->
-        <div class="stats-bar stats-bar--tappable" id="stats-bar" role="button" tabindex="0" aria-label="View all stats">
-          <div class="stat-item">
-            <span class="stat-item__icon">&#x2694;&#xFE0F;</span>
-            <span class="stat-item__value" id="attack-display">5</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-item__icon">&#x1F52E;</span>
-            <span class="stat-item__value stat-item__value--magic" id="magic-display">0</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-item__icon">&#x1F6E1;&#xFE0F;</span>
-            <span class="stat-item__value stat-item__value--armor" id="armor-display">0</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-item__icon">&#x1F4B0;</span>
-            <span class="stat-item__value stat-item__value--gold" id="gold-display">0</span>
-          </div>
-          <span class="stats-bar__expand">&#x25B2;</span>
-        </div>
-
-        <!-- XP Bar -->
-        <div class="xp-section">
-          <div class="xp-label">
-            <span>XP</span>
-            <span id="xp-text">0 / 100</span>
-          </div>
-          <div class="progress-bar progress-bar--sm">
-            <div class="progress-bar__fill xp-fill" id="xp-fill" style="width: 0%"></div>
-          </div>
-        </div>
-
-      </div>
+      <!-- XP Strip -->
+      <div class="xp-strip"><div class="xp-strip__fill" id="xp-fill" style="width: 0%"></div></div>
 
     </main>
 

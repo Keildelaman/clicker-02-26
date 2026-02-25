@@ -52,11 +52,42 @@ body {
   font-weight: 600;
 }
 
+.game-header__right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-left: auto;
+}
+
+.game-header__gold {
+  font-size: var(--font-size-xs);
+  color: var(--gold-color);
+  font-weight: 600;
+}
+
+.game-header__stats-btn {
+  background: transparent;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: var(--zone-accent);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.game-header__stats-btn:active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .game-header__level {
   font-size: var(--font-size-sm);
   color: var(--zone-accent);
   font-weight: 600;
-  margin-left: auto;
 }
 
 /* Main Combat Area */
@@ -106,10 +137,11 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-lg);
+  padding: 32px var(--spacing-lg) 48px;
   cursor: pointer;
   position: relative;
   min-height: 180px;
+  overflow: hidden;
   transition: background-color var(--transition-fast);
 }
 
@@ -125,62 +157,18 @@ body {
   overflow: hidden;
 }
 
-/* Bottom section */
-.bottom-section {
+/* XP Strip (thin bar above nav) */
+.xp-strip {
+  height: 4px;
+  background: var(--color-surface-raised);
   flex-shrink: 0;
-  background: var(--color-surface);
-  border-top: 1px solid var(--color-border);
+  overflow: hidden;
 }
 
-/* Stats bar */
-.stats-bar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-lg);
-  padding: var(--spacing-sm) var(--spacing-md);
-  font-size: var(--font-size-sm);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-}
-
-.stat-item__icon {
-  font-size: var(--font-size-base);
-}
-
-.stat-item__value {
-  font-weight: 600;
-}
-
-.stat-item__value--gold {
-  color: var(--gold-color);
-}
-
-.stat-item__value--magic {
-  color: var(--damage-magic);
-}
-
-.stat-item__value--armor {
-  color: var(--armor-color);
-}
-
-/* XP bar section */
-.xp-section {
-  padding: var(--spacing-xs) var(--spacing-md);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.xp-label {
-  display: flex;
-  justify-content: space-between;
-  font-size: var(--font-size-xs);
-  color: var(--color-text-dim);
-  margin-bottom: 2px;
+.xp-strip__fill {
+  height: 100%;
+  background: var(--xp-color);
+  transition: width var(--transition-normal);
 }
 
 /* Navigation */

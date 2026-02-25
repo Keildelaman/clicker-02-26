@@ -78,7 +78,6 @@ export function loadGame() {
     if (data.saveVersion === 2) {
       data.zoneKills = {};
       data.saveVersion = 3;
-      console.log('Migrated save v2 -> v3 (added zoneKills)');
     }
 
     // Migrate from v3 -> v4: skill system v2 (MP→SP, new skill schema)
@@ -97,7 +96,6 @@ export function loadGame() {
       delete data.equippedActiveSkills;
       delete data.equippedPassiveSkills;
       data.saveVersion = 4;
-      console.log('Migrated save v3 -> v4 (skill system v2, SP:', earnedSP, ')');
     }
 
     // Migrate from v4 -> v5: item system v2 (complete item wipe + gold compensation)
@@ -131,7 +129,6 @@ export function loadGame() {
       data.materials = {};
 
       data.saveVersion = 5;
-      console.log('Migrated save v4 -> v5 (item system v2, compensation:', Math.floor(compensation * 0.5), 'gold)');
     }
 
     if (data.saveVersion !== SAVE_VERSION) {

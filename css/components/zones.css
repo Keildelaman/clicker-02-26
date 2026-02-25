@@ -1,0 +1,208 @@
+/* === Boss Badge (floating inside monster area) === */
+.boss-badge {
+  position: absolute;
+  top: 38px;
+  left: var(--spacing-sm);
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.boss-badge__btn {
+  background: linear-gradient(135deg, rgba(239, 83, 80, 0.25) 0%, rgba(239, 83, 80, 0.10) 100%);
+  border: 2px solid var(--aggressive-color);
+  color: var(--aggressive-color);
+  font-size: 10px;
+  font-family: var(--font-main);
+  font-weight: 800;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  min-width: 44px;
+  min-height: 36px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  pointer-events: auto;
+  animation: pulse-bar 2s infinite;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.boss-badge__btn:active:not(:disabled) {
+  transform: scale(0.95);
+  background: rgba(239, 83, 80, 0.35);
+}
+
+.boss-badge__btn:disabled {
+  opacity: 0.4;
+  animation: none;
+}
+
+.boss-badge__btn--no-materials {
+  animation: none;
+  opacity: 0.6;
+}
+
+.boss-badge__progress {
+  font-size: 8px;
+  font-weight: 700;
+  background: rgba(30, 33, 40, 0.8);
+  color: var(--color-text-dim);
+  padding: 1px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+/* === Zone Cards === */
+.zone-card {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.zone-card--current {
+  border-color: var(--zone-accent);
+  border-width: 2px;
+}
+
+.zone-card--locked {
+  opacity: 0.5;
+}
+
+.zone-card__header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.zone-card__emoji {
+  font-size: 32px;
+  flex-shrink: 0;
+  width: 40px;
+  text-align: center;
+}
+
+.zone-card__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.zone-card__name {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+}
+
+.zone-card__levels {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-dim);
+}
+
+.zone-card__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.zone-card__btn {
+  background: var(--zone-primary);
+  border: 1px solid var(--zone-accent);
+  color: var(--zone-accent);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-main);
+  font-weight: 700;
+  padding: var(--spacing-xs) var(--spacing-lg);
+  border-radius: 6px;
+  cursor: pointer;
+  min-height: 36px;
+  letter-spacing: 1px;
+  transition: opacity var(--transition-fast);
+}
+
+.zone-card__btn:active {
+  opacity: 0.7;
+}
+
+.zone-card__lock {
+  font-size: var(--font-size-xs);
+  color: var(--hp-critical);
+  font-weight: 600;
+}
+
+.zone-card__current-badge {
+  font-size: var(--font-size-xs);
+  font-weight: 800;
+  color: var(--zone-accent);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+
+.zone-card__boss-status {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-dim);
+}
+
+.zone-card__boss-status--defeated {
+  color: var(--hp-healthy);
+}
+
+/* === Zones Screen Header === */
+.zones-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--zone-primary);
+  border-bottom: 2px solid var(--zone-accent);
+  height: var(--header-height);
+  flex-shrink: 0;
+}
+
+.zones-header__back {
+  background: none;
+  border: none;
+  color: var(--zone-accent);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-main);
+  cursor: pointer;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+  display: flex;
+  align-items: center;
+}
+
+.zones-header__title {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+}
+
+.zones-header__spacer {
+  min-width: var(--touch-target-min);
+}
+
+/* === Boss Material Display === */
+.boss-material {
+  text-align: center;
+  font-size: 8px;
+  font-weight: 700;
+  padding: 1px 5px;
+  background: rgba(30, 33, 40, 0.8);
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.boss-material--sufficient {
+  color: var(--hp-healthy);
+}
+
+.boss-material--insufficient {
+  color: var(--hp-critical);
+}

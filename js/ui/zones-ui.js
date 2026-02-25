@@ -27,9 +27,10 @@ export function init() {
   bossChallengeBtn = document.getElementById('boss-challenge-btn');
   bossKillProgress = document.getElementById('boss-kill-progress');
 
-  // Boss challenge button
+  // Boss challenge button (stopPropagation so taps don't hit monster area)
   if (bossChallengeBtn) {
-    bossChallengeBtn.addEventListener('click', () => {
+    bossChallengeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
       emit('zone:requestBoss');
     });
   }
@@ -55,6 +56,9 @@ export function init() {
   on('zone:killTracked', updateBossButton);
   on('zone:bossLocked', ({ current, required }) => {
     showToast(`Defeat ${required - current} more monsters!`, 'warning');
+  });
+  on('zone:insufficientMaterials', ({ materialName, current, required }) => {
+    showToast(`Need ${required - current} more ${materialName}!`, 'warning');
   });
   on('materials:added', updateBossButton);
   on('materials:spent', updateBossButton);
@@ -199,34 +203,29 @@ function updateBossButton() {
   const defeated = player.bossesDefeated.includes(zone.bossId);
   const progress = deriveBossKillProgress(player, zone);
 
+  // Check material sufficiency
+  const matInfo = ZONE_MATERIALS[player.currentZone];
+  const hasMaterials = !matInfo || (player.materials[matInfo.id] || 0) >= matInfo.bossCost;
+
   if (bossChallengeBtn) {
-    if (defeated) {
-      bossChallengeBtn.textContent = `RE-CHALLENGE ${boss ? boss.name.toUpperCase() : 'BOSS'}`;
+    if (defeated || progress.met) {
+      bossChallengeBtn.textContent = '\u{1F480} BOSS';
       bossChallengeBtn.disabled = false;
-    } else if (progress.met) {
-      bossChallengeBtn.textContent = `CHALLENGE ${boss ? boss.name.toUpperCase() : 'BOSS'}`;
-      bossChallengeBtn.disabled = false;
+      // Only pulse when truly ready (kills met AND materials sufficient)
+      bossChallengeBtn.classList.toggle('boss-badge__btn--no-materials', !hasMaterials && !defeated);
     } else {
-      bossChallengeBtn.textContent = `DEFEAT ${progress.required - progress.current} MORE MONSTERS`;
+      bossChallengeBtn.textContent = `\u{1F480} ${progress.current}/${progress.required}`;
       bossChallengeBtn.disabled = true;
+      bossChallengeBtn.classList.remove('boss-badge__btn--no-materials');
     }
   }
 
   // Update material cost display
   updateMaterialDisplay(player);
 
-  // Update kill progress bar
+  // Hide kill progress (folded into button text now)
   if (bossKillProgress) {
-    if (defeated || progress.met) {
-      bossKillProgress.style.display = 'none';
-    } else {
-      bossKillProgress.style.display = '';
-      const pct = Math.min(100, Math.floor((progress.current / progress.required) * 100));
-      const fillEl = bossKillProgress.querySelector('.boss-kill-progress__fill');
-      const textEl = bossKillProgress.querySelector('.boss-kill-progress__text');
-      if (fillEl) fillEl.style.width = `${pct}%`;
-      if (textEl) textEl.textContent = `${progress.current} / ${progress.required} kills`;
-    }
+    bossKillProgress.style.display = 'none';
   }
 }
 
@@ -252,7 +251,8 @@ function updateMaterialDisplay(player) {
   const el = document.createElement('div');
   el.id = 'boss-material-display';
   el.className = `boss-material ${cls}`;
-  el.textContent = `${matInfo.name}: ${current}/${required}`;
+  el.textContent = `${current}/${required}`;
+  el.title = matInfo.name;
 
   if (bossChallenge) {
     bossChallenge.appendChild(el);

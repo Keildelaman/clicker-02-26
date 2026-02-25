@@ -1,0 +1,405 @@
+/* === Level-Up Modal (non-blocking, floating card) === */
+.level-modal-container {
+  position: fixed;
+  top: 80px;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.8) translateY(-20px);
+  transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+}
+
+.level-modal-container--visible {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+.level-modal-container--exit {
+  opacity: 0;
+  transform: scale(0.9) translateY(-10px);
+  transition: opacity 0.5s ease-in, transform 0.5s ease-in;
+}
+
+.level-modal {
+  background: var(--modal-gold-gradient);
+  border: 2px solid var(--gold-color);
+  border-radius: 12px;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  max-width: 280px;
+  width: 90%;
+  text-align: center;
+  box-shadow:
+    0 0 30px rgba(255, 215, 0, 0.25),
+    0 8px 32px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 215, 0, 0.15);
+}
+
+.level-modal__title {
+  font-size: var(--font-size-lg);
+  font-weight: 800;
+  color: var(--gold-color);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: var(--spacing-xs);
+  animation: bounce-in 0.4s ease-out both;
+  animation-delay: 100ms;
+}
+
+.level-modal__level {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-md);
+  animation: bounce-in 0.4s ease-out both;
+  animation-delay: 300ms;
+}
+
+.level-modal__stats {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.level-modal__stat {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-dim);
+  animation: fade-in-up 0.3s ease-out both;
+  animation-delay: 500ms;
+}
+
+.level-modal__stat:nth-child(2) {
+  animation-delay: 600ms;
+}
+
+.level-modal__stat:nth-child(3) {
+  animation-delay: 700ms;
+}
+
+.level-modal__stat--highlight {
+  color: var(--hp-healthy);
+  font-weight: 600;
+}
+
+/* === Boss Modal (Blocking) === */
+.boss-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: var(--spacing-lg);
+}
+
+.boss-modal {
+  background: linear-gradient(135deg, #1a0a0a 0%, #2a1515 50%, #1a0a0a 100%);
+  border: 2px solid var(--aggressive-color);
+  border-radius: 12px;
+  padding: var(--spacing-xl);
+  max-width: 320px;
+  width: 100%;
+  text-align: center;
+  box-shadow:
+    0 0 40px rgba(239, 83, 80, 0.2),
+    0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+.boss-modal__emoji {
+  font-size: 48px;
+  line-height: 1;
+  margin-bottom: var(--spacing-sm);
+}
+
+.boss-modal__name {
+  font-size: var(--font-size-lg);
+  font-weight: 800;
+  color: var(--aggressive-color);
+  margin-bottom: var(--spacing-xs);
+}
+
+.boss-modal__type {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.boss-modal__hp {
+  font-size: var(--font-size-base);
+  color: var(--hp-critical);
+  font-weight: 700;
+  margin-bottom: var(--spacing-sm);
+}
+
+.boss-modal__desc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-dim);
+  margin-bottom: var(--spacing-sm);
+  line-height: 1.4;
+}
+
+.boss-modal__warning {
+  font-size: var(--font-size-xs);
+  color: var(--aggressive-warning);
+  font-weight: 700;
+  margin-bottom: var(--spacing-lg);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.boss-modal__buttons {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.boss-modal__btn {
+  flex: 1;
+  border: none;
+  font-size: var(--font-size-sm);
+  font-family: var(--font-main);
+  font-weight: 700;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: 8px;
+  cursor: pointer;
+  min-height: var(--touch-target-min);
+  letter-spacing: 0.5px;
+  transition: opacity var(--transition-fast);
+}
+
+.boss-modal__btn:active {
+  opacity: 0.7;
+}
+
+.boss-modal__btn--fight {
+  background: var(--aggressive-color);
+  color: white;
+}
+
+.boss-modal__btn--retreat {
+  background: var(--color-surface-raised);
+  color: var(--color-text-dim);
+  border: 1px solid var(--color-border);
+}
+
+.boss-modal__unlock {
+  margin: var(--spacing-md) 0;
+  padding: var(--spacing-sm);
+  border: 1px solid var(--gold-color);
+  border-radius: 8px;
+  background: rgba(255, 215, 0, 0.05);
+}
+
+.boss-modal__unlock-label {
+  font-size: var(--font-size-xs);
+  color: var(--gold-color);
+  font-weight: 800;
+  letter-spacing: 1px;
+  margin-bottom: var(--spacing-xs);
+}
+
+.boss-modal__unlock-zone {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+}
+
+/* === Tutorial Overlay (blocking welcome screen) === */
+.tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  cursor: pointer;
+}
+
+.tutorial-welcome {
+  text-align: center;
+}
+
+.tutorial-welcome__title {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--gold-color);
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+
+.tutorial-welcome__subtitle {
+  font-size: 14px;
+  color: var(--color-text-dim);
+  margin-bottom: 32px;
+}
+
+.tutorial-welcome__prompt {
+  font-size: 14px;
+  color: var(--color-text);
+  animation: pulse-bar 1.5s infinite;
+}
+
+/* === Tutorial Highlight (pulsing glow on target element) === */
+.tutorial-highlight {
+  animation: tutorial-pulse 1.5s infinite;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+  position: relative;
+  z-index: 251;
+}
+
+/* === Tutorial Modal (blocking, gold-themed) === */
+.tutorial-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 250;
+  padding: var(--spacing-lg);
+}
+
+.tutorial-modal {
+  background: var(--modal-gold-gradient);
+  border: 2px solid var(--gold-color);
+  border-radius: 12px;
+  padding: var(--spacing-xl);
+  max-width: 320px;
+  width: 100%;
+  text-align: center;
+  box-shadow:
+    0 0 30px rgba(255, 215, 0, 0.2),
+    0 8px 32px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 215, 0, 0.15);
+  animation: bounce-in 0.4s ease-out both;
+}
+
+.tutorial-modal__icon {
+  font-size: 36px;
+  line-height: 1;
+  margin-bottom: var(--spacing-sm);
+}
+
+.tutorial-modal__title {
+  font-size: var(--font-size-lg);
+  font-weight: 800;
+  color: var(--gold-color);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.tutorial-modal__body {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-dim);
+  line-height: 1.5;
+  margin-bottom: var(--spacing-lg);
+}
+
+.tutorial-modal__body .tutorial-bonus {
+  color: var(--gold-color);
+  font-weight: 700;
+}
+
+.tutorial-modal__body .tutorial-warning {
+  background: rgba(244, 67, 54, 0.1);
+  border: 1px solid var(--hp-critical);
+  border-radius: 6px;
+  padding: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+  color: var(--hp-critical);
+  font-weight: 600;
+}
+
+.tutorial-modal__body .tutorial-tip {
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 6px;
+  padding: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.tutorial-modal__buttons {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.tutorial-modal__btn--primary {
+  flex: 1;
+  background: var(--gold-color);
+  color: #1a1400;
+  border: none;
+  font-size: var(--font-size-sm);
+  font-family: var(--font-main);
+  font-weight: 800;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: 8px;
+  cursor: pointer;
+  min-height: var(--touch-target-min);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: opacity var(--transition-fast);
+}
+
+.tutorial-modal__btn--primary:active {
+  opacity: 0.7;
+}
+
+.tutorial-modal__btn--secondary {
+  flex: 1;
+  background: var(--color-surface-raised);
+  color: var(--color-text-dim);
+  border: 1px solid var(--color-border);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-main);
+  font-weight: 700;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: 8px;
+  cursor: pointer;
+  min-height: var(--touch-target-min);
+  letter-spacing: 0.5px;
+  transition: opacity var(--transition-fast);
+}
+
+.tutorial-modal__btn--secondary:active {
+  opacity: 0.7;
+}
+
+.tutorial-modal__btn--primary:disabled,
+.tutorial-modal__btn--secondary:disabled {
+  opacity: 0.45;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* === Item Detail Backdrop === */
+.item-detail-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: var(--spacing-md);
+}
+
+/* Shared base for modal panels (item detail, stats, etc.) */
+.modal-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  max-width: 420px;
+  width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: var(--spacing-lg);
+  position: relative;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+}

@@ -25,17 +25,18 @@ const EFFECT_ICONS = {
 };
 
 // Cached DOM references
-let monsterArea, monsterEmoji, monsterName, monsterLevel;
-let monsterHPFill, monsterHPText, monsterHPBar;
+let monsterArea, monsterEmoji, monsterName;
+let monsterHPFill, monsterHPBar;
 let damageContainer;
 let typeBadge, escapeTimerEl, escapeTimerText;
-let shieldContainer, shieldFill, shieldText;
+let shieldContainer, shieldFill;
 let bossTimerEl, bossTimerFill, bossTimerText;
 let playerBars, gameContainer;
 let executeMarker = null;
 let buffRow = null;
 let monsterStatusRow = null;
 let playerStatusRow = null;
+let passiveIndicatorRow = null;
 
 // Type badge labels
 const TYPE_LABELS = {
@@ -50,9 +51,7 @@ export function init() {
   monsterArea = document.getElementById('monster-area');
   monsterEmoji = document.getElementById('monster-emoji');
   monsterName = document.getElementById('monster-name');
-  monsterLevel = document.getElementById('monster-level');
   monsterHPFill = document.getElementById('monster-hp-fill');
-  monsterHPText = document.getElementById('monster-hp-text');
   monsterHPBar = document.getElementById('monster-hp-bar');
   damageContainer = document.getElementById('damage-container');
   typeBadge = document.getElementById('monster-type-badge');
@@ -60,15 +59,17 @@ export function init() {
   escapeTimerText = document.getElementById('escape-timer-text');
   shieldContainer = document.getElementById('monster-shield');
   shieldFill = document.getElementById('monster-shield-fill');
-  shieldText = document.getElementById('monster-shield-text');
   bossTimerEl = document.getElementById('boss-timer');
   bossTimerFill = document.getElementById('boss-timer-fill');
   bossTimerText = document.getElementById('boss-timer-text');
-  playerBars = document.querySelector('.player-bars');
+  playerBars = document.getElementById('player-overlay-bars');
   gameContainer = document.querySelector('.game-container');
   buffRow = document.getElementById('buff-row');
   monsterStatusRow = document.getElementById('monster-status-effects');
   playerStatusRow = document.getElementById('player-status-effects');
+  passiveIndicatorRow = document.getElementById('passive-indicator-row');
+
+  renderPassiveIndicators();
 
   on('combat:monsterSpawned', onMonsterSpawned);
   on('combat:click', onCombatClick);
@@ -129,8 +130,7 @@ function hasType(monster, typeName) {
 
 function onMonsterSpawned({ monster }) {
   monsterEmoji.textContent = monster.emoji;
-  monsterName.textContent = monster.name;
-  monsterLevel.textContent = `Lv. ${monster.level}`;
+  monsterName.textContent = `${monster.name}  Lv.${monster.level}`;
   monsterArea.classList.remove('monster-area--dead', 'monster-area--warning', 'monster-area--attacking', 'monster-area--regen-pulse');
   monsterArea.classList.add('monster-area--spawning');
 
@@ -295,13 +295,12 @@ function onBossTimeout({ bossName }) {
 
 function onPlayerDamaged({ damage, source }) {
   if (playerBars) {
-    playerBars.classList.remove('player-bars--damaged');
+    playerBars.classList.remove('player-overlay-bars--damaged');
     // Force reflow to restart animation
     void playerBars.offsetWidth;
-    playerBars.classList.add('player-bars--damaged');
-    setTimeout(() => playerBars.classList.remove('player-bars--damaged'), 300);
+    playerBars.classList.add('player-overlay-bars--damaged');
+    setTimeout(() => playerBars.classList.remove('player-overlay-bars--damaged'), 300);
   }
-
 }
 
 function onPlayerDied({ goldLost }) {
@@ -318,7 +317,6 @@ function onPlayerDied({ goldLost }) {
 function updateHPBar(monster) {
   const pct = Math.max(0, monster.currentHealth / monster.maxHealth) * 100;
   monsterHPFill.style.width = `${pct}%`;
-  monsterHPText.textContent = `${Math.max(0, Math.ceil(monster.currentHealth))} / ${monster.maxHealth}`;
 
   monsterHPFill.classList.remove('hp-fill--caution', 'hp-fill--critical');
   if (pct <= 25) {
@@ -361,7 +359,6 @@ function updateShieldBar(monster) {
   shieldContainer.style.display = '';
   const pct = Math.max(0, monster.shield / monster.maxShield) * 100;
   shieldFill.style.width = `${pct}%`;
-  shieldText.textContent = `\u{1F537} ${Math.ceil(monster.shield)} / ${monster.maxShield}`;
 }
 
 function updateEscapeTimer(monster) {
@@ -459,6 +456,23 @@ function updateExecuteMarker() {
 
 function onSkillEquipChange() {
   updateExecuteMarker();
+  renderPassiveIndicators();
+}
+
+function renderPassiveIndicators() {
+  if (!passiveIndicatorRow) return;
+  const player = state.player;
+  if (!player) { passiveIndicatorRow.innerHTML = ''; return; }
+
+  const passives = player.equippedPassive || [];
+  passiveIndicatorRow.innerHTML = passives
+    .filter(id => id != null)
+    .map(id => {
+      const skill = SKILLS[id];
+      if (!skill) return '';
+      return `<div class="passive-indicator" title="${skill.name}">${skill.icon}</div>`;
+    })
+    .join('');
 }
 
 // --- Buff Row Rendering ---

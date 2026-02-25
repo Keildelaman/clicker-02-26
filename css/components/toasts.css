@@ -1,0 +1,27 @@
+/* === Toasts === */
+.toast {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: 8px;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: auto;
+}
+
+.toast--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast--exiting {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.toast--success { background: var(--toast-success); color: white; }
+.toast--info    { background: var(--toast-info); color: white; }
+.toast--warning { background: var(--toast-warning); color: #333; }
+.toast--error   { background: var(--toast-error); color: white; }

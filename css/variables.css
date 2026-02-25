@@ -13,7 +13,6 @@
   --color-border: #2a2e36;
   --color-text: #e8e8e8;
   --color-text-dim: #8a8f98;
-  --color-text-secondary: #8a8f98;
   --success-color: #4caf50;
 
   /* HP Colors */
@@ -104,6 +103,9 @@
   --touch-target-min: 44px;
   --bar-height: 20px;
   --bar-height-sm: 14px;
+
+  /* Modal Gradients */
+  --modal-gold-gradient: linear-gradient(135deg, #1a1400 0%, #2a2000 50%, #1a1400 100%);
 
   /* Transitions */
   --transition-fast: 0.15s ease;

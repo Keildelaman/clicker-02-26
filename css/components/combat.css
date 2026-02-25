@@ -1,0 +1,528 @@
+/* === Player Overlay Bars (inside monster area) === */
+.player-overlay-bars {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 6;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--spacing-xs) var(--spacing-md) var(--spacing-sm);
+  padding-left: calc(var(--spacing-md) + 16px);
+  background: linear-gradient(to bottom, rgba(17, 19, 24, 0.6) 0%, transparent 100%);
+  border-radius: 0 0 8px 8px;
+}
+
+.player-overlay-bar {
+  height: 8px;
+  background: rgba(30, 33, 40, 0.7);
+  border-radius: 4px;
+  position: relative;
+}
+
+.player-overlay-bar--hp::before {
+  content: '\2764\FE0F';
+  position: absolute;
+  left: -14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 8px;
+  line-height: 1;
+}
+
+.player-overlay-bar--energy::before {
+  content: '\26A1';
+  position: absolute;
+  left: -14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 8px;
+  line-height: 1;
+}
+
+.player-overlay-bar--shield::before {
+  content: '\1F6E1\FE0F';
+  position: absolute;
+  left: -14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 7px;
+  line-height: 1;
+}
+
+.player-overlay-bar--shield {
+  height: 5px;
+}
+
+.player-overlay-bar__fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width var(--transition-normal);
+}
+
+.player-overlay-bars--damaged {
+  animation: damage-flash 0.3s ease-out;
+}
+
+/* === Monster Display === */
+.monster-display {
+  text-align: center;
+}
+
+.monster-display__emoji {
+  font-size: 64px;
+  line-height: 1;
+  display: block;
+  margin-bottom: var(--spacing-sm);
+  transition: transform var(--transition-fast), opacity var(--transition-normal);
+}
+
+.monster-display__name {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  margin-bottom: var(--spacing-md);
+}
+
+
+/* Monster HP */
+.monster-hp {
+  width: 100%;
+  max-width: 280px;
+  margin: 0 auto;
+}
+
+
+/* Monster area states */
+.monster-area--spawning .monster-display__emoji {
+  animation: spawn-in 0.2s ease-out;
+}
+
+.monster-area--dead .monster-display__emoji {
+  animation: death-fade 0.3s ease-out forwards;
+}
+
+/* === Death Particle (non-blocking kill feedback) === */
+.death-particle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  font-size: 48px;
+  pointer-events: none;
+  z-index: 15;
+  animation: death-particle-fade 0.4s ease-out forwards;
+}
+
+/* === Monster Type Badge === */
+.monster-type-badge {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  z-index: 5;
+}
+
+.monster-type-badge--swift {
+  background: rgba(255, 167, 38, 0.2);
+  color: var(--swift-color);
+  border: 1px solid var(--swift-color);
+}
+
+.monster-type-badge--aggressive {
+  background: rgba(239, 83, 80, 0.2);
+  color: var(--aggressive-color);
+  border: 1px solid var(--aggressive-color);
+}
+
+.monster-type-badge--armored {
+  background: rgba(158, 158, 158, 0.2);
+  color: var(--armor-color);
+  border: 1px solid var(--armor-color);
+}
+
+.monster-type-badge--shielded {
+  background: rgba(66, 165, 245, 0.2);
+  color: var(--shield-color);
+  border: 1px solid var(--shield-color);
+}
+
+.monster-type-badge--regenerating {
+  background: rgba(102, 187, 106, 0.2);
+  color: var(--regen-color);
+  border: 1px solid var(--regen-color);
+}
+
+/* === Boss Timer (Enrage Countdown) === */
+.boss-timer {
+  width: 100%;
+  max-width: 280px;
+  margin: 0 auto var(--spacing-xs);
+}
+
+.boss-timer__label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-dim);
+  margin-bottom: 2px;
+}
+
+.boss-timer-fill {
+  background: var(--success-color);
+  transition: width 0.2s linear, background-color 0.5s ease;
+}
+
+.boss-timer-fill--caution {
+  background: var(--xp-color);
+}
+
+.boss-timer-fill--critical {
+  background: var(--hp-critical);
+  animation: pulse-bar 0.5s infinite;
+}
+
+/* === Monster Escape Timer (Swift) === */
+.monster-escape-timer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--swift-color);
+  margin-bottom: var(--spacing-xs);
+}
+
+.monster-escape-timer--urgent {
+  color: var(--hp-critical);
+  animation: pulse-bar 0.5s infinite;
+}
+
+/* === Monster Shield Bar === */
+.monster-shield {
+  width: 100%;
+  max-width: 280px;
+  margin: 0 auto var(--spacing-xs);
+}
+
+
+.shield-fill {
+  background: var(--shield-color);
+}
+
+/* === Aggressive Phase Indicators === */
+.monster-area--warning {
+  border: 2px solid var(--aggressive-warning);
+  animation: warning-pulse 0.8s infinite;
+}
+
+.monster-area--attacking {
+  border: 2px solid var(--aggressive-attack);
+  background: rgba(244, 67, 54, 0.08);
+}
+
+.monster-area--attacking::after {
+  content: 'STOP!';
+  position: absolute;
+  bottom: var(--spacing-lg);
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--aggressive-attack);
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  animation: pulse-bar 0.4s infinite;
+  z-index: 5;
+}
+
+/* === Regenerating Pulse === */
+.monster-area--regen-pulse .progress-bar__fill.hp-fill {
+  box-shadow: 0 0 6px var(--regen-color);
+}
+
+/* === Player Damage Flash === */
+/* (handled by .player-overlay-bars--damaged above) */
+
+/* === Death Flash === */
+.game-container--death-flash {
+  animation: death-screen-flash 0.5s ease-out;
+}
+
+/* === Charge Up Screen Intensity === */
+.charging-screen {
+  transition: box-shadow 0.2s ease;
+}
+
+.charging-screen[data-charge-intensity="low"] {
+  box-shadow: inset 0 0 30px rgba(100, 181, 246, 0.1);
+}
+
+.charging-screen[data-charge-intensity="mid"] {
+  box-shadow: inset 0 0 50px rgba(66, 165, 245, 0.2);
+}
+
+.charging-screen[data-charge-intensity="high"] {
+  box-shadow: inset 0 0 80px rgba(30, 136, 229, 0.35);
+  animation: charge-screen-pulse 0.6s ease-in-out infinite;
+}
+
+/* === Damage Numbers === */
+.damage-number {
+  position: absolute;
+  color: var(--damage-normal);
+  font-size: 22px;
+  font-weight: 800;
+  pointer-events: none;
+  animation: float-up 0.8s ease-out forwards;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  top: 40%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+.damage-number--crit {
+  color: var(--damage-crit);
+  font-size: 30px;
+  animation: float-up-crit 0.8s ease-out forwards;
+}
+
+/* Damage type colors (Phase 7) */
+.damage-number--physical { color: var(--damage-physical); }
+.damage-number--magic { color: var(--damage-magic); animation-name: float-up-skill; }
+
+/* DoT tick damage numbers */
+.damage-number--dot {
+  font-size: 16px;
+  font-weight: 700;
+  animation: float-up-dot 0.7s ease-out forwards;
+}
+.damage-number--bleed { color: var(--effect-bleed); }
+.damage-number--poison { color: var(--effect-poison); }
+.damage-number--burn { color: var(--effect-burn); }
+
+/* Skill-typed damage number colors */
+.damage-number--skill-power { color: var(--skill-color-power); }
+.damage-number--skill-mage { color: var(--skill-color-mage); animation-name: float-up-skill; }
+.damage-number--skill-crit { color: var(--skill-color-crit); }
+.damage-number--skill-speed { color: var(--skill-color-speed); }
+.damage-number--skill-channel {
+  color: var(--skill-color-mage);
+  font-size: 24px;
+  font-weight: 900;
+  animation-name: float-up-crit;
+}
+
+/* === Execute Threshold Marker === */
+.execute-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #ff5252;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+/* === Buff Indicators === */
+.buff-row {
+  display: flex;
+  gap: 4px;
+  padding: 2px var(--spacing-md);
+  justify-content: center;
+  min-height: 0;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  pointer-events: none;
+}
+
+.buff-row--overlay {
+  position: absolute;
+  bottom: var(--spacing-sm);
+  left: var(--spacing-md);
+  right: var(--spacing-md);
+  z-index: 6;
+}
+
+.buff-indicator {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  font-size: 11px;
+  line-height: 1;
+}
+
+.buff-indicator--entering {
+  animation: buff-apply 0.3s ease-out;
+}
+
+.buff-indicator__icon { font-size: 12px; }
+
+.buff-indicator__timer {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  min-width: 18px;
+  text-align: center;
+}
+
+.buff-indicator--hit-mod {
+  border-color: var(--zone-accent);
+  background: rgba(255, 152, 0, 0.15);
+}
+
+.buff-indicator--toggle {
+  border-color: var(--gold-color);
+  background: rgba(255, 200, 0, 0.1);
+}
+
+.buff-indicator--channel {
+  position: relative;
+  overflow: hidden;
+  border-color: var(--charge-color-low);
+  background: rgba(100, 181, 246, 0.1);
+  transition: border-color 0.3s, background 0.3s;
+}
+
+.buff-indicator--charge-mid {
+  border-color: var(--charge-color-mid);
+  background: rgba(66, 165, 245, 0.2);
+}
+
+.buff-indicator--charge-high {
+  border-color: var(--charge-color-high);
+  background: rgba(30, 136, 229, 0.3);
+  animation: charge-pulse 2s ease-in-out infinite;
+}
+
+.buff-indicator__charge-bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 100%;
+  background: rgba(100, 181, 246, 0.25);
+  transition: width 0.15s linear;
+  pointer-events: none;
+}
+
+/* === Status Effect Indicators === */
+.status-effects-row {
+  display: flex;
+  gap: 3px;
+  justify-content: center;
+  flex-wrap: wrap;
+  min-height: 0;
+  padding: 2px 0;
+  pointer-events: none;
+}
+
+.status-effects-row--player-overlay {
+  position: absolute;
+  top: 30px;
+  left: var(--spacing-md);
+  right: var(--spacing-md);
+  z-index: 6;
+}
+
+.status-effect {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 5px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.status-effect--entering {
+  animation: buff-apply 0.3s ease-out;
+}
+
+.status-effect__icon { font-size: 11px; }
+.status-effect__info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+.status-effect__stacks { font-size: 9px; font-weight: 800; }
+.status-effect__timer { font-size: 8px; opacity: 0.8; }
+
+.status-effect--bleed {
+  background: rgba(229, 57, 53, 0.15);
+  border: 1px solid var(--effect-bleed);
+  color: var(--effect-bleed);
+}
+.status-effect--poison {
+  background: rgba(67, 160, 71, 0.15);
+  border: 1px solid var(--effect-poison);
+  color: var(--effect-poison);
+}
+.status-effect--burn {
+  background: rgba(255, 109, 0, 0.15);
+  border: 1px solid var(--effect-burn);
+  color: var(--effect-burn);
+}
+.status-effect--slow {
+  background: rgba(79, 195, 247, 0.15);
+  border: 1px solid var(--effect-slow);
+  color: var(--effect-slow);
+}
+.status-effect--freeze {
+  background: rgba(129, 212, 250, 0.2);
+  border: 1px solid var(--effect-freeze);
+  color: var(--effect-freeze);
+  animation: freeze-pulse 2s infinite;
+}
+
+/* Monster frozen overlay */
+.monster-area--frozen .monster-display__emoji {
+  filter: brightness(1.3) saturate(0.4);
+  animation: freeze-shake 0.3s infinite;
+}
+
+/* Monster slowed overlay */
+.monster-area--slowed .monster-display__emoji {
+  filter: saturate(0.6);
+  opacity: 0.85;
+}
+
+/* === Player Shield Fill === */
+.player-shield-fill {
+  background: var(--player-shield-color);
+}
+
+/* === Damage Type Badge (Skill Cards) === */
+.skill-card__dtype {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+.skill-card__dtype--physical {
+  background: rgba(255, 167, 38, 0.15);
+  color: var(--damage-physical);
+  border: 1px solid var(--damage-physical);
+}
+.skill-card__dtype--magic {
+  background: rgba(124, 77, 255, 0.15);
+  color: var(--damage-magic);
+  border: 1px solid var(--damage-magic);
+}
