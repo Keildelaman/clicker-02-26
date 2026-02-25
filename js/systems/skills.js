@@ -30,6 +30,7 @@ let computeStats = null;
 let hurtPlayer = null;
 let invalidateStats = null; // Injected: player.invalidateStatCache
 let getItemSkillLevelBonus = null; // Injected: items.getItemSkillLevelBonus
+let getStatusPotency = null;      // Injected: items.getStatusPotency
 
 // Track cooldown-ready notifications to avoid spam
 const cooldownReadyNotified = new Set();
@@ -121,9 +122,11 @@ export function useSkill(skillId) {
 
   // Status effect application (Phase 5)
   if (skillDef.statusEffect) {
+    const potency = getStatusPotency ? getStatusPotency() : {};
     if (state.hitModifier && state.hitModifier.skillId === skillId) {
-      // Next-click skills: attach statusEffect to hitModifier (combat.js applies on hit)
+      // Next-click skills: attach statusEffect + potency to hitModifier (combat.js applies on hit)
       state.hitModifier.statusEffect = skillDef.statusEffect;
+      state.hitModifier.statusPotencyBonus = potency[skillDef.statusEffect.type] || 0;
     } else if (skillDef.mechanic === 'instant') {
       // Instant skills: roll and apply now (damage is immediate)
       const se = skillDef.statusEffect;
@@ -135,7 +138,8 @@ export function useSkill(skillId) {
           stacks: se.stacks || 1,
           source: skillId,
           sourceAttack: stats.attack || 0,
-          sourceMagicPower: stats.magicPower || 0
+          sourceMagicPower: stats.magicPower || 0,
+          potencyBonus: potency[se.type] || 0
         });
       }
     }
@@ -642,6 +646,7 @@ export function init(deps = {}) {
   hurtPlayer = deps.damagePlayer;
   invalidateStats = deps.invalidateStatCache;
   getItemSkillLevelBonus = deps.getItemSkillLevelBonus || null;
+  getStatusPotency = deps.getStatusPotency || null;
 
   // Initialize extracted modules with shared deps
   initEffects({ invalidateStatCache: deps.invalidateStatCache, cooldownReadyNotified });

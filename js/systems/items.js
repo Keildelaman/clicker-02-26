@@ -519,6 +519,24 @@ export function getStatusProcChances() {
   };
 }
 
+/**
+ * Get status effect potency multipliers from equipment.
+ * DoT potency (bleed/poison/burn) = 1 + bonus (e.g. 0.15 → 1.15x damage).
+ * Slow strength bonus = raw percentage added to base slow strength.
+ * Freeze duration bonus = 1 + bonus (e.g. 0.10 → 1.10x duration).
+ * @returns {{ bleed: number, poison: number, burn: number, slow: number, freeze: number }}
+ */
+export function getStatusPotency() {
+  const stats = state.equipmentStats || {};
+  return {
+    bleed: stats.bleedPotency || 0,
+    poison: stats.poisonPotency || 0,
+    burn: stats.burnPotency || 0,
+    slow: stats.slowStrength || 0,
+    freeze: stats.freezeDuration || 0
+  };
+}
+
 // ============================================================
 // MATERIALS
 // ============================================================

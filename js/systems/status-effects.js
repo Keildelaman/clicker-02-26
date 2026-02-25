@@ -84,12 +84,12 @@ const EFFECT_DEFS = {
 /**
  * Handle incoming status effect application request.
  */
-function onTryApply({ target, effectId, stacks = 1, source, sourceAttack = 0, sourceMagicPower = 0 }) {
+function onTryApply({ target, effectId, stacks = 1, source, sourceAttack = 0, sourceMagicPower = 0, potencyBonus = 0 }) {
   const def = EFFECT_DEFS[effectId];
   if (!def) return;
 
   if (target === 'monster') {
-    applyToMonster(effectId, def, stacks, source, sourceAttack, sourceMagicPower);
+    applyToMonster(effectId, def, stacks, source, sourceAttack, sourceMagicPower, potencyBonus);
   } else if (target === 'player') {
     applyToPlayer(effectId, def, stacks, source, sourceAttack, sourceMagicPower);
   }
@@ -98,7 +98,7 @@ function onTryApply({ target, effectId, stacks = 1, source, sourceAttack = 0, so
 /**
  * Apply a status effect to the current monster.
  */
-function applyToMonster(effectId, def, stacks, source, sourceAttack, sourceMagicPower) {
+function applyToMonster(effectId, def, stacks, source, sourceAttack, sourceMagicPower, potencyBonus = 0) {
   const monster = state.currentMonster;
   if (!monster || state.combatState !== 'active') return;
 
@@ -127,6 +127,11 @@ function applyToMonster(effectId, def, stacks, source, sourceAttack, sourceMagic
     duration *= (1 + LEGENDARY_EFFECTS.STATUS_DURATION_BONUS);
   }
 
+  // Equipment potency: freeze_duration extends freeze duration
+  if (effectId === STATUS_EFFECTS.FREEZE && potencyBonus > 0) {
+    duration *= (1 + potencyBonus);
+  }
+
   const effects = state.monsterStatusEffects;
   const existing = effects.find(e => e.id === effectId);
 
@@ -149,10 +154,11 @@ function applyToMonster(effectId, def, stacks, source, sourceAttack, sourceMagic
       source
     };
 
-    // Snapshot DoT damage at application time
+    // Snapshot DoT damage at application time, boosted by potency
     if (def.damagePercent) {
       const sourceStat = def.statKey === 'magicPower' ? sourceMagicPower : sourceAttack;
-      effect.damagePerTick = Math.max(1, Math.floor(sourceStat * (def.damagePercent / 100)));
+      const potencyMult = 1 + potencyBonus;
+      effect.damagePerTick = Math.max(1, Math.floor(sourceStat * (def.damagePercent / 100) * potencyMult));
       effect.damageType = def.damageType;
     }
 
@@ -165,8 +171,9 @@ function applyToMonster(effectId, def, stacks, source, sourceAttack, sourceMagic
     }
     if (effectId === STATUS_EFFECTS.SLOW) {
       monster.slowed = true;
-      monster.slowStrength = def.strength;
-      emit('statusEffect:slowed', { target: 'monster', strength: def.strength });
+      // Base slow strength + potency bonus from equipment
+      monster.slowStrength = def.strength + potencyBonus;
+      emit('statusEffect:slowed', { target: 'monster', strength: monster.slowStrength });
     }
 
     emit('statusEffect:applied', {

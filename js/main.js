@@ -53,7 +53,8 @@ combat.init({
   getComputedStats: player.getComputedStats,
   damagePlayer: health.damagePlayer,
   getWeaponDamageType: items.getWeaponDamageType,
-  getStatusProcChances: items.getStatusProcChances
+  getStatusProcChances: items.getStatusProcChances,
+  getStatusPotency: items.getStatusPotency
 });
 health.init({ getComputedStats: player.getComputedStats });
 energy.init({ getComputedStats: player.getComputedStats, getEffectiveSkillLevel: skills.getEffectiveSkillLevel });
@@ -81,7 +82,8 @@ skills.init({
   getComputedStats: player.getComputedStats,
   damagePlayer: health.damagePlayer,
   invalidateStatCache: player.invalidateStatCache,
-  getItemSkillLevelBonus: items.getItemSkillLevelBonus
+  getItemSkillLevelBonus: items.getItemSkillLevelBonus,
+  getStatusPotency: items.getStatusPotency
 });
 statusEffects.init({ damagePlayer: health.damagePlayer });
 tutorial.init();

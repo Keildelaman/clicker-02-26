@@ -29,6 +29,7 @@ let computeStats = null;    // Injected dependency
 let hurtPlayer = null;      // Injected dependency: damagePlayer(amount, source)
 let getWeaponDamageType = null;  // Injected: items.getWeaponDamageType
 let getStatusProcChances = null; // Injected: items.getStatusProcChances
+let getStatusPotency = null;     // Injected: items.getStatusPotency
 
 // Boss timer state
 let bossTimer = null;  // { remaining, duration, bossId } or null
@@ -234,7 +235,8 @@ export function handleClick() {
             stacks: se.stacks || 1,
             source: mod.skillId,
             sourceAttack: stats.attack || 0,
-            sourceMagicPower: stats.magicPower || 0
+            sourceMagicPower: stats.magicPower || 0,
+            potencyBonus: mod.statusPotencyBonus || 0
           });
         }
       }
@@ -602,6 +604,7 @@ function rollEquipmentStatusProcs() {
   if (!monster || state.combatState !== 'active') return;
 
   const procs = getStatusProcChances();
+  const potency = getStatusPotency ? getStatusPotency() : {};
   const stats = computeStats();
 
   for (const [effectId, chance] of Object.entries(procs)) {
@@ -612,7 +615,8 @@ function rollEquipmentStatusProcs() {
         stacks: 1,
         source: 'equipment',
         sourceAttack: stats.attack || 0,
-        sourceMagicPower: stats.magicPower || 0
+        sourceMagicPower: stats.magicPower || 0,
+        potencyBonus: potency[effectId] || 0
       });
     }
   }
@@ -641,6 +645,7 @@ export function init(deps = {}) {
   hurtPlayer = deps.damagePlayer;
   getWeaponDamageType = deps.getWeaponDamageType || null;
   getStatusProcChances = deps.getStatusProcChances || null;
+  getStatusPotency = deps.getStatusPotency || null;
 
   on('combat:monsterSpawned', onMonsterSpawned);
   on('skill:instantDamage', onInstantDamage);
