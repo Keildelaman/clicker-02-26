@@ -14,10 +14,9 @@ import { state, getPlayer } from '../core/game-state.js';
 import {
   BASE_CRIT_CHANCE, BASE_CRIT_MULTIPLIER,
   BASE_PLAYER_HP, BASE_HP_REGEN,
-  MAX_ENERGY, SAVE_VERSION, LEGENDARY_EFFECTS,
-  BASE_SKILL_MAX_LEVEL
+  MAX_ENERGY, SAVE_VERSION, LEGENDARY_EFFECTS
 } from '../data/constants.js';
-import { maxHPAtLevel, baseAttackAtLevel, baseArmorAtLevel, baseMagicResistAtLevel, beyondMaxSkillMultiplier } from '../data/balance.js';
+import { maxHPAtLevel, baseAttackAtLevel, baseArmorAtLevel, baseMagicResistAtLevel, resolveSkillLevelData } from '../data/balance.js';
 import { SKILLS } from '../data/skills.data.js';
 
 // --- Stat Cache ---
@@ -59,11 +58,8 @@ function getPassiveSkillBonus(player, statName) {
     const skillDef = SKILLS[skillId];
     if (!skillDef) continue;
     const effectiveLevel = resolveEffectiveLevel ? resolveEffectiveLevel(skillId) : baseLevel;
-    const maxLevel = skillDef.maxLevel || BASE_SKILL_MAX_LEVEL;
-    const cappedLevel = Math.min(effectiveLevel, maxLevel);
-    const data = skillDef.levels[cappedLevel];
+    const { data, bmMult } = resolveSkillLevelData(skillDef, effectiveLevel);
     if (!data) continue;
-    const bmMult = beyondMaxSkillMultiplier(effectiveLevel, maxLevel);
 
     switch (skillId) {
       case 'heavy_handed':
@@ -355,9 +351,7 @@ export function init(deps = {}) {
       const skillDef = SKILLS['berserker'];
       if (baseLevel && skillDef) {
         const effectiveLevel = resolveEffectiveLevel ? resolveEffectiveLevel('berserker') : baseLevel;
-        const maxLevel = skillDef.maxLevel || BASE_SKILL_MAX_LEVEL;
-        const cappedLevel = Math.min(effectiveLevel, maxLevel);
-        const data = skillDef.levels[cappedLevel];
+        const { data } = resolveSkillLevelData(skillDef, effectiveLevel);
         const threshold = data ? data.hpThreshold / 100 : 0.3;
         const nowActive = hpRatio < threshold;
         if (nowActive !== lastBerserkerActive) {

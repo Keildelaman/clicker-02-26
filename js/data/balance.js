@@ -22,7 +22,8 @@ import {
   MATERIAL_DECAY_FACTOR,
   BOSS_HP_SCALING_FACTOR, BOSS_DAMAGE_SCALING_FACTOR,
   BOSS_LEVEL_BUFFER, BOSS_AFFIX_TIER_DIVISOR,
-  BEYOND_MAX_SKILL_BONUS_PER_LEVEL
+  BEYOND_MAX_SKILL_BONUS_PER_LEVEL,
+  BASE_SKILL_MAX_LEVEL
 } from './constants.js';
 
 /**
@@ -332,4 +333,21 @@ export function skillLevelRangeForZone(zoneTier) {
  */
 export function beyondMaxSkillMultiplier(effectiveLevel, maxLevel) {
   return 1 + BEYOND_MAX_SKILL_BONUS_PER_LEVEL * Math.max(0, effectiveLevel - maxLevel);
+}
+
+/**
+ * Resolve effective skill level into capped level, level data, and beyond-max multiplier.
+ * Consolidates the common 5-line pattern used across energy.js, player.js, skills.js.
+ *
+ * @param {Object} skillDef - Skill definition from SKILLS data
+ * @param {number} effectiveLevel - Total skill level including item bonuses
+ * @returns {{ cappedLevel: number, data: Object|null, bmMult: number }}
+ */
+export function resolveSkillLevelData(skillDef, effectiveLevel) {
+  if (!skillDef) return { cappedLevel: 0, data: null, bmMult: 1 };
+  const maxLevel = skillDef.maxLevel || BASE_SKILL_MAX_LEVEL;
+  const cappedLevel = Math.min(effectiveLevel, maxLevel);
+  const data = skillDef.levels[cappedLevel] || null;
+  const bmMult = beyondMaxSkillMultiplier(effectiveLevel, maxLevel);
+  return { cappedLevel, data, bmMult };
 }

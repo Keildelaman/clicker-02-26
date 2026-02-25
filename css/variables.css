@@ -71,6 +71,12 @@
   --aggressive-warning: #ff9800;
   --aggressive-attack: #f44336;
 
+  /* Charge Up Skill Colors */
+  --charge-color-low: #64b5f6;
+  --charge-color-mid: #42a5f5;
+  --charge-color-high: #1e88e5;
+  --color-overflow-warning: #ff9800;
+
   /* Toast Colors */
   --toast-success: #4caf50;
   --toast-info: #2196f3;

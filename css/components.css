@@ -414,18 +414,18 @@
 .buff-indicator--channel {
   position: relative;
   overflow: hidden;
-  border-color: #64b5f6;
+  border-color: var(--charge-color-low);
   background: rgba(100, 181, 246, 0.1);
   transition: border-color 0.3s, background 0.3s;
 }
 
 .buff-indicator--charge-mid {
-  border-color: #42a5f5;
+  border-color: var(--charge-color-mid);
   background: rgba(66, 165, 245, 0.2);
 }
 
 .buff-indicator--charge-high {
-  border-color: #1e88e5;
+  border-color: var(--charge-color-high);
   background: rgba(30, 136, 229, 0.3);
   animation: charge-pulse 2s ease-in-out infinite;
 }
@@ -1509,7 +1509,7 @@
 
 .skill-btn--channeling {
   position: relative;
-  border-color: #64b5f6;
+  border-color: var(--charge-color-low);
   overflow: hidden;
 }
 
@@ -1834,11 +1834,11 @@
   padding-top: 2px;
 }
 
-.skill-card__preview-arrow { color: #4caf50; font-weight: 700; }
-.skill-card__preview-val { color: #4caf50; }
+.skill-card__preview-arrow { color: var(--success-color); font-weight: 700; }
+.skill-card__preview-val { color: var(--success-color); }
 
 .skill-card__level-bonus {
-  color: #4caf50;
+  color: var(--success-color);
   font-weight: 700;
 }
 
@@ -2024,7 +2024,8 @@
   padding: var(--spacing-md);
 }
 
-.item-detail-panel {
+/* Shared base for modal panels (item detail, stats, etc.) */
+.modal-panel {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 12px;
@@ -2035,6 +2036,10 @@
   padding: var(--spacing-lg);
   position: relative;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+.item-detail-panel {
+  /* All base styles provided by .modal-panel */
 }
 
 .item-detail__close {
@@ -2152,7 +2157,7 @@
 }
 
 .item-detail__unique--active {
-  border-color: #4caf50;
+  border-color: var(--success-color);
 }
 
 .item-detail__unique--inactive {
@@ -2161,7 +2166,7 @@
 
 .item-detail__unique-badge {
   font-size: 0.7rem;
-  color: #4caf50;
+  color: var(--success-color);
   text-transform: uppercase;
   margin-right: 4px;
 }
@@ -2501,7 +2506,7 @@
 .inventory-overflow-label {
   font-size: var(--font-size-sm);
   font-weight: 700;
-  color: #ff9800;
+  color: var(--color-overflow-warning);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   padding: var(--spacing-sm) 0;
@@ -2509,7 +2514,7 @@
 }
 
 .item-card--overflow {
-  border-left: 3px solid #ff9800;
+  border-left: 3px solid var(--color-overflow-warning);
   background: rgba(255, 152, 0, 0.04);
 }
 
@@ -2543,16 +2548,7 @@
 }
 
 .stats-panel {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  max-width: 420px;
-  width: 90%;
-  max-height: 85vh;
-  overflow-y: auto;
-  padding: var(--spacing-lg);
-  position: relative;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  /* Base styles provided by .modal-panel */
   animation: bounce-in 0.25s ease-out;
 }
 
@@ -2646,14 +2642,3 @@
   transform: translateY(-50%) rotate(180deg);
 }
 
-/* === Dev Reset Button === */
-.game-header__reset {
-  background: none;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: rgba(255, 255, 255, 0.7);
-  border-radius: 4px;
-  font-size: 1rem;
-  padding: 2px 6px;
-  cursor: pointer;
-  margin-left: var(--spacing-sm);
-}

@@ -44,3 +44,21 @@ export function formatGold(amount) {
   if (amount >= 1000) return (amount / 1000).toFixed(1) + 'K';
   return amount.toString();
 }
+
+/**
+ * Return true with the given probability (0-1).
+ * @param {number} probability - Chance of returning true (0 = never, 1 = always)
+ * @returns {boolean}
+ */
+export function chance(probability) {
+  return Math.random() < probability;
+}
+
+/**
+ * Pick a random element from an array.
+ * @param {Array} array
+ * @returns {*} Random element, or undefined if empty
+ */
+export function pick(array) {
+  return array[Math.floor(Math.random() * array.length)];
+}

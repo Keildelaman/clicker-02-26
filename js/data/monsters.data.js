@@ -44,10 +44,6 @@ export const MONSTERS = {
     xpMin: 18,
     xpMax: 30,
     xpPerLevel: 6,
-    lootTable: [
-      { itemId: 'weapon_whisperwood_common_01', chance: 0.06 },
-      { itemId: 'armor_whisperwood_common_01', chance: 0.04 }
-    ],
     emoji: '\u{1F407}',
     deathEmoji: '\u{1F480}',
     spawnWeight: 30
@@ -70,10 +66,6 @@ export const MONSTERS = {
     xpMin: 22,
     xpMax: 35,
     xpPerLevel: 6,
-    lootTable: [
-      { itemId: 'weapon_whisperwood_common_01', chance: 0.08 },
-      { itemId: 'armor_whisperwood_common_01', chance: 0.04 }
-    ],
     emoji: '\u{1F9DA}',
     deathEmoji: '\u2728',
     spawnWeight: 30
@@ -97,11 +89,6 @@ export const MONSTERS = {
     xpMin: 24,
     xpMax: 38,
     xpPerLevel: 6,
-    lootTable: [
-      { itemId: 'weapon_whisperwood_common_01', chance: 0.05 },
-      { itemId: 'accessory_whisperwood_common_01', chance: 0.04 },
-      { itemId: 'armor_whisperwood_common_01', chance: 0.03 }
-    ],
     emoji: '\u{1F344}',
     deathEmoji: '\u{1F4A8}',
     spawnWeight: 28
@@ -124,12 +111,6 @@ export const MONSTERS = {
     xpMin: 28,
     xpMax: 42,
     xpPerLevel: 7,
-    lootTable: [
-      { itemId: 'weapon_whisperwood_common_01', chance: 0.06 },
-      { itemId: 'weapon_whisperwood_common_02', chance: 0.06 },
-      { itemId: 'armor_whisperwood_common_01', chance: 0.03 },
-      { itemId: 'accessory_whisperwood_common_01', chance: 0.02 }
-    ],
     emoji: '\u{1F417}',
     deathEmoji: '\u{1F480}',
     spawnWeight: 25
@@ -152,11 +133,6 @@ export const MONSTERS = {
     xpMin: 26,
     xpMax: 40,
     xpPerLevel: 7,
-    lootTable: [
-      { itemId: 'weapon_whisperwood_common_02', chance: 0.06 },
-      { itemId: 'armor_whisperwood_common_01', chance: 0.03 },
-      { itemId: 'accessory_whisperwood_common_01', chance: 0.02 }
-    ],
     emoji: '\u{1F577}\uFE0F',
     deathEmoji: '\u{1F480}',
     spawnWeight: 25
@@ -179,12 +155,6 @@ export const MONSTERS = {
     xpMin: 30,
     xpMax: 48,
     xpPerLevel: 8,
-    lootTable: [
-      { itemId: 'weapon_whisperwood_common_02', chance: 0.08 },
-      { itemId: 'weapon_whisperwood_uncommon_01', chance: 0.03 },
-      { itemId: 'armor_whisperwood_uncommon_01', chance: 0.02 },
-      { itemId: 'accessory_whisperwood_uncommon_01', chance: 0.02 }
-    ],
     emoji: '\u{1F43A}',
     deathEmoji: '\u{1F480}',
     spawnWeight: 25
@@ -207,12 +177,6 @@ export const MONSTERS = {
     xpMin: 35,
     xpMax: 55,
     xpPerLevel: 8,
-    lootTable: [
-      { itemId: 'weapon_whisperwood_uncommon_01', chance: 0.04 },
-      { itemId: 'armor_whisperwood_common_01', chance: 0.05 },
-      { itemId: 'armor_whisperwood_uncommon_01', chance: 0.03 },
-      { itemId: 'accessory_whisperwood_uncommon_01', chance: 0.02 }
-    ],
     emoji: '\u{1F43B}',
     deathEmoji: '\u{1F480}',
     spawnWeight: 22
@@ -235,13 +199,6 @@ export const MONSTERS = {
     xpMin: 40,
     xpMax: 60,
     xpPerLevel: 9,
-    lootTable: [
-      { itemId: 'weapon_whisperwood_uncommon_01', chance: 0.05 },
-      { itemId: 'weapon_whisperwood_rare_01', chance: 0.004 },
-      { itemId: 'armor_whisperwood_uncommon_01', chance: 0.03 },
-      { itemId: 'accessory_whisperwood_uncommon_01', chance: 0.02 },
-      { itemId: 'armor_whisperwood_rare_01', chance: 0.003 }
-    ],
     emoji: '\u{1F989}',
     deathEmoji: '\u{1FAB6}',
     spawnWeight: 20
@@ -264,13 +221,6 @@ export const MONSTERS = {
     xpMin: 42,
     xpMax: 65,
     xpPerLevel: 10,
-    lootTable: [
-      { itemId: 'weapon_whisperwood_uncommon_01', chance: 0.05 },
-      { itemId: 'accessory_whisperwood_common_01', chance: 0.06 },
-      { itemId: 'weapon_whisperwood_rare_01', chance: 0.005 },
-      { itemId: 'armor_whisperwood_uncommon_01', chance: 0.03 },
-      { itemId: 'armor_whisperwood_rare_01', chance: 0.004 }
-    ],
     emoji: '\u{1F333}',
     deathEmoji: '\u{1FAB5}',
     spawnWeight: 20
@@ -300,10 +250,6 @@ export const MONSTERS = {
       attackDuration: 1200,
       damagePercent: 0.10
     },
-    lootTable: [
-      { itemId: 'weapon_whisperwood_rare_01', chance: 1.0 },
-      { itemId: 'armor_whisperwood_rare_01', chance: 1.0 }
-    ],
     emoji: '\u{1F332}',
     deathEmoji: '\u{1FAB5}',
     spawnWeight: 0
@@ -330,10 +276,6 @@ export const MONSTERS = {
     xpMin: 50,
     xpMax: 75,
     xpPerLevel: 10,
-    lootTable: [
-      { itemId: 'weapon_dustwind_common_01', chance: 0.08 },
-      { itemId: 'armor_dustwind_common_01', chance: 0.05 }
-    ],
     emoji: '\u{1F43F}\uFE0F',
     deathEmoji: '\u{1F480}',
     spawnWeight: 30
@@ -357,10 +299,6 @@ export const MONSTERS = {
     xpMin: 55,
     xpMax: 82,
     xpPerLevel: 10,
-    lootTable: [
-      { itemId: 'weapon_dustwind_common_01', chance: 0.07 },
-      { itemId: 'armor_dustwind_common_01', chance: 0.04 }
-    ],
     emoji: '\u{1F982}',
     deathEmoji: '\u{1F480}',
     spawnWeight: 28
@@ -387,11 +325,6 @@ export const MONSTERS = {
     xpMin: 65,
     xpMax: 95,
     xpPerLevel: 12,
-    lootTable: [
-      { itemId: 'weapon_dustwind_common_02', chance: 0.06 },
-      { itemId: 'armor_dustwind_common_01', chance: 0.03 },
-      { itemId: 'accessory_dustwind_common_01', chance: 0.02 }
-    ],
     emoji: '\u{1F40D}',
     deathEmoji: '\u{1F480}',
     spawnWeight: 25
@@ -418,11 +351,6 @@ export const MONSTERS = {
     xpMin: 60,
     xpMax: 88,
     xpPerLevel: 11,
-    lootTable: [
-      { itemId: 'weapon_dustwind_common_01', chance: 0.06 },
-      { itemId: 'accessory_dustwind_common_01', chance: 0.05 },
-      { itemId: 'armor_dustwind_common_01', chance: 0.03 }
-    ],
     emoji: '\u{1F32A}\uFE0F',
     deathEmoji: '\u{1F4A8}',
     spawnWeight: 25
@@ -447,12 +375,6 @@ export const MONSTERS = {
     xpMin: 68,
     xpMax: 100,
     xpPerLevel: 12,
-    lootTable: [
-      { itemId: 'accessory_dustwind_common_01', chance: 0.06 },
-      { itemId: 'weapon_dustwind_uncommon_01', chance: 0.03 },
-      { itemId: 'armor_dustwind_uncommon_01', chance: 0.02 },
-      { itemId: 'accessory_dustwind_uncommon_01', chance: 0.02 }
-    ],
     emoji: '\u{1F985}',
     deathEmoji: '\u{1FAB6}',
     spawnWeight: 23
@@ -482,12 +404,6 @@ export const MONSTERS = {
     xpMin: 75,
     xpMax: 110,
     xpPerLevel: 13,
-    lootTable: [
-      { itemId: 'weapon_dustwind_common_02', chance: 0.08 },
-      { itemId: 'weapon_dustwind_uncommon_01', chance: 0.04 },
-      { itemId: 'armor_dustwind_uncommon_01', chance: 0.02 },
-      { itemId: 'accessory_dustwind_common_01', chance: 0.03 }
-    ],
     emoji: '\u{1F5E1}\uFE0F',
     deathEmoji: '\u{1F480}',
     spawnWeight: 25
@@ -517,12 +433,6 @@ export const MONSTERS = {
     xpMin: 85,
     xpMax: 125,
     xpPerLevel: 14,
-    lootTable: [
-      { itemId: 'weapon_dustwind_uncommon_01', chance: 0.05 },
-      { itemId: 'accessory_dustwind_uncommon_01', chance: 0.03 },
-      { itemId: 'armor_dustwind_uncommon_01', chance: 0.03 },
-      { itemId: 'armor_dustwind_rare_01', chance: 0.003 }
-    ],
     emoji: '\u2694\uFE0F',
     deathEmoji: '\u{1F480}',
     spawnWeight: 22
@@ -547,13 +457,6 @@ export const MONSTERS = {
     xpMin: 95,
     xpMax: 140,
     xpPerLevel: 15,
-    lootTable: [
-      { itemId: 'weapon_dustwind_uncommon_01', chance: 0.05 },
-      { itemId: 'weapon_dustwind_rare_01', chance: 0.008 },
-      { itemId: 'accessory_dustwind_uncommon_01', chance: 0.03 },
-      { itemId: 'armor_dustwind_uncommon_01', chance: 0.02 },
-      { itemId: 'armor_dustwind_rare_01', chance: 0.004 }
-    ],
     emoji: '\u{1F406}',
     deathEmoji: '\u{1F480}',
     spawnWeight: 20
@@ -576,13 +479,6 @@ export const MONSTERS = {
     xpMin: 100,
     xpMax: 145,
     xpPerLevel: 16,
-    lootTable: [
-      { itemId: 'weapon_dustwind_uncommon_01', chance: 0.06 },
-      { itemId: 'weapon_dustwind_rare_01', chance: 0.006 },
-      { itemId: 'armor_dustwind_uncommon_01', chance: 0.03 },
-      { itemId: 'accessory_dustwind_uncommon_01', chance: 0.02 },
-      { itemId: 'accessory_dustwind_rare_01', chance: 0.003 }
-    ],
     emoji: '\u{1F415}',
     deathEmoji: '\u{1F480}',
     spawnWeight: 20
@@ -612,10 +508,6 @@ export const MONSTERS = {
       attackDuration: 1000,
       damagePercent: 0.12
     },
-    lootTable: [
-      { itemId: 'weapon_dustwind_rare_01', chance: 1.0 },
-      { itemId: 'accessory_dustwind_rare_01', chance: 0.25 }
-    ],
     emoji: '\u{1F451}',
     deathEmoji: '\u{1F480}',
     spawnWeight: 0
@@ -642,10 +534,6 @@ export const MONSTERS = {
     xpMin: 120,
     xpMax: 175,
     xpPerLevel: 18,
-    lootTable: [
-      { itemId: 'weapon_shadowmire_common_01', chance: 0.08 },
-      { itemId: 'armor_shadowmire_common_01', chance: 0.05 }
-    ],
     emoji: '\u{1F982}',
     deathEmoji: '\u{1F480}',
     spawnWeight: 30
@@ -670,10 +558,6 @@ export const MONSTERS = {
     xpMin: 130,
     xpMax: 190,
     xpPerLevel: 18,
-    lootTable: [
-      { itemId: 'weapon_shadowmire_common_01', chance: 0.07 },
-      { itemId: 'armor_shadowmire_common_01', chance: 0.04 }
-    ],
     emoji: '\u{1F438}',
     deathEmoji: '\u{1F480}',
     spawnWeight: 28
@@ -702,11 +586,6 @@ export const MONSTERS = {
     xpMin: 140,
     xpMax: 200,
     xpPerLevel: 20,
-    lootTable: [
-      { itemId: 'weapon_shadowmire_common_02', chance: 0.07 },
-      { itemId: 'accessory_shadowmire_common_01', chance: 0.05 },
-      { itemId: 'armor_shadowmire_common_01', chance: 0.03 }
-    ],
     emoji: '\u{1F47B}',
     deathEmoji: '\u2728',
     spawnWeight: 25
@@ -737,12 +616,6 @@ export const MONSTERS = {
     xpMin: 150,
     xpMax: 215,
     xpPerLevel: 20,
-    lootTable: [
-      { itemId: 'weapon_shadowmire_common_02', chance: 0.06 },
-      { itemId: 'accessory_shadowmire_common_01', chance: 0.04 },
-      { itemId: 'armor_shadowmire_uncommon_01', chance: 0.02 },
-      { itemId: 'accessory_shadowmire_common_01', chance: 0.02 }
-    ],
     emoji: '\u{1F33F}',
     deathEmoji: '\u{1FAB4}',
     spawnWeight: 25
@@ -768,11 +641,6 @@ export const MONSTERS = {
     xpMin: 160,
     xpMax: 225,
     xpPerLevel: 22,
-    lootTable: [
-      { itemId: 'weapon_shadowmire_uncommon_01', chance: 0.04 },
-      { itemId: 'accessory_shadowmire_uncommon_01', chance: 0.03 },
-      { itemId: 'armor_shadowmire_uncommon_01', chance: 0.02 }
-    ],
     emoji: '\u{1FAB1}',
     deathEmoji: '\u{1F4A7}',
     spawnWeight: 24
@@ -798,12 +666,6 @@ export const MONSTERS = {
     xpMin: 175,
     xpMax: 245,
     xpPerLevel: 24,
-    lootTable: [
-      { itemId: 'weapon_shadowmire_uncommon_01', chance: 0.05 },
-      { itemId: 'accessory_shadowmire_uncommon_01', chance: 0.04 },
-      { itemId: 'armor_shadowmire_uncommon_01', chance: 0.02 },
-      { itemId: 'accessory_shadowmire_rare_01', chance: 0.003 }
-    ],
     emoji: '\u{1F9D9}\u200D\u2640\uFE0F',
     deathEmoji: '\u{1F480}',
     spawnWeight: 25
@@ -828,13 +690,6 @@ export const MONSTERS = {
     xpMin: 190,
     xpMax: 265,
     xpPerLevel: 25,
-    lootTable: [
-      { itemId: 'weapon_shadowmire_uncommon_01', chance: 0.05 },
-      { itemId: 'weapon_shadowmire_epic_01', chance: 0.003 },
-      { itemId: 'armor_shadowmire_uncommon_01', chance: 0.03 },
-      { itemId: 'accessory_shadowmire_uncommon_01', chance: 0.02 },
-      { itemId: 'armor_shadowmire_rare_01', chance: 0.004 }
-    ],
     emoji: '\u{1F32B}\uFE0F',
     deathEmoji: '\u{1F4A8}',
     spawnWeight: 22
@@ -864,12 +719,6 @@ export const MONSTERS = {
     xpMin: 205,
     xpMax: 285,
     xpPerLevel: 26,
-    lootTable: [
-      { itemId: 'weapon_shadowmire_uncommon_01', chance: 0.06 },
-      { itemId: 'weapon_shadowmire_rare_01', chance: 0.008 },
-      { itemId: 'armor_shadowmire_uncommon_01', chance: 0.03 },
-      { itemId: 'accessory_shadowmire_uncommon_01', chance: 0.02 }
-    ],
     emoji: '\u{1F9DF}',
     deathEmoji: '\u{1F480}',
     spawnWeight: 20
@@ -900,12 +749,6 @@ export const MONSTERS = {
     xpMin: 220,
     xpMax: 300,
     xpPerLevel: 28,
-    lootTable: [
-      { itemId: 'weapon_shadowmire_rare_01', chance: 0.01 },
-      { itemId: 'weapon_shadowmire_epic_01', chance: 0.005 },
-      { itemId: 'armor_shadowmire_rare_01', chance: 0.005 },
-      { itemId: 'accessory_shadowmire_rare_01', chance: 0.003 }
-    ],
     emoji: '\u{1F40D}',
     deathEmoji: '\u{1F480}',
     spawnWeight: 18
@@ -938,10 +781,6 @@ export const MONSTERS = {
       damagePercent: 0.15
     },
     regenRate: 0.006,
-    lootTable: [
-      { itemId: 'weapon_shadowmire_rare_01', chance: 1.0 },
-      { itemId: 'accessory_shadowmire_rare_01', chance: 0.25 }
-    ],
     emoji: '\u{1F441}\uFE0F',
     deathEmoji: '\u{1F480}',
     spawnWeight: 0
@@ -970,10 +809,6 @@ export const MONSTERS = {
     xpMin: 250,
     xpMax: 350,
     xpPerLevel: 25,
-    lootTable: [
-      { itemId: 'weapon_ironhold_common_01', chance: 0.08 },
-      { itemId: 'armor_ironhold_common_01', chance: 0.05 }
-    ],
     emoji: '\u{1F5FF}',
     deathEmoji: '\u{1F48E}',
     spawnWeight: 30
@@ -999,11 +834,6 @@ export const MONSTERS = {
     xpMin: 260,
     xpMax: 365,
     xpPerLevel: 26,
-    lootTable: [
-      { itemId: 'weapon_ironhold_common_01', chance: 0.07 },
-      { itemId: 'weapon_ironhold_common_02', chance: 0.05 },
-      { itemId: 'armor_ironhold_common_01', chance: 0.03 }
-    ],
     emoji: '\u{1F577}\uFE0F',
     deathEmoji: '\u2728',
     spawnWeight: 25
@@ -1028,11 +858,6 @@ export const MONSTERS = {
     xpMin: 280,
     xpMax: 395,
     xpPerLevel: 28,
-    lootTable: [
-      { itemId: 'weapon_ironhold_common_02', chance: 0.07 },
-      { itemId: 'accessory_ironhold_common_01', chance: 0.05 },
-      { itemId: 'armor_ironhold_common_01', chance: 0.03 }
-    ],
     emoji: '\u{1F987}',
     deathEmoji: '\u{1F480}',
     spawnWeight: 25
@@ -1064,12 +889,6 @@ export const MONSTERS = {
     xpMin: 300,
     xpMax: 425,
     xpPerLevel: 30,
-    lootTable: [
-      { itemId: 'weapon_ironhold_uncommon_01', chance: 0.05 },
-      { itemId: 'armor_ironhold_uncommon_01', chance: 0.03 },
-      { itemId: 'weapon_ironhold_epic_01', chance: 0.004 },
-      { itemId: 'accessory_ironhold_uncommon_01', chance: 0.02 }
-    ],
     emoji: '\u{1F916}',
     deathEmoji: '\u{1F4A5}',
     spawnWeight: 20
@@ -1093,11 +912,6 @@ export const MONSTERS = {
     xpMin: 310,
     xpMax: 440,
     xpPerLevel: 30,
-    lootTable: [
-      { itemId: 'weapon_ironhold_common_02', chance: 0.06 },
-      { itemId: 'accessory_ironhold_common_01', chance: 0.04 },
-      { itemId: 'armor_ironhold_uncommon_01', chance: 0.02 }
-    ],
     emoji: '\u{1FAB1}',
     deathEmoji: '\u{1F480}',
     spawnWeight: 24
@@ -1126,11 +940,6 @@ export const MONSTERS = {
     xpMin: 330,
     xpMax: 465,
     xpPerLevel: 32,
-    lootTable: [
-      { itemId: 'weapon_ironhold_uncommon_01', chance: 0.05 },
-      { itemId: 'accessory_ironhold_uncommon_01', chance: 0.04 },
-      { itemId: 'armor_ironhold_uncommon_01', chance: 0.02 }
-    ],
     emoji: '\u26CF\uFE0F',
     deathEmoji: '\u{1F480}',
     spawnWeight: 25
@@ -1163,13 +972,6 @@ export const MONSTERS = {
     xpMin: 350,
     xpMax: 490,
     xpPerLevel: 33,
-    lootTable: [
-      { itemId: 'weapon_ironhold_uncommon_01', chance: 0.06 },
-      { itemId: 'weapon_ironhold_rare_01', chance: 0.008 },
-      { itemId: 'armor_ironhold_uncommon_01', chance: 0.03 },
-      { itemId: 'accessory_ironhold_uncommon_01', chance: 0.02 },
-      { itemId: 'armor_ironhold_rare_01', chance: 0.004 }
-    ],
     emoji: '\u{1F409}',
     deathEmoji: '\u{1F525}',
     spawnWeight: 22
@@ -1195,12 +997,6 @@ export const MONSTERS = {
     xpMin: 380,
     xpMax: 535,
     xpPerLevel: 35,
-    lootTable: [
-      { itemId: 'weapon_ironhold_uncommon_01', chance: 0.06 },
-      { itemId: 'weapon_ironhold_rare_01', chance: 0.01 },
-      { itemId: 'armor_ironhold_uncommon_01', chance: 0.03 },
-      { itemId: 'accessory_ironhold_uncommon_01', chance: 0.02 }
-    ],
     emoji: '\u{1F48E}',
     deathEmoji: '\u2728',
     spawnWeight: 20
@@ -1227,12 +1023,6 @@ export const MONSTERS = {
     xpMin: 410,
     xpMax: 575,
     xpPerLevel: 38,
-    lootTable: [
-      { itemId: 'weapon_ironhold_rare_01', chance: 0.01 },
-      { itemId: 'armor_ironhold_epic_01', chance: 0.004 },
-      { itemId: 'armor_ironhold_rare_01', chance: 0.005 },
-      { itemId: 'accessory_ironhold_rare_01', chance: 0.003 }
-    ],
     emoji: '\u{1F6E1}\uFE0F',
     deathEmoji: '\u{1F48E}',
     spawnWeight: 18
@@ -1264,10 +1054,6 @@ export const MONSTERS = {
       damagePercent: 0.16
     },
     armor: 65,
-    lootTable: [
-      { itemId: 'weapon_ironhold_rare_01', chance: 1.0 },
-      { itemId: 'accessory_ironhold_rare_01', chance: 0.25 }
-    ],
     emoji: '\u{1F3D4}\uFE0F',
     deathEmoji: '\u{1F4A5}',
     spawnWeight: 0
@@ -1299,11 +1085,6 @@ export const MONSTERS = {
     xpMin: 500,
     xpMax: 710,
     xpPerLevel: 40,
-    lootTable: [
-      { itemId: 'weapon_emberfell_common_01', chance: 0.07 },
-      { itemId: 'weapon_emberfell_common_02', chance: 0.05 },
-      { itemId: 'armor_emberfell_common_01', chance: 0.04 }
-    ],
     emoji: '\u{1F9AE}',
     deathEmoji: '\u{1F525}',
     spawnWeight: 25
@@ -1330,10 +1111,6 @@ export const MONSTERS = {
     xpMin: 520,
     xpMax: 735,
     xpPerLevel: 42,
-    lootTable: [
-      { itemId: 'weapon_emberfell_common_01', chance: 0.08 },
-      { itemId: 'armor_emberfell_common_01', chance: 0.05 }
-    ],
     emoji: '\u{1F534}',
     deathEmoji: '\u{1F4A7}',
     spawnWeight: 30
@@ -1365,11 +1142,6 @@ export const MONSTERS = {
     xpMin: 560,
     xpMax: 790,
     xpPerLevel: 44,
-    lootTable: [
-      { itemId: 'weapon_emberfell_common_02', chance: 0.07 },
-      { itemId: 'accessory_emberfell_common_01', chance: 0.05 },
-      { itemId: 'armor_emberfell_common_01', chance: 0.03 }
-    ],
     emoji: '\u{1F608}',
     deathEmoji: '\u{1F525}',
     spawnWeight: 25
@@ -1402,12 +1174,6 @@ export const MONSTERS = {
     xpMin: 590,
     xpMax: 830,
     xpPerLevel: 46,
-    lootTable: [
-      { itemId: 'weapon_emberfell_uncommon_01', chance: 0.04 },
-      { itemId: 'weapon_emberfell_epic_01', chance: 0.004 },
-      { itemId: 'armor_emberfell_uncommon_01', chance: 0.02 },
-      { itemId: 'accessory_emberfell_uncommon_01', chance: 0.02 }
-    ],
     emoji: '\u{1F9D9}',
     deathEmoji: '\u{1F525}',
     spawnWeight: 20
@@ -1434,11 +1200,6 @@ export const MONSTERS = {
     xpMin: 640,
     xpMax: 900,
     xpPerLevel: 48,
-    lootTable: [
-      { itemId: 'weapon_emberfell_uncommon_01', chance: 0.05 },
-      { itemId: 'accessory_emberfell_uncommon_01', chance: 0.04 },
-      { itemId: 'armor_emberfell_uncommon_01', chance: 0.02 }
-    ],
     emoji: '\u{1F464}',
     deathEmoji: '\u{1F4A8}',
     spawnWeight: 25
@@ -1465,11 +1226,6 @@ export const MONSTERS = {
     xpMin: 670,
     xpMax: 940,
     xpPerLevel: 50,
-    lootTable: [
-      { itemId: 'weapon_emberfell_uncommon_01', chance: 0.05 },
-      { itemId: 'armor_emberfell_epic_01', chance: 0.004 },
-      { itemId: 'armor_emberfell_uncommon_01', chance: 0.02 }
-    ],
     emoji: '\u{1F5FF}',
     deathEmoji: '\u{1F4A5}',
     spawnWeight: 18
@@ -1495,12 +1251,6 @@ export const MONSTERS = {
     xpMin: 700,
     xpMax: 985,
     xpPerLevel: 52,
-    lootTable: [
-      { itemId: 'weapon_emberfell_uncommon_01', chance: 0.06 },
-      { itemId: 'accessory_emberfell_uncommon_01', chance: 0.04 },
-      { itemId: 'armor_emberfell_uncommon_01', chance: 0.03 },
-      { itemId: 'armor_emberfell_rare_01', chance: 0.004 }
-    ],
     emoji: '\u{1F98E}',
     deathEmoji: '\u{1F525}',
     spawnWeight: 22
@@ -1526,13 +1276,6 @@ export const MONSTERS = {
     xpMin: 760,
     xpMax: 1070,
     xpPerLevel: 55,
-    lootTable: [
-      { itemId: 'weapon_emberfell_uncommon_01', chance: 0.06 },
-      { itemId: 'weapon_emberfell_rare_01', chance: 0.01 },
-      { itemId: 'armor_emberfell_uncommon_01', chance: 0.03 },
-      { itemId: 'accessory_emberfell_uncommon_01', chance: 0.02 },
-      { itemId: 'accessory_emberfell_rare_01', chance: 0.003 }
-    ],
     emoji: '\u{1F525}',
     deathEmoji: '\u{1F480}',
     spawnWeight: 20
@@ -1564,12 +1307,6 @@ export const MONSTERS = {
     xpMin: 800,
     xpMax: 1120,
     xpPerLevel: 58,
-    lootTable: [
-      { itemId: 'weapon_emberfell_rare_01', chance: 0.01 },
-      { itemId: 'weapon_emberfell_epic_01', chance: 0.006 },
-      { itemId: 'armor_emberfell_rare_01', chance: 0.005 },
-      { itemId: 'accessory_emberfell_rare_01', chance: 0.003 }
-    ],
     emoji: '\u{1F409}',
     deathEmoji: '\u{1F4A5}',
     spawnWeight: 18
@@ -1602,10 +1339,6 @@ export const MONSTERS = {
       damagePercent: 0.18
     },
     shieldPercent: 0.25,
-    lootTable: [
-      { itemId: 'weapon_emberfell_rare_01', chance: 1.0 },
-      { itemId: 'accessory_emberfell_rare_01', chance: 0.25 }
-    ],
     emoji: '\u{1F31F}',
     deathEmoji: '\u{1F4A5}',
     spawnWeight: 0
@@ -1637,10 +1370,6 @@ export const MONSTERS = {
     xpMin: 950,
     xpMax: 1340,
     xpPerLevel: 60,
-    lootTable: [
-      { itemId: 'weapon_frostpeak_common_01', chance: 0.08 },
-      { itemId: 'armor_frostpeak_common_01', chance: 0.04 }
-    ],
     emoji: '\u2744\uFE0F',
     deathEmoji: '\u2728',
     spawnWeight: 30
@@ -1672,11 +1401,6 @@ export const MONSTERS = {
     xpMin: 1020,
     xpMax: 1440,
     xpPerLevel: 65,
-    lootTable: [
-      { itemId: 'weapon_frostpeak_common_01', chance: 0.07 },
-      { itemId: 'armor_frostpeak_common_01', chance: 0.05 },
-      { itemId: 'armor_frostpeak_uncommon_01', chance: 0.03 }
-    ],
     emoji: '\u{1F9CD}',
     deathEmoji: '\u{1F4A5}',
     spawnWeight: 22
@@ -1703,11 +1427,6 @@ export const MONSTERS = {
     xpMin: 1100,
     xpMax: 1550,
     xpPerLevel: 70,
-    lootTable: [
-      { itemId: 'weapon_frostpeak_common_02', chance: 0.06 },
-      { itemId: 'accessory_frostpeak_common_01', chance: 0.04 },
-      { itemId: 'armor_frostpeak_common_01', chance: 0.03 }
-    ],
     emoji: '\u2744\uFE0F',
     deathEmoji: '\u2728',
     spawnWeight: 24
@@ -1738,11 +1457,6 @@ export const MONSTERS = {
     xpMin: 1140,
     xpMax: 1600,
     xpPerLevel: 72,
-    lootTable: [
-      { itemId: 'weapon_frostpeak_common_02', chance: 0.07 },
-      { itemId: 'accessory_frostpeak_common_01', chance: 0.05 },
-      { itemId: 'armor_frostpeak_uncommon_01', chance: 0.02 }
-    ],
     emoji: '\u{1F43B}\u200D\u2744\uFE0F',
     deathEmoji: '\u{1F480}',
     spawnWeight: 25
@@ -1769,11 +1483,6 @@ export const MONSTERS = {
     xpMin: 1180,
     xpMax: 1660,
     xpPerLevel: 75,
-    lootTable: [
-      { itemId: 'weapon_frostpeak_uncommon_01', chance: 0.04 },
-      { itemId: 'accessory_frostpeak_uncommon_01', chance: 0.03 },
-      { itemId: 'armor_frostpeak_uncommon_01', chance: 0.02 }
-    ],
     emoji: '\u{1F43A}',
     deathEmoji: '\u{1F480}',
     spawnWeight: 24
@@ -1800,12 +1509,6 @@ export const MONSTERS = {
     xpMin: 1260,
     xpMax: 1780,
     xpPerLevel: 78,
-    lootTable: [
-      { itemId: 'weapon_frostpeak_uncommon_01', chance: 0.05 },
-      { itemId: 'accessory_frostpeak_uncommon_01', chance: 0.04 },
-      { itemId: 'armor_frostpeak_uncommon_01', chance: 0.02 },
-      { itemId: 'accessory_frostpeak_uncommon_01', chance: 0.02 }
-    ],
     emoji: '\u{1F47B}',
     deathEmoji: '\u2744\uFE0F',
     spawnWeight: 25
@@ -1833,13 +1536,6 @@ export const MONSTERS = {
     xpMin: 1360,
     xpMax: 1920,
     xpPerLevel: 82,
-    lootTable: [
-      { itemId: 'weapon_frostpeak_uncommon_01', chance: 0.05 },
-      { itemId: 'weapon_frostpeak_rare_01', chance: 0.008 },
-      { itemId: 'armor_frostpeak_uncommon_01', chance: 0.03 },
-      { itemId: 'accessory_frostpeak_uncommon_01', chance: 0.02 },
-      { itemId: 'armor_frostpeak_rare_01', chance: 0.004 }
-    ],
     emoji: '\u{1F47B}',
     deathEmoji: '\u2744\uFE0F',
     spawnWeight: 18
@@ -1864,12 +1560,6 @@ export const MONSTERS = {
     xpMin: 1480,
     xpMax: 2080,
     xpPerLevel: 88,
-    lootTable: [
-      { itemId: 'weapon_frostpeak_uncommon_01', chance: 0.06 },
-      { itemId: 'weapon_frostpeak_rare_01', chance: 0.01 },
-      { itemId: 'armor_frostpeak_uncommon_01', chance: 0.03 },
-      { itemId: 'accessory_frostpeak_uncommon_01', chance: 0.02 }
-    ],
     emoji: '\u{1F9CA}',
     deathEmoji: '\u{1F48E}',
     spawnWeight: 20
@@ -1901,12 +1591,6 @@ export const MONSTERS = {
     xpMin: 1560,
     xpMax: 2200,
     xpPerLevel: 92,
-    lootTable: [
-      { itemId: 'weapon_frostpeak_rare_01', chance: 0.01 },
-      { itemId: 'weapon_frostpeak_legendary_01', chance: 0.003 },
-      { itemId: 'armor_frostpeak_rare_01', chance: 0.005 },
-      { itemId: 'accessory_frostpeak_rare_01', chance: 0.003 }
-    ],
     emoji: '\u{1F432}',
     deathEmoji: '\u{1F4A5}',
     spawnWeight: 18
@@ -1939,10 +1623,6 @@ export const MONSTERS = {
       damagePercent: 0.20
     },
     regenRate: 0.005,
-    lootTable: [
-      { itemId: 'weapon_frostpeak_rare_01', chance: 1.0 },
-      { itemId: 'accessory_frostpeak_rare_01', chance: 0.25 }
-    ],
     emoji: '\u{1F451}',
     deathEmoji: '\u2744\uFE0F',
     spawnWeight: 0
@@ -1973,10 +1653,6 @@ export const MONSTERS = {
     xpMin: 1900,
     xpMax: 2700,
     xpPerLevel: 110,
-    lootTable: [
-      { itemId: 'weapon_voidrift_common_01', chance: 0.08 },
-      { itemId: 'armor_voidrift_common_01', chance: 0.05 }
-    ],
     emoji: '\u{1F573}\uFE0F',
     deathEmoji: '\u2728',
     spawnWeight: 30
@@ -2010,12 +1686,6 @@ export const MONSTERS = {
     xpMin: 2000,
     xpMax: 2850,
     xpPerLevel: 115,
-    lootTable: [
-      { itemId: 'weapon_voidrift_common_01', chance: 0.07 },
-      { itemId: 'weapon_voidrift_common_02', chance: 0.05 },
-      { itemId: 'armor_voidrift_common_01', chance: 0.03 },
-      { itemId: 'accessory_voidrift_common_01', chance: 0.03 }
-    ],
     emoji: '\u{1F977}',
     deathEmoji: '\u{1F4A8}',
     spawnWeight: 22
@@ -2043,11 +1713,6 @@ export const MONSTERS = {
     xpMin: 2150,
     xpMax: 3050,
     xpPerLevel: 120,
-    lootTable: [
-      { itemId: 'weapon_voidrift_common_02', chance: 0.07 },
-      { itemId: 'accessory_voidrift_common_01', chance: 0.05 },
-      { itemId: 'armor_voidrift_common_01', chance: 0.03 }
-    ],
     emoji: '\u{1F47F}',
     deathEmoji: '\u{1F4AB}',
     spawnWeight: 25
@@ -2075,11 +1740,6 @@ export const MONSTERS = {
     xpMin: 2300,
     xpMax: 3250,
     xpPerLevel: 125,
-    lootTable: [
-      { itemId: 'weapon_voidrift_uncommon_01', chance: 0.04 },
-      { itemId: 'armor_voidrift_rare_01', chance: 0.008 },
-      { itemId: 'armor_voidrift_uncommon_01', chance: 0.02 }
-    ],
     emoji: '\u{1F3DB}\uFE0F',
     deathEmoji: '\u{1F4A5}',
     spawnWeight: 18
@@ -2108,11 +1768,6 @@ export const MONSTERS = {
     xpMin: 2400,
     xpMax: 3400,
     xpPerLevel: 130,
-    lootTable: [
-      { itemId: 'weapon_voidrift_uncommon_01', chance: 0.05 },
-      { itemId: 'accessory_voidrift_uncommon_01', chance: 0.04 },
-      { itemId: 'armor_voidrift_uncommon_01', chance: 0.02 }
-    ],
     emoji: '\u{1F419}',
     deathEmoji: '\u{1F4A8}',
     spawnWeight: 20
@@ -2145,12 +1800,6 @@ export const MONSTERS = {
     xpMin: 2550,
     xpMax: 3600,
     xpPerLevel: 135,
-    lootTable: [
-      { itemId: 'weapon_voidrift_uncommon_01', chance: 0.05 },
-      { itemId: 'accessory_voidrift_uncommon_01', chance: 0.04 },
-      { itemId: 'armor_voidrift_uncommon_01', chance: 0.02 },
-      { itemId: 'accessory_voidrift_uncommon_01', chance: 0.02 }
-    ],
     emoji: '\u{1F300}',
     deathEmoji: '\u{1F4A5}',
     spawnWeight: 25
@@ -2184,13 +1833,6 @@ export const MONSTERS = {
     xpMin: 2750,
     xpMax: 3880,
     xpPerLevel: 145,
-    lootTable: [
-      { itemId: 'weapon_voidrift_rare_01', chance: 0.012 },
-      { itemId: 'weapon_voidrift_epic_01', chance: 0.004 },
-      { itemId: 'armor_voidrift_uncommon_01', chance: 0.03 },
-      { itemId: 'accessory_voidrift_uncommon_01', chance: 0.02 },
-      { itemId: 'armor_voidrift_rare_01', chance: 0.005 }
-    ],
     emoji: '\u{1F47D}',
     deathEmoji: '\u{1F573}\uFE0F',
     spawnWeight: 18
@@ -2218,14 +1860,6 @@ export const MONSTERS = {
     xpMin: 3100,
     xpMax: 4400,
     xpPerLevel: 155,
-    lootTable: [
-      { itemId: 'weapon_voidrift_uncommon_01', chance: 0.06 },
-      { itemId: 'weapon_voidrift_rare_01', chance: 0.015 },
-      { itemId: 'weapon_voidrift_epic_01', chance: 0.003 },
-      { itemId: 'armor_voidrift_uncommon_01', chance: 0.03 },
-      { itemId: 'armor_voidrift_rare_01', chance: 0.005 },
-      { itemId: 'accessory_voidrift_rare_01', chance: 0.003 }
-    ],
     emoji: '\u{1F441}\uFE0F\u200D\u{1F5E8}\uFE0F',
     deathEmoji: '\u{1F573}\uFE0F',
     spawnWeight: 20
@@ -2254,13 +1888,6 @@ export const MONSTERS = {
     xpMin: 3500,
     xpMax: 5000,
     xpPerLevel: 170,
-    lootTable: [
-      { itemId: 'weapon_voidrift_epic_01', chance: 0.006 },
-      { itemId: 'weapon_voidrift_legendary_01', chance: 0.001 },
-      { itemId: 'accessory_voidrift_legendary_01', chance: 0.001 },
-      { itemId: 'armor_voidrift_rare_01', chance: 0.008 },
-      { itemId: 'armor_voidrift_legendary_01', chance: 0.001 }
-    ],
     emoji: '\u{1F5FF}',
     deathEmoji: '\u{1F4A5}',
     spawnWeight: 15
@@ -2295,10 +1922,6 @@ export const MONSTERS = {
     },
     shieldPercent: 0.20,
     regenRate: 0.004,
-    lootTable: [
-      { itemId: 'weapon_voidrift_legendary_01', chance: 1.0 },
-      { itemId: 'accessory_voidrift_legendary_01', chance: 0.5 }
-    ],
     emoji: '\u26AB',
     deathEmoji: '\u{1F4A5}',
     spawnWeight: 0

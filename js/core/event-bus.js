@@ -30,6 +30,16 @@ export function off(event, callback) {
 }
 
 /**
+ * Subscribe to an event for a single firing, then auto-unsubscribe.
+ * @param {string} event - Event name
+ * @param {Function} callback - Handler function
+ */
+export function once(event, callback) {
+  const wrapper = (data) => { off(event, wrapper); callback(data); };
+  on(event, wrapper);
+}
+
+/**
  * Emit an event to all subscribers.
  * @param {string} event - Event name
  * @param {*} data - Event payload

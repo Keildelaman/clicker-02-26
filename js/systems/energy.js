@@ -13,10 +13,10 @@ import { getPlayer } from '../core/game-state.js';
 import {
   MAX_ENERGY, ENERGY_PER_CLICK, ENERGY_ON_KILL,
   ENERGY_ON_BOSS_KILL, ENERGY_REGEN_PER_SECOND,
-  ENERGY_GAIN_COOLDOWN, BASE_SKILL_MAX_LEVEL
+  ENERGY_GAIN_COOLDOWN
 } from '../data/constants.js';
 import { SKILLS } from '../data/skills.data.js';
-import { beyondMaxSkillMultiplier } from '../data/balance.js';
+import { resolveSkillLevelData } from '../data/balance.js';
 
 // 200ms cooldown between click-based energy gains (in seconds)
 const COOLDOWN_SEC = ENERGY_GAIN_COOLDOWN / 1000;
@@ -51,12 +51,8 @@ function getEnergyPerClick() {
     const baseLevel = player.unlockedSkills['heavy_handed'];
     if (baseLevel) {
       const effectiveLevel = resolveEffectiveLevel ? resolveEffectiveLevel('heavy_handed') : baseLevel;
-      const skillDef = SKILLS['heavy_handed'];
-      const maxLevel = skillDef?.maxLevel || BASE_SKILL_MAX_LEVEL;
-      const cappedLevel = Math.min(effectiveLevel, maxLevel);
-      const data = skillDef?.levels[cappedLevel];
+      const { data, bmMult } = resolveSkillLevelData(SKILLS['heavy_handed'], effectiveLevel);
       if (data?.energyPerClick !== undefined) {
-        const bmMult = beyondMaxSkillMultiplier(effectiveLevel, maxLevel);
         return Math.floor(data.energyPerClick * bmMult);
       }
     }
@@ -107,18 +103,30 @@ export function update(dt) {
       const baseLevel = player.unlockedSkills['focused_mind'];
       if (baseLevel) {
         const effectiveLevel = resolveEffectiveLevel ? resolveEffectiveLevel('focused_mind') : baseLevel;
-        const skillDef = SKILLS['focused_mind'];
-        const maxLevel = skillDef?.maxLevel || BASE_SKILL_MAX_LEVEL;
-        const cappedLevel = Math.min(effectiveLevel, maxLevel);
-        const data = skillDef?.levels[cappedLevel];
+        const { data, bmMult } = resolveSkillLevelData(SKILLS['focused_mind'], effectiveLevel);
         if (data) {
-          const bmMult = beyondMaxSkillMultiplier(effectiveLevel, maxLevel);
           player.energy = Math.min(player.energy + data.idleRegen * bmMult * dt, MAX_ENERGY);
           emitChanged();
         }
       }
     }
   }
+}
+
+/**
+ * Add energy to the player, clamped to MAX_ENERGY.
+ * Used by skill effects and passives via DI to avoid duplicating energy logic.
+ * @param {number} amount - Energy to add
+ * @returns {number} Actual energy gained
+ */
+export function addEnergy(amount) {
+  const player = getPlayer();
+  const gained = Math.min(amount, MAX_ENERGY - player.energy);
+  if (gained > 0) {
+    player.energy += gained;
+    emitChanged();
+  }
+  return gained;
 }
 
 function emitChanged() {

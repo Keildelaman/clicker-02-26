@@ -19,9 +19,9 @@ import { SKILLS } from '../data/skills.data.js';
 import {
   ACTIVE_SKILL_SLOTS, PASSIVE_SKILL_SLOTS,
   SP_PER_LEVEL_INTERVAL, SP_UPGRADE_COST, RESPEC_COSTS,
-  SKILL_SWAP_COOLDOWN_PENALTY, BASE_SKILL_MAX_LEVEL
+  SKILL_SWAP_COOLDOWN_PENALTY
 } from '../data/constants.js';
-import { beyondMaxSkillMultiplier } from '../data/balance.js';
+import { resolveSkillLevelData } from '../data/balance.js';
 import { EFFECT_HANDLERS, initEffects, onCombatClickMomentum } from './skill-effects.js';
 import { PASSIVE_HANDLERS, initPassives, refreshAllPassives } from './skill-passives.js';
 
@@ -34,6 +34,17 @@ let getStatusPotency = null;      // Injected: items.getStatusPotency
 
 // Track cooldown-ready notifications to avoid spam
 const cooldownReadyNotified = new Set();
+
+/**
+ * Notify that a skill's cooldown is ready (debounced - only fires once per cooldown cycle).
+ * @param {string} skillId
+ */
+export function notifyCooldownReady(skillId) {
+  if (!cooldownReadyNotified.has(skillId)) {
+    cooldownReadyNotified.add(skillId);
+    emit('skill:cooldownReady', { skillId });
+  }
+}
 
 // --- Public API ---
 
@@ -89,9 +100,7 @@ export function useSkill(skillId) {
 
   // Use effective level (base + item bonuses)
   const effectiveLevel = getEffectiveSkillLevel(skillId);
-  const maxLevel = skillDef.maxLevel || BASE_SKILL_MAX_LEVEL;
-  const cappedLevel = Math.min(effectiveLevel, maxLevel);
-  const levelData = skillDef.levels[cappedLevel];
+  const { data: levelData, bmMult } = resolveSkillLevelData(skillDef, effectiveLevel);
   if (!levelData) return false;
 
   // Validate: not on cooldown
@@ -110,9 +119,6 @@ export function useSkill(skillId) {
   // Set cooldown (seconds)
   player.skillCooldowns[skillId] = levelData.cooldown;
   cooldownReadyNotified.delete(skillId);
-
-  // Beyond-max skill multiplier (item bonuses pushing above max level)
-  const bmMult = beyondMaxSkillMultiplier(effectiveLevel, maxLevel);
 
   // Dispatch to effect handler
   const handler = EFFECT_HANDLERS[skillId];
@@ -562,10 +568,7 @@ export function update(dt) {
     if (player.skillCooldowns[skillId] <= 0) {
       player.skillCooldowns[skillId] = 0;
 
-      if (!cooldownReadyNotified.has(skillId)) {
-        cooldownReadyNotified.add(skillId);
-        emit('skill:cooldownReady', { skillId });
-      }
+      notifyCooldownReady(skillId);
     }
   }
 
@@ -649,8 +652,8 @@ export function init(deps = {}) {
   getStatusPotency = deps.getStatusPotency || null;
 
   // Initialize extracted modules with shared deps
-  initEffects({ invalidateStatCache: deps.invalidateStatCache, cooldownReadyNotified });
-  initPassives({ invalidateStatCache: deps.invalidateStatCache, cooldownReadyNotified, getEffectiveSkillLevel });
+  initEffects({ invalidateStatCache: deps.invalidateStatCache, notifyCooldownReady, addEnergy: deps.addEnergy });
+  initPassives({ invalidateStatCache: deps.invalidateStatCache, notifyCooldownReady, getEffectiveSkillLevel, addEnergy: deps.addEnergy });
 
   on('player:levelUp', onLevelUp);
   on('player:died', onPlayerDied);

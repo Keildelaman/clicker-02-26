@@ -61,6 +61,42 @@ export function init() {
     tab.addEventListener('click', () => switchTab(tab.dataset.tab));
   });
 
+  // Delegated click handler for equipped skill slots (unequip)
+  if (equippedContainer) {
+    equippedContainer.addEventListener('click', (e) => {
+      const slot = e.target.closest('.skills-slot--filled');
+      if (slot) {
+        const slotIndex = parseInt(slot.dataset.slot, 10);
+        const type = slot.dataset.type;
+        if (type === 'active') {
+          emit('skill:requestUnequipActive', { slot: slotIndex });
+        } else {
+          emit('skill:requestUnequipPassive', { slot: slotIndex });
+        }
+      }
+    });
+  }
+
+  // Delegated click handler for skill cards (unlock, upgrade, equip, unequip, respec)
+  if (skillsList) {
+    skillsList.addEventListener('click', (e) => {
+      const actionBtn = e.target.closest('[data-action]');
+      if (actionBtn) {
+        handleSkillAction({ currentTarget: actionBtn });
+        return;
+      }
+      const respecBtn = e.target.closest('.skill-card__btn--respec');
+      if (respecBtn && !respecBtn.disabled) {
+        const player = getPlayer();
+        const costIndex = Math.min(player.respecCount, RESPEC_COSTS.length - 1);
+        const cost = RESPEC_COSTS[costIndex];
+        if (confirm(`Reset ALL skills for ${cost.toLocaleString()} gold?\nYou'll get your SP back.`)) {
+          emit('skill:requestRespec');
+        }
+      }
+    });
+  }
+
   // Skill bar: all skills fire on pointerdown (channel queues, others fire immediately)
   skillBarSlots.forEach((slot, i) => {
     slot.addEventListener('pointerdown', (e) => {
@@ -182,18 +218,6 @@ function renderEquippedSlots() {
     equippedContainer.innerHTML = slots;
   }
 
-  // Click to unequip
-  equippedContainer.querySelectorAll('.skills-slot--filled').forEach(el => {
-    el.addEventListener('click', () => {
-      const slot = parseInt(el.dataset.slot);
-      const type = el.dataset.type;
-      if (type === 'active') {
-        emit('skill:requestUnequipActive', { slot });
-      } else {
-        emit('skill:requestUnequipPassive', { slot });
-      }
-    });
-  });
 }
 
 function renderSkillCards() {
@@ -229,11 +253,6 @@ function renderSkillCards() {
   }
 
   skillsList.innerHTML = html;
-
-  // Wire up action buttons
-  skillsList.querySelectorAll('[data-action]').forEach(btn => {
-    btn.addEventListener('click', handleSkillAction);
-  });
 }
 
 function renderRespecButton() {
@@ -255,15 +274,6 @@ function renderRespecButton() {
     RESPEC ALL (${cost.toLocaleString()} gold)
   </button>`;
   skillsList.appendChild(section);
-
-  const btn = section.querySelector('button');
-  if (btn && canAfford) {
-    btn.addEventListener('click', () => {
-      if (confirm(`Reset ALL skills for ${cost.toLocaleString()} gold?\nYou'll get your SP back.`)) {
-        emit('skill:requestRespec');
-      }
-    });
-  }
 }
 
 function renderSkillCard(skillDef, player) {

@@ -18,17 +18,20 @@ import { BARRAGE_HIT_DELAY } from '../data/constants.js';
 
 // Dependency injection — set during initEffects()
 let invalidateStats = null;
-let cooldownReadyNotified = null;
+let notifyCooldownReady = null;
+let addEnergy = null;
 
 /**
  * Initialize effect handler dependencies.
  * @param {Object} deps
  * @param {Function} deps.invalidateStatCache
- * @param {Set} deps.cooldownReadyNotified
+ * @param {Function} deps.notifyCooldownReady
+ * @param {Function} deps.addEnergy
  */
 export function initEffects(deps) {
   invalidateStats = deps.invalidateStatCache;
-  cooldownReadyNotified = deps.cooldownReadyNotified;
+  notifyCooldownReady = deps.notifyCooldownReady;
+  addEnergy = deps.addEnergy;
 }
 
 // --- Effect Handlers ---
@@ -146,10 +149,7 @@ export const EFFECT_HANDLERS = {
 
   // Instant energy grant
   energy_surge(skillDef, levelData, bmMult) {
-    const player = getPlayer();
-    const gained = Math.min(Math.floor(levelData.energyGained * bmMult), player.maxEnergy - player.energy);
-    player.energy += gained;
-    emit('energy:changed', { energy: player.energy, maxEnergy: player.maxEnergy });
+    const gained = addEnergy(Math.floor(levelData.energyGained * bmMult));
     emit('skill:effectTriggered', { effect: 'energySurge', gained });
   },
 
@@ -165,10 +165,7 @@ export const EFFECT_HANDLERS = {
         );
         if (player.skillCooldowns[equippedId] <= 0) {
           player.skillCooldowns[equippedId] = 0;
-          if (!cooldownReadyNotified.has(equippedId)) {
-            cooldownReadyNotified.add(equippedId);
-            emit('skill:cooldownReady', { skillId: equippedId });
-          }
+          notifyCooldownReady(equippedId);
         }
       }
     }
@@ -183,9 +180,7 @@ export const EFFECT_HANDLERS = {
       player.hp = Math.max(1, player.hp - hpCost);
       emit('player:hpChanged', { hp: player.hp, maxHP: player.maxHP });
     }
-    const gained = Math.min(Math.floor(levelData.energyGained * bmMult), player.maxEnergy - player.energy);
-    player.energy += gained;
-    emit('energy:changed', { energy: player.energy, maxEnergy: player.maxEnergy });
+    const gained = addEnergy(Math.floor(levelData.energyGained * bmMult));
     emit('skill:effectTriggered', { effect: 'lifeTap', hpCost, energyGained: gained });
   },
 

@@ -114,8 +114,6 @@ function createMonsterInstance(definition) {
     goldReward: goldBase + goldBonus,
     xpReward: xpBase + xpBonus,
     deathEmoji: definition.deathEmoji,
-    lootTable: definition.lootTable || [],
-
     // Defense stats (all monsters have these; armored type overrides armor)
     armor: definition.armor || MONSTER_ARMOR_DEFAULT,
     magicResist: definition.magicResist || MONSTER_MAGIC_RESIST_DEFAULT,

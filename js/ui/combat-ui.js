@@ -195,7 +195,7 @@ function showDeathParticle(emoji) {
   el.textContent = emoji;
   monsterArea.appendChild(el);
 
-  el.addEventListener('animationend', () => el.remove());
+  el.addEventListener('animationend', () => el.remove(), { once: true });
 }
 
 function onShieldBroken() {

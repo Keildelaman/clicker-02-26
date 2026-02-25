@@ -17,8 +17,9 @@ import { SKILLS } from '../data/skills.data.js';
 
 // Dependency injection — set during initPassives()
 let invalidateStats = null;
-let cooldownReadyNotified = null;
+let notifyCooldownReady = null;
 let resolveSkillLevel = null; // Injected: skills.getEffectiveSkillLevel
+let addEnergy = null;
 
 // Track event subscriptions for cleanup
 const passiveHandlerRefs = {}; // { skillId: [{ event, fn }, ...] }
@@ -76,13 +77,7 @@ export const PASSIVE_HANDLERS = {
       const data = SKILLS[skillId].levels[level];
       const fn = ({ isCrit }) => {
         if (!isCrit) return;
-        const player = getPlayer();
-        if (!player) return;
-        const gained = Math.min(data.energyPerCrit, player.maxEnergy - player.energy);
-        if (gained > 0) {
-          player.energy += gained;
-          emit('energy:changed', { energy: player.energy, maxEnergy: player.maxEnergy });
-        }
+        addEnergy(data.energyPerCrit);
       };
       passiveHandlerRefs[skillId] = [{ event: 'combat:hit', fn }];
       on('combat:hit', fn);
@@ -156,10 +151,7 @@ export const PASSIVE_HANDLERS = {
             );
             if (player.skillCooldowns[equippedId] <= 0) {
               player.skillCooldowns[equippedId] = 0;
-              if (!cooldownReadyNotified.has(equippedId)) {
-                cooldownReadyNotified.add(equippedId);
-                emit('skill:cooldownReady', { skillId: equippedId });
-              }
+              notifyCooldownReady(equippedId);
             }
           }
         }
@@ -176,12 +168,8 @@ export const PASSIVE_HANDLERS = {
       const fn = ({ skillId: endedSkillId, type: endType }) => {
         const def = SKILLS[endedSkillId];
         if (endType !== 'shield' && def && (def.mechanic === 'instant' || def.mechanic === 'cd_utility' || def.mechanic === 'hp_cost')) return;
-        const player = getPlayer();
-        if (!player) return;
-        const gained = Math.min(data.energyOnEnd, player.maxEnergy - player.energy);
+        const gained = addEnergy(data.energyOnEnd);
         if (gained > 0) {
-          player.energy += gained;
-          emit('energy:changed', { energy: player.energy, maxEnergy: player.maxEnergy });
           emit('skill:effectTriggered', { effect: 'residualEnergy', gained });
         }
       };
@@ -250,11 +238,13 @@ function resubscribeAll() {
  * Initialize passive handler dependencies and re-subscribe equipped passives.
  * @param {Object} deps
  * @param {Function} deps.invalidateStatCache
- * @param {Set} deps.cooldownReadyNotified
+ * @param {Function} deps.notifyCooldownReady
+ * @param {Function} deps.addEnergy
  */
 export function initPassives(deps) {
   invalidateStats = deps.invalidateStatCache;
-  cooldownReadyNotified = deps.cooldownReadyNotified;
+  notifyCooldownReady = deps.notifyCooldownReady;
   resolveSkillLevel = deps.getEffectiveSkillLevel || null;
+  addEnergy = deps.addEnergy || null;
   resubscribeAll();
 }

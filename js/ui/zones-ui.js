@@ -34,6 +34,16 @@ export function init() {
     });
   }
 
+  // Delegated click handler for zone travel buttons
+  if (zonesList) {
+    zonesList.addEventListener('click', (e) => {
+      const travelBtn = e.target.closest('[data-zone-id]');
+      if (travelBtn) {
+        emit('zone:requestTravel', { zoneId: travelBtn.dataset.zoneId });
+      }
+    });
+  }
+
   // Subscribe to events
   on('zone:changed', ({ zoneId }) => {
     applyZoneTheme(zoneId);
@@ -138,9 +148,7 @@ function renderZoneList() {
       const travelBtn = document.createElement('button');
       travelBtn.className = 'zone-card__btn';
       travelBtn.textContent = 'TRAVEL';
-      travelBtn.addEventListener('click', () => {
-        emit('zone:requestTravel', { zoneId });
-      });
+      travelBtn.dataset.zoneId = zoneId;
       actions.appendChild(travelBtn);
 
       if (bossDefeated) {

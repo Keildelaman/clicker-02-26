@@ -10,7 +10,7 @@
 import { state } from './core/game-state.js';
 import { on, emit } from './core/event-bus.js';
 import { registerTickSystem, startLoop } from './core/game-loop.js';
-import { loadGame, setupAutoSave, clearSave } from './services/storage.js';
+import { loadGame, setupAutoSave } from './services/storage.js';
 
 // Systems
 import * as player from './systems/player.js';
@@ -83,7 +83,8 @@ skills.init({
   damagePlayer: health.damagePlayer,
   invalidateStatCache: player.invalidateStatCache,
   getItemSkillLevelBonus: items.getItemSkillLevelBonus,
-  getStatusPotency: items.getStatusPotency
+  getStatusPotency: items.getStatusPotency,
+  addEnergy: energy.addEnergy
 });
 statusEffects.init({ damagePlayer: health.damagePlayer });
 tutorial.init();
@@ -190,27 +191,19 @@ document.getElementById('skills-back-btn').addEventListener('click', () => {
   showScreen('combat');
 });
 
-// 7. Dev reset button
-document.getElementById('reset-btn').addEventListener('click', () => {
-  if (confirm('Reset ALL progress and start fresh?')) {
-    clearSave();
-    location.reload();
-  }
-});
-
-// 8. Set up auto-save
+// 7. Set up auto-save
 setupAutoSave();
 
-// 9. Start the game
+// 8. Start the game
 startLoop();
 monster.spawnNext();
 
-// 10. Tutorial: show welcome screen for new players
+// 9. Tutorial: show welcome screen for new players
 if (!savedData) {
   emit('tutorial:welcome');
 }
 
-// 11. Debug tools (dev only)
+// 10. Debug tools (dev only)
 initDebug({
   grantXP: progression.grantXP,
   damagePlayer: health.damagePlayer,

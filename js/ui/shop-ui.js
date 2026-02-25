@@ -35,6 +35,13 @@ const SLOT_ORDER = { weapon: 0, helmet: 1, chest: 2, gloves: 3, boots: 4, access
 // Track bulk sell confirmation timers
 let confirmTimers = {};
 
+function clearConfirmTimers() {
+  for (const key of Object.keys(confirmTimers)) {
+    clearTimeout(confirmTimers[key]);
+  }
+  confirmTimers = {};
+}
+
 export function init() {
   shopContent = document.getElementById('shop-content');
   inventoryContent = document.getElementById('inventory-content');
@@ -128,6 +135,86 @@ export function init() {
     showToast(`+${amount} ${name}`, 'info', 2000);
   });
 
+  // Delegated click handler for shop content (buy items, refresh)
+  if (shopContent) {
+    shopContent.addEventListener('click', (e) => {
+      const shopItem = e.target.closest('[data-shop-index]');
+      if (shopItem) {
+        const idx = parseInt(shopItem.dataset.shopIndex, 10);
+        const items = state.shopItems || [];
+        const item = items[idx];
+        if (item) itemDetailUI.show(item, { source: 'shop', shopIndex: idx });
+        return;
+      }
+      const refreshBtn = e.target.closest('#shop-refresh-btn');
+      if (refreshBtn) {
+        emit('shop:requestRefresh');
+        return;
+      }
+    });
+  }
+
+  // Delegated click handler for inventory content (equip, items, filters, bulk sell)
+  if (inventoryContent) {
+    inventoryContent.addEventListener('click', (e) => {
+      const equipSlot = e.target.closest('[data-equip-slot]');
+      if (equipSlot) {
+        const slot = equipSlot.dataset.equipSlot;
+        const player = getPlayer();
+        const item = player.equipment[slot];
+        if (item) itemDetailUI.show(item, { source: 'equipment', slot });
+        return;
+      }
+      const invItem = e.target.closest('[data-inv-id]');
+      if (invItem) {
+        const itemId = invItem.dataset.invId;
+        const player = getPlayer();
+        const item = player.inventory.find(i => i.id === itemId);
+        if (item) itemDetailUI.show(item, { source: 'inventory' });
+        return;
+      }
+      const overflowItem = e.target.closest('[data-overflow-id]');
+      if (overflowItem) {
+        const itemId = overflowItem.dataset.overflowId;
+        const player = getPlayer();
+        const item = (player.inventoryOverflow || []).find(i => i.id === itemId);
+        if (item) itemDetailUI.show(item, { source: 'inventory' });
+        return;
+      }
+      const filterBtn = e.target.closest('[data-filter]');
+      if (filterBtn) {
+        activeFilter = filterBtn.dataset.filter;
+        renderInventory();
+        return;
+      }
+      const sortEl = e.target.closest('[data-inv-sort]');
+      if (sortEl) {
+        // Sort is handled via 'change' event, not click — skip
+        return;
+      }
+      const bulkToggle = e.target.closest('[data-bulk-toggle]');
+      if (bulkToggle) {
+        bulkPanelOpen = !bulkPanelOpen;
+        renderInventory();
+        return;
+      }
+      const bulkSellBtn = e.target.closest('[data-bulk-sell]');
+      if (bulkSellBtn) {
+        handleBulkSell(bulkSellBtn, bulkSellBtn.dataset.bulkSell);
+        return;
+      }
+    });
+
+    // Sort select uses 'change' event — delegate on inventoryContent
+    inventoryContent.addEventListener('change', (e) => {
+      const sortEl = e.target.closest('[data-inv-sort]');
+      if (sortEl) {
+        activeSort = sortEl.value;
+        renderInventory();
+      }
+    });
+  }
+
   // Live timer update (no full re-render)
   on('shop:timerTick', ({ timeLeft }) => {
     if (activeTab !== 'shop') return;
@@ -141,6 +228,7 @@ export function init() {
 
 function switchTab(tab) {
   activeTab = tab;
+  clearConfirmTimers();
   document.querySelectorAll('.shop-tab').forEach(t => {
     t.classList.toggle('shop-tab--active', t.dataset.tab === tab);
   });
@@ -193,23 +281,6 @@ function renderShop() {
   }
 
   shopContent.innerHTML = html;
-
-  // Wire refresh button
-  const refreshBtn = document.getElementById('shop-refresh-btn');
-  if (refreshBtn) {
-    refreshBtn.addEventListener('click', () => {
-      emit('shop:requestRefresh');
-    });
-  }
-
-  // Wire shop item card taps → detail panel
-  shopContent.querySelectorAll('[data-shop-index]').forEach(card => {
-    card.addEventListener('click', () => {
-      const idx = parseInt(card.dataset.shopIndex);
-      const item = items[idx];
-      if (item) itemDetailUI.show(item, { source: 'shop', shopIndex: idx });
-    });
-  });
 }
 
 function createShopItemCard(item, player, shopIndex) {
@@ -445,73 +516,6 @@ function renderInventory() {
   // Restore filter scroll position
   const newScrollEl = inventoryContent.querySelector('.inv-toolbar__scroll');
   if (newScrollEl) newScrollEl.scrollLeft = savedScrollLeft;
-
-  wireInventoryHandlers();
-}
-
-function wireInventoryHandlers() {
-  // Wire equipment slot taps → detail panel
-  inventoryContent.querySelectorAll('[data-equip-slot]').forEach(el => {
-    el.addEventListener('click', () => {
-      const slot = el.dataset.equipSlot;
-      const player = getPlayer();
-      const item = player.equipment[slot];
-      if (item) itemDetailUI.show(item, { source: 'equipment', slot });
-    });
-  });
-
-  // Wire inventory item taps → detail panel
-  inventoryContent.querySelectorAll('[data-inv-id]').forEach(card => {
-    card.addEventListener('click', () => {
-      const itemId = card.dataset.invId;
-      const player = getPlayer();
-      const item = player.inventory.find(i => i.id === itemId);
-      if (item) itemDetailUI.show(item, { source: 'inventory' });
-    });
-  });
-
-  // Wire overflow item taps → detail panel
-  inventoryContent.querySelectorAll('[data-overflow-id]').forEach(card => {
-    card.addEventListener('click', () => {
-      const itemId = card.dataset.overflowId;
-      const player = getPlayer();
-      const item = (player.inventoryOverflow || []).find(i => i.id === itemId);
-      if (item) itemDetailUI.show(item, { source: 'inventory' });
-    });
-  });
-
-  // Wire filter pills
-  inventoryContent.querySelectorAll('[data-filter]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      activeFilter = btn.dataset.filter;
-      renderInventory();
-    });
-  });
-
-  // Wire sort select
-  const sortEl = inventoryContent.querySelector('[data-inv-sort]');
-  if (sortEl) {
-    sortEl.addEventListener('change', () => {
-      activeSort = sortEl.value;
-      renderInventory();
-    });
-  }
-
-  // Wire bulk sell toggle
-  const toggleBtn = inventoryContent.querySelector('[data-bulk-toggle]');
-  if (toggleBtn) {
-    toggleBtn.addEventListener('click', () => {
-      bulkPanelOpen = !bulkPanelOpen;
-      renderInventory();
-    });
-  }
-
-  // Wire bulk sell buttons (two-tap confirm)
-  inventoryContent.querySelectorAll('[data-bulk-sell]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      handleBulkSell(btn, btn.dataset.bulkSell);
-    });
-  });
 }
 
 function handleBulkSell(btn, rarity) {
@@ -567,6 +571,7 @@ function buildAffixTags(item) {
  * Called when shop screen becomes visible.
  */
 export function onShow() {
+  clearConfirmTimers();
   updateGold();
   if (activeTab === 'shop') renderShop();
   if (activeTab === 'inventory') renderInventory();
