@@ -126,8 +126,8 @@
       <!-- Bottom Section -->
       <div class="bottom-section">
 
-        <!-- Stats Bar -->
-        <div class="stats-bar">
+        <!-- Stats Bar (tappable to expand full stats) -->
+        <div class="stats-bar stats-bar--tappable" id="stats-bar" role="button" tabindex="0" aria-label="View all stats">
           <div class="stat-item">
             <span class="stat-item__icon">&#x2694;&#xFE0F;</span>
             <span class="stat-item__value" id="attack-display">5</span>
@@ -144,6 +144,7 @@
             <span class="stat-item__icon">&#x1F4B0;</span>
             <span class="stat-item__value stat-item__value--gold" id="gold-display">0</span>
           </div>
+          <span class="stats-bar__expand">&#x25B2;</span>
         </div>
 
         <!-- XP Bar -->
@@ -213,6 +214,11 @@
     <!-- Item Detail Panel -->
     <div class="item-detail-backdrop" id="item-detail-backdrop" style="display: none;">
       <div class="item-detail-panel" id="item-detail-panel"></div>
+    </div>
+
+    <!-- Stats Panel Overlay -->
+    <div class="stats-panel-backdrop" id="stats-panel-backdrop" style="display: none;">
+      <div class="stats-panel" id="stats-panel"></div>
     </div>
 
     <!-- Boss Modal -->

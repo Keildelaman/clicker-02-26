@@ -18,6 +18,7 @@ import * as zonesUI from './zones-ui.js';
 import * as skillsUI from './skills-ui.js';
 import * as tutorialUI from './tutorial-ui.js';
 import * as itemDetailUI from './item-detail-ui.js';
+import * as statsPanelUI from './stats-panel-ui.js';
 
 let dirty = true;
 
@@ -37,6 +38,7 @@ export function init() {
   skillsUI.init();
   tutorialUI.init();
   itemDetailUI.init();
+  statsPanelUI.init();
 
   // Mark dirty on state-changing events
   on('combat:click', markDirty);

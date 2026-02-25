@@ -28,6 +28,9 @@ export function init() {
   on('player:hpChanged', renderShield);
   on('player:shieldBroken', renderShield);
   on('skill:buffApplied', renderShield);
+  on('item:equipped', renderShield);
+  on('item:unequipped', renderShield);
+  on('player:statsChanged', renderShield);
   on('energy:changed', renderEnergy);
   on('player:levelUp', renderAll);
   on('combat:monsterSpawned', renderAll);
@@ -64,15 +67,27 @@ function renderHP() {
 function renderShield() {
   if (!shieldBar) return;
   const shield = state.playerShield;
-  if (!shield || shield.amount <= 0) {
-    shieldBar.style.display = 'none';
+  const maxShield = (state.computedStats && state.computedStats.maxShield) || 0;
+
+  // Case 1: Active shield with amount > 0
+  if (shield && shield.amount > 0) {
+    shieldBar.style.display = '';
+    const pct = (shield.amount / shield.max) * 100;
+    if (shieldFill) shieldFill.style.width = `${Math.min(pct, 100)}%`;
+    if (shieldText) shieldText.textContent = `${Math.ceil(shield.amount)} / ${shield.max}`;
     return;
   }
 
-  shieldBar.style.display = '';
-  const pct = (shield.amount / shield.max) * 100;
-  if (shieldFill) shieldFill.style.width = `${Math.min(pct, 100)}%`;
-  if (shieldText) shieldText.textContent = `${Math.ceil(shield.amount)} / ${shield.max}`;
+  // Case 2: No active shield, but maxShield > 0 from equipment — show empty bar
+  if (maxShield > 0) {
+    shieldBar.style.display = '';
+    if (shieldFill) shieldFill.style.width = '0%';
+    if (shieldText) shieldText.textContent = `0 / ${maxShield}`;
+    return;
+  }
+
+  // Case 3: No shield at all — hide bar
+  shieldBar.style.display = 'none';
 }
 
 function renderEnergy() {
