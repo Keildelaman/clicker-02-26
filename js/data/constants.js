@@ -126,8 +126,8 @@ export const SELL_PRICE_RATIO = 0.25;
 
 // Progression Defaults
 export const STARTING_LEVEL = 1;
-export const BASE_XP_REQUIREMENT = 100;
-export const XP_GROWTH_RATE = 0.12;
+export const BASE_XP_REQUIREMENT = 600;
+export const XP_GROWTH_RATE = 0.09;
 
 // Skill Defaults
 export const ACTIVE_SKILL_SLOTS = 4;

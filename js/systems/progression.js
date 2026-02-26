@@ -93,6 +93,15 @@ export function init(deps = {}) {
   computeStats = deps.getComputedStats;
   invalidateStats = deps.invalidateStatCache;
 
+  // Recalculate XP threshold for current level (handles formula changes across saves)
+  const p = getPlayer();
+  if (p.level < MAX_PLAYER_LEVEL) {
+    p.xpToNextLevel = xpToNextLevel(p.level);
+    while (p.xp >= p.xpToNextLevel && p.level < MAX_PLAYER_LEVEL) {
+      levelUp();
+    }
+  }
+
   on('combat:monsterKilled', ({ xpReward }) => {
     // Apply xpBonus from equipment + passive skills + buffs
     const stats = computeStats();

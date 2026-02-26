@@ -249,7 +249,7 @@ export function createNewPlayer() {
 
     level: 1,
     xp: 0,
-    xpToNextLevel: 100,
+    xpToNextLevel: 600,
     totalXpEarned: 0,
 
     gold: 0,
