@@ -40,7 +40,8 @@ let bossTimer = null;  // { remaining, duration, bossId } or null
  */
 function tryApplyStatusEffect(target, statusEffect, source, stats, potencyBonus = 0) {
   if (!statusEffect) return;
-  if (Math.random() < statusEffect.chance) {
+  const procBonus = stats.statusProcBonus || 0;
+  if (Math.random() < statusEffect.chance + procBonus) {
     emit('statusEffect:tryApply', {
       target,
       effectId: statusEffect.type,
@@ -51,6 +52,13 @@ function tryApplyStatusEffect(target, statusEffect, source, stats, potencyBonus 
       potencyBonus
     });
   }
+}
+
+/**
+ * Get base damage for a given damage type (attack for physical, magicPower for magic).
+ */
+function getBaseDamage(stats, damageType) {
+  return damageType === DAMAGE_TYPES.MAGIC ? stats.magicPower : stats.attack;
 }
 
 /**
@@ -73,6 +81,11 @@ export function applyDamageToMonster(rawDamage, opts = {}) {
 
   const damageType = opts.damageType || DAMAGE_TYPES.PHYSICAL;
   let damage = Math.max(rawDamage, MIN_DAMAGE);
+
+  // Scorched debuff (Combustion): amplify magic damage
+  if (damageType === DAMAGE_TYPES.MAGIC && monster.scorched && monster.scorched.remaining > 0) {
+    damage = Math.floor(damage * (1 + monster.scorched.magicVuln));
+  }
 
   // Defense: percentage-based reduction (all monsters, not just armored type)
   if (!opts.ignoreArmor) {
@@ -204,19 +217,24 @@ export function handleClick() {
 
     if (isCrit) anyCrit = true;
 
-    // Compute damage
-    let damage = stats.attack;
+    // Determine damage type FIRST (weapon type, then skill override)
+    let hitDamageType = getWeaponDamageType ? getWeaponDamageType() : DAMAGE_TYPES.PHYSICAL;
+    let shatterBonus = 0;
+    if (i === 0 && state.hitModifier) {
+      const mod = state.hitModifier;
+      hitDamageType = mod.damageType || DAMAGE_TYPES.PHYSICAL;
+    }
+
+    // Compute damage using correct stat for the damage type
+    let damage = getBaseDamage(stats, hitDamageType);
     if (isCrit) {
       damage = Math.floor(damage * stats.critDamage);
     }
     damage = Math.max(damage, MIN_DAMAGE);
 
-    // PRIMARY hit only (i === 0): apply hitModifier
-    let shatterBonus = 0;
-    let hitDamageType = getWeaponDamageType ? getWeaponDamageType() : DAMAGE_TYPES.PHYSICAL;
+    // PRIMARY hit only (i === 0): apply hitModifier multiplier
     if (i === 0 && state.hitModifier) {
       const mod = state.hitModifier;
-      hitDamageType = mod.damageType || DAMAGE_TYPES.PHYSICAL;
 
       if (mod.type === 'execute') {
         const hpRatio = monster.currentHealth / monster.maxHealth;
@@ -226,7 +244,7 @@ export function handleClick() {
         // Normal damage + bonus %maxHP (ignores armor)
         shatterBonus = Math.floor(monster.maxHealth * mod.percentHP);
       } else {
-        // Default (power_strike): flat multiplier
+        // Default (power_strike, plague_touch): flat multiplier
         damage = Math.floor(damage * mod.multiplier);
       }
 
@@ -235,11 +253,49 @@ export function handleClick() {
       // Status effect from hit modifier skill (Phase 5)
       tryApplyStatusEffect('monster', mod.statusEffect, mod.skillId, stats, mod.statusPotencyBonus || 0);
 
+      // Multi-status hit modifier (Plague Touch): apply bleed + poison + slow
+      if (mod.multiStatus) {
+        for (const se of mod.multiStatus) {
+          emit('statusEffect:tryApply', {
+            target: 'monster',
+            effectId: se.type,
+            stacks: se.stacks || 1,
+            source: mod.skillId,
+            sourceAttack: stats.attack || 0,
+            sourceMagicPower: stats.magicPower || 0
+          });
+        }
+      }
+
       state.hitModifier = null;
       emit('skill:effectEnded', { skillId: mod.skillId, type: 'hitModifier' });
 
       // Equipment status procs on skill damage (hit modifier consumed)
       rollEquipmentStatusProcs();
+    }
+
+    // Immolate buff: apply burn on every hit
+    if (state.activeBuffs['immolate']?.effects.burnOnHit) {
+      emit('statusEffect:tryApply', {
+        target: 'monster',
+        effectId: 'burn',
+        stacks: 1,
+        source: 'immolate',
+        sourceAttack: stats.attack || 0,
+        sourceMagicPower: stats.magicPower || 0
+      });
+    }
+
+    // Envenom buff: apply 1 poison stack on every hit
+    if (state.activeBuffs['envenom']?.effects.poisonOnHit) {
+      emit('statusEffect:tryApply', {
+        target: 'monster',
+        effectId: 'poison',
+        stacks: 1,
+        source: 'envenom',
+        sourceAttack: stats.attack || 0,
+        sourceMagicPower: stats.magicPower || 0
+      });
     }
 
     // Apply passive damage bonuses (Click Mastery + Momentum)
@@ -320,7 +376,7 @@ function onInstantDamage({ hits, damagePerHit, skillId, hitDelay, damageType }) 
     const stats = computeStats();
     for (let i = 0; i < hits; i++) {
       const isCrit = Math.random() < stats.critChance;
-      let dmg = Math.floor(stats.attack * (damagePerHit / 100));
+      let dmg = Math.floor(getBaseDamage(stats, type) * (damagePerHit / 100));
       if (isCrit) dmg = Math.floor(dmg * stats.critDamage);
       dmg = Math.max(dmg, MIN_DAMAGE);
 
@@ -339,7 +395,7 @@ function onInstantDamage({ hits, damagePerHit, skillId, hitDelay, damageType }) 
 
       const stats = computeStats();
       const isCrit = Math.random() < stats.critChance;
-      let dmg = Math.floor(stats.attack * (damagePerHit / 100));
+      let dmg = Math.floor(getBaseDamage(stats, type) * (damagePerHit / 100));
       if (isCrit) dmg = Math.floor(dmg * stats.critDamage);
       dmg = Math.max(dmg, MIN_DAMAGE);
 
@@ -589,8 +645,9 @@ function rollEquipmentStatusProcs() {
   const potency = getStatusPotency ? getStatusPotency() : {};
   const stats = computeStats();
 
+  const procBonus = stats.statusProcBonus || 0;
   for (const [effectId, chance] of Object.entries(procs)) {
-    if (chance > 0 && Math.random() < chance) {
+    if (chance > 0 && Math.random() < (chance + procBonus)) {
       emit('statusEffect:tryApply', {
         target: 'monster',
         effectId,
@@ -660,6 +717,14 @@ export function update(dt) {
   // Active combat: run monster type updates + boss timer
   if (state.combatState === 'active' && state.currentMonster) {
     updateMonsterTypes(state.currentMonster, dt);
+
+    // Tick scorched debuff (Combustion)
+    if (state.currentMonster.scorched) {
+      state.currentMonster.scorched.remaining -= dt;
+      if (state.currentMonster.scorched.remaining <= 0) {
+        state.currentMonster.scorched = null;
+      }
+    }
 
     // Boss timer countdown
     if (bossTimer) {

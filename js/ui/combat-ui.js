@@ -37,6 +37,7 @@ let buffRow = null;
 let monsterStatusRow = null;
 let playerStatusRow = null;
 let passiveIndicatorRow = null;
+let monsterDefenseRow = null;
 
 // Type badge labels
 const TYPE_LABELS = {
@@ -68,6 +69,7 @@ export function init() {
   monsterStatusRow = document.getElementById('monster-status-effects');
   playerStatusRow = document.getElementById('player-status-effects');
   passiveIndicatorRow = document.getElementById('passive-indicator-row');
+  monsterDefenseRow = document.getElementById('monster-defense-row');
 
   renderPassiveIndicators();
 
@@ -147,6 +149,7 @@ function onMonsterSpawned({ monster }) {
   updateTypeBadge(monster);
   updateShieldBar(monster);
   updateEscapeTimer(monster);
+  updateDefenseRow(monster);
   updateExecuteMarker();
 }
 
@@ -375,10 +378,23 @@ function updateEscapeTimer(monster) {
   escapeTimerText.textContent = `${secs}s`;
 }
 
+function updateDefenseRow(monster) {
+  if (!monsterDefenseRow) return;
+  const badges = [];
+  if (monster.armor > 0) {
+    badges.push(`<span class="monster-defense-badge monster-defense-badge--armor">\u{1F6E1}\uFE0F ${monster.armor}</span>`);
+  }
+  if (monster.magicResist > 0) {
+    badges.push(`<span class="monster-defense-badge monster-defense-badge--mr">\u2728 ${monster.magicResist}</span>`);
+  }
+  monsterDefenseRow.innerHTML = badges.join(' ');
+}
+
 function hideTypeIndicators() {
   if (typeBadge) typeBadge.style.display = 'none';
   if (escapeTimerEl) escapeTimerEl.style.display = 'none';
   if (shieldContainer) shieldContainer.style.display = 'none';
+  if (monsterDefenseRow) monsterDefenseRow.innerHTML = '';
   monsterArea.classList.remove('monster-area--warning', 'monster-area--attacking', 'monster-area--regen-pulse');
 }
 
@@ -696,6 +712,7 @@ function onSlowedStateChange({ target }) {
 
 function clearMonsterStatusUI() {
   if (monsterStatusRow) monsterStatusRow.innerHTML = '';
+  if (monsterDefenseRow) monsterDefenseRow.innerHTML = '';
   if (monsterArea) {
     monsterArea.classList.remove('monster-area--frozen', 'monster-area--slowed');
   }

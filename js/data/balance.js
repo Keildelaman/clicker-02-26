@@ -11,7 +11,7 @@
 import {
   BASE_XP_REQUIREMENT, XP_GROWTH_RATE,
   BASE_PLAYER_HP, HP_PER_LEVEL,
-  BASE_PLAYER_ATTACK,
+  BASE_PLAYER_ATTACK, BASE_PLAYER_MAGIC_POWER,
   DEFENSE_SCALING_FACTOR,
   BASE_ARMOR_PER_LEVEL, BASE_MAGIC_RESIST_PER_LEVEL,
   FLAT_TIER_MULTIPLIERS, PERCENT_TIER_MULTIPLIERS,
@@ -75,6 +75,16 @@ export function maxHPAtLevel(level) {
  */
 export function baseAttackAtLevel(level) {
   return BASE_PLAYER_ATTACK + (level - 1);
+}
+
+/**
+ * Base magic power at a given level (before equipment/buffs).
+ * Formula: 5 + (level - 1) — mirrors attack scaling.
+ * @param {number} level - Player level
+ * @returns {number} Base magic power
+ */
+export function baseMagicPowerAtLevel(level) {
+  return BASE_PLAYER_MAGIC_POWER + (level - 1);
 }
 
 /**

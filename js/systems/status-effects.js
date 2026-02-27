@@ -81,15 +81,18 @@ const EFFECT_DEFS = {
 
 // --- Application Logic ---
 
+// DI dep for passive skill bonus (Plague Doctor)
+let getPlagueDoctorBonus = null;
+
 /**
  * Handle incoming status effect application request.
  */
-function onTryApply({ target, effectId, stacks = 1, source, sourceAttack = 0, sourceMagicPower = 0, potencyBonus = 0 }) {
+function onTryApply({ target, effectId, stacks = 1, source, sourceAttack = 0, sourceMagicPower = 0, potencyBonus = 0, customDuration }) {
   const def = EFFECT_DEFS[effectId];
   if (!def) return;
 
   if (target === 'monster') {
-    applyToMonster(effectId, def, stacks, source, sourceAttack, sourceMagicPower, potencyBonus);
+    applyToMonster(effectId, def, stacks, source, sourceAttack, sourceMagicPower, potencyBonus, customDuration);
   } else if (target === 'player') {
     applyToPlayer(effectId, def, stacks, source, sourceAttack, sourceMagicPower);
   }
@@ -98,7 +101,7 @@ function onTryApply({ target, effectId, stacks = 1, source, sourceAttack = 0, so
 /**
  * Apply a status effect to the current monster.
  */
-function applyToMonster(effectId, def, stacks, source, sourceAttack, sourceMagicPower, potencyBonus = 0) {
+function applyToMonster(effectId, def, stacks, source, sourceAttack, sourceMagicPower, potencyBonus = 0, customDuration) {
   const monster = state.currentMonster;
   if (!monster || state.combatState !== 'active') return;
 
@@ -121,10 +124,20 @@ function applyToMonster(effectId, def, stacks, source, sourceAttack, sourceMagic
     maxStacks = 9999;
   }
 
+  // Use custom duration if provided (e.g., Frost Nova, Glacial Shatter), else default
+  let duration = customDuration || def.duration;
+
   // Legendary: Shadowmire Cowl — 40% longer status effect durations on monsters
-  let duration = def.duration;
   if (state.activeLegendaryEffects?.has('status_duration_bonus')) {
     duration *= (1 + LEGENDARY_EFFECTS.STATUS_DURATION_BONUS);
+  }
+
+  // Plague Doctor passive: bonus status duration
+  if (getPlagueDoctorBonus) {
+    const pdBonus = getPlagueDoctorBonus();
+    if (pdBonus.durationBonus > 0) {
+      duration *= (1 + pdBonus.durationBonus / 100);
+    }
   }
 
   // Equipment potency: freeze_duration extends freeze duration
@@ -284,7 +297,15 @@ function tickMonsterEffects(dt) {
         // Re-check monster is still alive (previous tick could have killed it)
         if (state.currentMonster !== monster || state.combatState !== 'active') return;
 
-        const rawDmg = effect.damagePerTick * (effect.stacks || 1);
+        let rawDmg = effect.damagePerTick * (effect.stacks || 1);
+
+        // Inferno supercharge: multiply burn tick damage once, then clear
+        if (effect.id === STATUS_EFFECTS.BURN && state.burnTickMultiplier > 0) {
+          rawDmg = Math.floor(rawDmg * state.burnTickMultiplier);
+          state.burnTickMultiplier = 0;
+          emit('skill:effectTriggered', { effect: 'inferno_supercharge_consumed' });
+        }
+
         const defense = effect.damageType === DAMAGE_TYPES.MAGIC
           ? (monster.magicResist || 0)
           : (monster.armor || 0);
@@ -385,7 +406,72 @@ function tickPlayerEffects(dt) {
 
 // --- Cleanup ---
 
+/**
+ * Snapshot current DoTs for Pandemic transfer before clearing.
+ */
+function snapshotForPandemic() {
+  const pandemicBuff = state.activeBuffs && state.activeBuffs['pandemic'];
+  if (!pandemicBuff) return;
+  const transferPct = pandemicBuff.effects.transferPercent || 0;
+  if (transferPct <= 0) return;
+
+  // Snapshot only DoT effects (bleed, poison, burn)
+  const dotEffects = state.monsterStatusEffects.filter(
+    e => e.id === 'bleed' || e.id === 'poison' || e.id === 'burn'
+  );
+  if (dotEffects.length === 0) return;
+
+  state.pandemicTransfer = dotEffects.map(e => ({
+    id: e.id,
+    stacks: e.stacks || 1,
+    remaining: e.remaining * transferPct,
+    damagePerTick: e.damagePerTick || 0,
+    damageType: e.damageType || 'physical',
+    source: 'pandemic'
+  }));
+}
+
+/**
+ * Apply Pandemic-transferred DoTs to a newly spawned monster.
+ */
+function applyPandemicTransfer() {
+  if (!state.pandemicTransfer || state.pandemicTransfer.length === 0) return;
+  const monster = state.currentMonster;
+  if (!monster || state.combatState !== 'active') {
+    state.pandemicTransfer = null;
+    return;
+  }
+
+  for (const snapshot of state.pandemicTransfer) {
+    const effect = {
+      id: snapshot.id,
+      stacks: snapshot.stacks,
+      remaining: snapshot.remaining,
+      tickTimer: 0,
+      source: 'pandemic',
+      damagePerTick: snapshot.damagePerTick,
+      damageType: snapshot.damageType
+    };
+    state.monsterStatusEffects.push(effect);
+
+    if (snapshot.id === 'slow') {
+      monster.slowed = true;
+      monster.slowStrength = SLOW_STRENGTH;
+      emit('statusEffect:slowed', { target: 'monster', strength: SLOW_STRENGTH });
+    }
+
+    emit('statusEffect:applied', {
+      target: 'monster', effectId: snapshot.id, stacks: snapshot.stacks, refreshed: false
+    });
+  }
+
+  state.pandemicTransfer = null;
+}
+
 function clearMonsterEffects() {
+  // Snapshot DoTs for Pandemic before clearing
+  snapshotForPandemic();
+
   const monster = state.currentMonster;
   if (monster) {
     monster.frozen = false;
@@ -394,6 +480,8 @@ function clearMonsterEffects() {
     monster.freezeCooldown = 0;
   }
   state.monsterStatusEffects = [];
+  // Clear burn tick multiplier and scorched debuff
+  state.burnTickMultiplier = 0;
 }
 
 function clearPlayerEffects() {
@@ -428,6 +516,7 @@ export function getPlayerEffects() {
  */
 export function init(deps = {}) {
   hurtPlayer = deps.damagePlayer;
+  getPlagueDoctorBonus = deps.getPlagueDoctorBonus || null;
 
   // Initialize runtime state
   state.monsterStatusEffects = [];
@@ -436,6 +525,8 @@ export function init(deps = {}) {
   state.playerFrozen = false;
   state.playerSlowed = false;
   state.playerSlowStrength = 0;
+  state.burnTickMultiplier = 0;
+  state.pandemicTransfer = null;
 
   // Effect application requests
   on('statusEffect:tryApply', onTryApply);
@@ -443,7 +534,11 @@ export function init(deps = {}) {
   // Clear monster effects on death/spawn transitions
   on('combat:monsterKilled', clearMonsterEffects);
   on('combat:requestImmediateSpawn', clearMonsterEffects);
-  on('combat:monsterSpawned', clearMonsterEffects);
+  // On monster spawned: clear then apply Pandemic transfer
+  on('combat:monsterSpawned', () => {
+    clearMonsterEffects();
+    applyPandemicTransfer();
+  });
   on('combat:bossTimeout', clearMonsterEffects);
   on('combat:monsterEscaped', clearMonsterEffects);
 

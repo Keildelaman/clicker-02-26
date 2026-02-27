@@ -131,6 +131,30 @@ export function initDebug(deps) {
         if (item?.uniqueEffect) console.log(`[${slot}] ${item.name}: ${item.uniqueEffect.description}`);
       }
     },
+    applyStatus: (effectId = 'bleed', stacks = 1) => {
+      if (!state.currentMonster) { console.error('No active monster'); return; }
+      emit('statusEffect:tryApply', {
+        target: 'monster', effectId, stacks,
+        source: 'debug',
+        sourceAttack: state.computedStats?.attack || 100,
+        sourceMagicPower: state.computedStats?.magicPower || 50
+      });
+      console.log(`Applied ${stacks}x ${effectId} to monster`);
+    },
+    listStatuses: () => {
+      console.log('Monster effects:', state.monsterStatusEffects.map(e => `${e.id} (${e.stacks || 1} stacks, ${e.remaining.toFixed(1)}s)`));
+      console.log('Player effects:', state.playerStatusEffects.map(e => `${e.id} (${e.stacks || 1} stacks, ${e.remaining.toFixed(1)}s)`));
+      console.log('Active buffs:', Object.keys(state.activeBuffs));
+      console.log('Scorched:', state.currentMonster?.scorched || null);
+      console.log('Burn tick mult:', state.burnTickMultiplier);
+    },
+    maxAllSkills: () => {
+      for (const [id, def] of Object.entries(SKILLS)) {
+        state.player.unlockedSkills[id] = def.maxLevel;
+      }
+      emit('skill:upgraded', {});
+      console.log('All skills maxed to level 5');
+    },
     reset: () => {
       clearSave();
       location.reload();

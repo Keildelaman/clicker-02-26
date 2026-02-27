@@ -86,7 +86,7 @@ skills.init({
   getStatusPotency: items.getStatusPotency,
   addEnergy: energy.addEnergy
 });
-statusEffects.init({ damagePlayer: health.damagePlayer });
+statusEffects.init({ damagePlayer: health.damagePlayer, getPlagueDoctorBonus: player.getPlagueDoctorBonus });
 tutorial.init();
 
 // 3. Initialize UI

@@ -16,7 +16,7 @@ import {
   BASE_PLAYER_HP, BASE_HP_REGEN,
   MAX_ENERGY, SAVE_VERSION, LEGENDARY_EFFECTS
 } from '../data/constants.js';
-import { maxHPAtLevel, baseAttackAtLevel, baseArmorAtLevel, baseMagicResistAtLevel, resolveSkillLevelData } from '../data/balance.js';
+import { maxHPAtLevel, baseAttackAtLevel, baseMagicPowerAtLevel, baseArmorAtLevel, baseMagicResistAtLevel, resolveSkillLevelData } from '../data/balance.js';
 import { SKILLS } from '../data/skills.data.js';
 
 // --- Stat Cache ---
@@ -74,6 +74,20 @@ function getPassiveSkillBonus(player, statName) {
       case 'efficient_casting':
         if (statName === 'skillEnergyCost') total += (data.costReduction / 100) * bmMult;
         break;
+      case 'affliction_mastery':
+        if (statName === 'damage') {
+          const effectCount = state.monsterStatusEffects ? state.monsterStatusEffects.length : 0;
+          const bonus = Math.min(
+            (data.dmgPerEffect / 100) * effectCount * bmMult,
+            (data.maxBonus / 100) * bmMult
+          );
+          total += bonus;
+        }
+        break;
+      case 'plague_doctor':
+        if (statName === 'statusDurationBonus') total += (data.durationBonus) * bmMult;
+        if (statName === 'statusProcBonus') total += (data.procBonus / 100) * bmMult;
+        break;
     }
   }
   return total;
@@ -127,7 +141,7 @@ export function getComputedStats() {
 
   // Base + equipment
   let attack = computeTotalAttack(player);
-  let magicPower = getEquipmentBonus(player, 'magicPower');
+  let magicPower = computeTotalMagicPower(player);
   let critChance = computeTotalCritChance(player);
   let critDamage = computeTotalCritDamage(player);
   let maxHP = computeMaxHP(player);
@@ -145,7 +159,10 @@ export function getComputedStats() {
 
   // Passive skill bonuses
   const dmgPassive = getPassiveSkillBonus(player, 'damage');
-  if (dmgPassive) attack = Math.floor(attack * (1 + dmgPassive));
+  if (dmgPassive) {
+    attack = Math.floor(attack * (1 + dmgPassive));
+    magicPower = Math.floor(magicPower * (1 + dmgPassive));
+  }
 
   critChance += getPassiveSkillBonus(player, 'critChance');
   armorPen += getPassiveSkillBonus(player, 'armorPen');
@@ -171,6 +188,7 @@ export function getComputedStats() {
   if (state.activeLegendaryEffects?.has('high_hp_damage_bonus')) {
     if (player.hp / player.maxHP > LEGENDARY_EFFECTS.HIGH_HP_THRESHOLD) {
       attack = Math.floor(attack * (1 + LEGENDARY_EFFECTS.HIGH_HP_DAMAGE_BONUS));
+      magicPower = Math.floor(magicPower * (1 + LEGENDARY_EFFECTS.HIGH_HP_DAMAGE_BONUS));
     }
   }
 
@@ -179,8 +197,10 @@ export function getComputedStats() {
   const skillEnergyCostEquip = getEquipmentBonus(player, 'skillEnergyCost');
   const skillEnergyCostPassive = getPassiveSkillBonus(player, 'skillEnergyCost');
   const skillEnergyCost = skillEnergyCostEquip + skillEnergyCostPassive;
+  const statusProcBonus = getPassiveSkillBonus(player, 'statusProcBonus');
   // Active buff bonuses
   attack = Math.floor(attack * buffFx.damageMultiplier);
+  magicPower = Math.floor(magicPower * buffFx.damageMultiplier);
   critChance += buffFx.critBonus;
   goldFind += buffFx.goldBonus;
   xpBonus += buffFx.xpBonus;
@@ -205,6 +225,7 @@ export function getComputedStats() {
     warningBonus,
     skillCooldown,
     skillEnergyCost,
+    statusProcBonus,
     damageMultiplier: buffFx.damageMultiplier,
     damageTakenMultiplier: buffFx.damageTakenMultiplier,
     reflectMultiplier: buffFx.reflectMultiplier,
@@ -220,6 +241,10 @@ export function getComputedStats() {
 
 function computeTotalAttack(player) {
   return baseAttackAtLevel(player.level) + getEquipmentBonus(player, 'attack');
+}
+
+function computeTotalMagicPower(player) {
+  return baseMagicPowerAtLevel(player.level) + getEquipmentBonus(player, 'magicPower');
 }
 
 function computeTotalCritChance(player) {
@@ -324,6 +349,20 @@ export function createNewPlayer() {
   };
 }
 
+/**
+ * Get Plague Doctor passive bonuses (duration + proc chance).
+ * Called by status-effects.js via DI.
+ * @returns {{ durationBonus: number, procBonus: number }}
+ */
+export function getPlagueDoctorBonus() {
+  const player = getPlayer();
+  if (!player) return { durationBonus: 0, procBonus: 0 };
+  return {
+    durationBonus: getPassiveSkillBonus(player, 'statusDurationBonus'),
+    procBonus: getPassiveSkillBonus(player, 'statusProcBonus')
+  };
+}
+
 // --- Initialization ---
 
 export function init(deps = {}) {
@@ -336,6 +375,9 @@ export function init(deps = {}) {
   on('skill:unequipped', invalidateStatCache);
   on('skill:buffApplied', invalidateStatCache);
   on('skill:buffExpired', invalidateStatCache);
+  // Affliction Mastery: stat cache depends on number of status effects
+  on('statusEffect:applied', invalidateStatCache);
+  on('statusEffect:expired', invalidateStatCache);
   // Only invalidate stat cache when HP crosses a threshold that affects stats.
   // Berserker passive: bonus below hpThreshold%. Titan's Greaves legendary: bonus above 80% HP.
   let lastBerserkerActive = false;

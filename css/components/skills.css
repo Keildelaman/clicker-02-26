@@ -436,3 +436,151 @@
   color: var(--success-color);
   font-weight: 700;
 }
+
+/* Damage type badge */
+.skill-card__dtype {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.skill-card__dtype--physical { color: var(--damage-physical); border-color: var(--damage-physical); }
+.skill-card__dtype--magic { color: var(--damage-magic); border-color: var(--damage-magic); }
+
+/* === Category Filter Chips === */
+.skills-category-filter {
+  display: flex;
+  gap: 6px;
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  overflow-x: auto;
+  flex-shrink: 0;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.skills-category-filter::-webkit-scrollbar { display: none; }
+
+.skills-filter-chip {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  color: var(--color-text-dim);
+  font-size: 11px;
+  font-family: var(--font-main);
+  font-weight: 600;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.skills-filter-chip--active {
+  background: var(--zone-accent);
+  border-color: var(--zone-accent);
+  color: var(--color-bg);
+}
+
+/* === Compact/Expanded Skill Cards === */
+.skill-card {
+  cursor: pointer;
+}
+
+.skill-card__compact {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.skill-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.skill-card__status-dots {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+  margin-left: 2px;
+}
+
+.skill-card__status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.skill-card__status-dot--req {
+  background: none;
+  border: 2px solid;
+}
+
+.skill-card__expanded {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding-top: var(--spacing-xs);
+  border-top: 1px solid var(--color-border);
+  margin-top: var(--spacing-xs);
+}
+
+.skill-card:not(.skill-card--expanded) .skill-card__expanded {
+  display: none;
+}
+
+/* Status effect badges (expanded) */
+.skill-card__status-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.skill-card__status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 8px;
+  border: 1px solid;
+}
+
+.skill-card__condition-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 8px;
+  background: rgba(255, 152, 0, 0.12);
+  border: 1px solid var(--color-overflow-warning);
+  color: var(--color-overflow-warning);
+}
+
+/* === Skill Bar: Condition Not Met === */
+.skill-btn--condition-not-met {
+  opacity: 0.4;
+  border-color: var(--color-overflow-warning);
+}
+
+.skill-btn__lock {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  font-size: 10px;
+  line-height: 1;
+}
+
+/* Damage type accent on skill buttons */
+.skill-btn--dtype-physical { border-bottom: 2px solid var(--damage-physical); }
+.skill-btn--dtype-magic { border-bottom: 2px solid var(--damage-magic); }

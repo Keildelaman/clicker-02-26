@@ -30,6 +30,7 @@ export const OVERKILL_CHAIN_MAX = 3;        // Max consecutive overkill chains t
 
 // Combat Defaults
 export const BASE_PLAYER_ATTACK = 5;
+export const BASE_PLAYER_MAGIC_POWER = 5;
 export const BASE_CRIT_CHANCE = 0.05;
 export const BASE_CRIT_MULTIPLIER = 2.0;
 export const MIN_DAMAGE = 1;

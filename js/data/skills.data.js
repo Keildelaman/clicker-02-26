@@ -1,7 +1,7 @@
 /**
- * skills.data.js - Skill Definitions (v2)
+ * skills.data.js - Skill Definitions (v2 + Status Overhaul)
  *
- * 25 skills: 15 active + 10 passive. New schema with per-level
+ * 46 skills: 31 active + 15 passive. New schema with per-level
  * energyCost/cooldown (seconds), tags, mechanic, unlockLevel.
  * Pure data — no imports, no logic.
  *
@@ -373,7 +373,414 @@ export const SKILLS = {
   },
 
   // ===========================
-  // PASSIVE SKILLS (10)
+  // STATUS EFFECT SKILLS (16 active)
+  // ===========================
+
+  // --- BLEED ---
+
+  lacerate: {
+    id: 'lacerate',
+    name: 'Lacerate',
+    description: 'Deal {damage}% damage. Apply 2 bleed stacks. +{bonusPerStack}% per existing bleed stack.',
+    category: 'speed',
+    type: 'active',
+    damageType: 'physical',
+    tags: ['speed', 'attack', 'status'],
+    mechanic: 'instant',
+    statusEffect: { type: 'bleed', chance: 1.0, stacks: 2 },
+    icon: '\uD83E\uDE78',
+    unlockLevel: 17,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { damage: 200, bonusPerStack: 15, bleedStacks: 2, cooldown: 8, energyCost: 20 },
+      2: { damage: 250, bonusPerStack: 17, bleedStacks: 2, cooldown: 8, energyCost: 20 },
+      3: { damage: 300, bonusPerStack: 20, bleedStacks: 2, cooldown: 7, energyCost: 18 },
+      4: { damage: 350, bonusPerStack: 22, bleedStacks: 2, cooldown: 7, energyCost: 18 },
+      5: { damage: 400, bonusPerStack: 25, bleedStacks: 2, cooldown: 6, energyCost: 15 }
+    }
+  },
+
+  rupture: {
+    id: 'rupture',
+    name: 'Rupture',
+    description: 'Consume ALL bleed stacks, deal {damagePerStack}% per stack. Requires Bleed.',
+    category: 'status',
+    type: 'active',
+    damageType: 'physical',
+    tags: ['status', 'attack'],
+    mechanic: 'instant',
+    condition: { requiresStatus: 'bleed', minStacks: 1 },
+    icon: '\uD83D\uDCA2',
+    unlockLevel: 40,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { damagePerStack: 250, cooldown: 10, energyCost: 20 },
+      2: { damagePerStack: 300, cooldown: 10, energyCost: 20 },
+      3: { damagePerStack: 375, cooldown: 9,  energyCost: 18 },
+      4: { damagePerStack: 450, cooldown: 8,  energyCost: 16 },
+      5: { damagePerStack: 550, cooldown: 7,  energyCost: 15 }
+    }
+  },
+
+  // --- POISON ---
+
+  envenom: {
+    id: 'envenom',
+    name: 'Envenom',
+    description: 'For {duration}s, ALL hits apply 1 poison stack.',
+    category: 'status',
+    type: 'active',
+    tags: ['status', 'buff'],
+    mechanic: 'buff',
+    icon: '\uD83E\uDDA0',
+    unlockLevel: 23,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { duration: 4,  cooldown: 16, energyCost: 25 },
+      2: { duration: 5,  cooldown: 15, energyCost: 25 },
+      3: { duration: 5,  cooldown: 14, energyCost: 23 },
+      4: { duration: 6,  cooldown: 13, energyCost: 21 },
+      5: { duration: 7,  cooldown: 12, energyCost: 20 }
+    }
+  },
+
+  venomous_surge: {
+    id: 'venomous_surge',
+    name: 'Venomous Surge',
+    description: 'Deal {baseDamage}% + {bonusPerStack}% per poison stack (not consumed). Requires 3+ Poison.',
+    category: 'status',
+    type: 'active',
+    damageType: 'physical',
+    tags: ['status', 'attack'],
+    mechanic: 'instant',
+    condition: { requiresStatus: 'poison', minStacks: 3 },
+    icon: '\uD83D\uDC0D',
+    unlockLevel: 46,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { baseDamage: 300, bonusPerStack: 80,  cooldown: 10, energyCost: 25 },
+      2: { baseDamage: 350, bonusPerStack: 100, cooldown: 10, energyCost: 25 },
+      3: { baseDamage: 400, bonusPerStack: 120, cooldown: 9,  energyCost: 23 },
+      4: { baseDamage: 500, bonusPerStack: 140, cooldown: 8,  energyCost: 21 },
+      5: { baseDamage: 600, bonusPerStack: 170, cooldown: 7,  energyCost: 20 }
+    }
+  },
+
+  noxious_burst: {
+    id: 'noxious_burst',
+    name: 'Noxious Burst',
+    description: 'Consume ALL poison, deal {damagePerStack}% per stack, re-apply {reapplyStacks}. Requires 5+ Poison.',
+    category: 'status',
+    type: 'active',
+    damageType: 'physical',
+    tags: ['status', 'attack'],
+    mechanic: 'instant',
+    condition: { requiresStatus: 'poison', minStacks: 5 },
+    icon: '\u2623\uFE0F',
+    unlockLevel: 78,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { damagePerStack: 150, reapplyStacks: 2, cooldown: 12, energyCost: 25 },
+      2: { damagePerStack: 180, reapplyStacks: 2, cooldown: 11, energyCost: 25 },
+      3: { damagePerStack: 210, reapplyStacks: 3, cooldown: 10, energyCost: 23 },
+      4: { damagePerStack: 250, reapplyStacks: 3, cooldown: 9,  energyCost: 21 },
+      5: { damagePerStack: 300, reapplyStacks: 4, cooldown: 8,  energyCost: 20 }
+    }
+  },
+
+  // --- BURN ---
+
+  immolate: {
+    id: 'immolate',
+    name: 'Immolate',
+    description: 'For {duration}s, ALL attacks apply Burn and refresh Burn duration.',
+    category: 'mage',
+    type: 'active',
+    tags: ['spell', 'buff', 'status'],
+    mechanic: 'buff',
+    icon: '\uD83D\uDD25',
+    unlockLevel: 54,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { duration: 4,  cooldown: 18, energyCost: 35 },
+      2: { duration: 5,  cooldown: 17, energyCost: 35 },
+      3: { duration: 5,  cooldown: 16, energyCost: 33 },
+      4: { duration: 6,  cooldown: 15, energyCost: 30 },
+      5: { duration: 7,  cooldown: 14, energyCost: 28 }
+    }
+  },
+
+  inferno: {
+    id: 'inferno',
+    name: 'Inferno',
+    description: 'Deal {damage}% magic damage. If burning: supercharge next burn tick ({burnTickMult}x).',
+    category: 'mage',
+    type: 'active',
+    damageType: 'magic',
+    tags: ['spell', 'attack', 'status'],
+    mechanic: 'instant',
+    icon: '\u2604\uFE0F',
+    unlockLevel: 44,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { damage: 350, burnTickMult: 3,   cooldown: 8, energyCost: 22 },
+      2: { damage: 400, burnTickMult: 3.5, cooldown: 8, energyCost: 22 },
+      3: { damage: 500, burnTickMult: 4,   cooldown: 7, energyCost: 20 },
+      4: { damage: 600, burnTickMult: 4.5, cooldown: 7, energyCost: 18 },
+      5: { damage: 750, burnTickMult: 5,   cooldown: 6, energyCost: 15 }
+    }
+  },
+
+  combustion: {
+    id: 'combustion',
+    name: 'Combustion',
+    description: 'Requires Burn. Consume burn, deal {damage}% magic damage. Target takes +{magicVuln}% magic damage for {vulnDuration}s.',
+    category: 'status',
+    type: 'active',
+    damageType: 'magic',
+    tags: ['status', 'attack', 'spell'],
+    mechanic: 'instant',
+    condition: { requiresStatus: 'burn' },
+    icon: '\uD83D\uDCA3',
+    unlockLevel: 74,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { damage: 600,  magicVuln: 15, vulnDuration: 4, cooldown: 14, energyCost: 30 },
+      2: { damage: 750,  magicVuln: 18, vulnDuration: 4, cooldown: 13, energyCost: 30 },
+      3: { damage: 900,  magicVuln: 20, vulnDuration: 4, cooldown: 12, energyCost: 28 },
+      4: { damage: 1100, magicVuln: 25, vulnDuration: 4, cooldown: 11, energyCost: 26 },
+      5: { damage: 1400, magicVuln: 30, vulnDuration: 4, cooldown: 10, energyCost: 25 }
+    }
+  },
+
+  // --- SLOW ---
+
+  frostbolt: {
+    id: 'frostbolt',
+    name: 'Frostbolt',
+    description: 'Deal {damage}% magic damage, guaranteed slow. If slowed: +{bonusSlowStr}% slow, refund {refundPercent}% energy.',
+    category: 'mage',
+    type: 'active',
+    damageType: 'magic',
+    tags: ['spell', 'attack', 'status'],
+    mechanic: 'instant',
+    statusEffect: { type: 'slow', chance: 1.0 },
+    icon: '\u2744\uFE0F',
+    unlockLevel: 27,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { damage: 250, bonusSlowStr: 15, refundPercent: 50, cooldown: 7, energyCost: 18 },
+      2: { damage: 300, bonusSlowStr: 18, refundPercent: 50, cooldown: 7, energyCost: 18 },
+      3: { damage: 350, bonusSlowStr: 20, refundPercent: 50, cooldown: 6, energyCost: 16 },
+      4: { damage: 400, bonusSlowStr: 25, refundPercent: 50, cooldown: 6, energyCost: 16 },
+      5: { damage: 500, bonusSlowStr: 30, refundPercent: 50, cooldown: 5, energyCost: 14 }
+    }
+  },
+
+  permafrost: {
+    id: 'permafrost',
+    name: 'Permafrost',
+    description: 'Deal {damage}% magic damage. Extend ALL status durations by {durationExtend}s. Requires Slow.',
+    category: 'status',
+    type: 'active',
+    damageType: 'magic',
+    tags: ['status', 'attack', 'spell'],
+    mechanic: 'instant',
+    condition: { requiresStatus: 'slow' },
+    icon: '\u26C4',
+    unlockLevel: 58,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { damage: 200, durationExtend: 1.5, cooldown: 12, energyCost: 22 },
+      2: { damage: 250, durationExtend: 1.8, cooldown: 11, energyCost: 22 },
+      3: { damage: 300, durationExtend: 2.0, cooldown: 10, energyCost: 20 },
+      4: { damage: 350, durationExtend: 2.5, cooldown: 9,  energyCost: 18 },
+      5: { damage: 400, durationExtend: 3.0, cooldown: 8,  energyCost: 16 }
+    }
+  },
+
+  deep_chill: {
+    id: 'deep_chill',
+    name: 'Deep Chill',
+    description: 'Deal {damage}% magic damage. Convert slow to freeze. Requires Slow.',
+    category: 'status',
+    type: 'active',
+    damageType: 'magic',
+    tags: ['status', 'attack', 'spell'],
+    mechanic: 'instant',
+    condition: { requiresStatus: 'slow' },
+    icon: '\uD83E\uDDCA',
+    unlockLevel: 66,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { damage: 400, cooldown: 16, energyCost: 28 },
+      2: { damage: 500, cooldown: 15, energyCost: 28 },
+      3: { damage: 600, cooldown: 14, energyCost: 26 },
+      4: { damage: 750, cooldown: 13, energyCost: 24 },
+      5: { damage: 900, cooldown: 12, energyCost: 22 }
+    }
+  },
+
+  // --- FREEZE ---
+
+  frost_nova: {
+    id: 'frost_nova',
+    name: 'Frost Nova',
+    description: 'Deal {damage}% magic damage. Guaranteed freeze ({freezeDuration}s).',
+    category: 'mage',
+    type: 'active',
+    damageType: 'magic',
+    tags: ['spell', 'attack', 'status'],
+    mechanic: 'instant',
+    icon: '\u2728',
+    unlockLevel: 34,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { damage: 200, freezeDuration: 1.5, cooldown: 18, energyCost: 30 },
+      2: { damage: 250, freezeDuration: 1.7, cooldown: 17, energyCost: 30 },
+      3: { damage: 300, freezeDuration: 2.0, cooldown: 16, energyCost: 28 },
+      4: { damage: 350, freezeDuration: 2.2, cooldown: 15, energyCost: 26 },
+      5: { damage: 400, freezeDuration: 2.5, cooldown: 14, energyCost: 25 }
+    }
+  },
+
+  glacial_shatter: {
+    id: 'glacial_shatter',
+    name: 'Glacial Shatter',
+    description: 'Consume freeze, deal {damage}% magic damage, apply slow {slowDuration}s. Requires Freeze.',
+    category: 'status',
+    type: 'active',
+    damageType: 'magic',
+    tags: ['status', 'attack', 'spell'],
+    mechanic: 'instant',
+    condition: { requiresStatus: 'freeze' },
+    icon: '\uD83D\uDC8E',
+    unlockLevel: 62,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { damage: 800,  slowDuration: 5.0, cooldown: 14, energyCost: 25 },
+      2: { damage: 1000, slowDuration: 5.5, cooldown: 13, energyCost: 25 },
+      3: { damage: 1200, slowDuration: 6.0, cooldown: 12, energyCost: 23 },
+      4: { damage: 1500, slowDuration: 6.5, cooldown: 11, energyCost: 21 },
+      5: { damage: 1800, slowDuration: 7.0, cooldown: 10, energyCost: 20 }
+    }
+  },
+
+  // --- CROSS-STATUS ---
+
+  plague_touch: {
+    id: 'plague_touch',
+    name: 'Plague Touch',
+    description: 'Next click deals {damage}% + applies Bleed ({bleedStacks}), Poison ({poisonStacks}), Slow.',
+    category: 'status',
+    type: 'active',
+    damageType: 'physical',
+    tags: ['status', 'attack'],
+    mechanic: 'next_click_hit',
+    icon: '\u2620\uFE0F',
+    unlockLevel: 72,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { damage: 300, bleedStacks: 1, poisonStacks: 2, cooldown: 14, energyCost: 35 },
+      2: { damage: 350, bleedStacks: 1, poisonStacks: 3, cooldown: 13, energyCost: 35 },
+      3: { damage: 400, bleedStacks: 2, poisonStacks: 3, cooldown: 12, energyCost: 33 },
+      4: { damage: 500, bleedStacks: 2, poisonStacks: 4, cooldown: 11, energyCost: 30 },
+      5: { damage: 600, bleedStacks: 3, poisonStacks: 5, cooldown: 10, energyCost: 28 }
+    }
+  },
+
+  pandemic: {
+    id: 'pandemic',
+    name: 'Pandemic',
+    description: 'For {duration}s, dying monsters transfer DoTs to next spawn at {transferPercent}% duration.',
+    category: 'status',
+    type: 'active',
+    tags: ['status', 'buff'],
+    mechanic: 'buff',
+    icon: '\uD83E\uDDA0',
+    unlockLevel: 68,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { duration: 10, transferPercent: 50, cooldown: 25, energyCost: 30 },
+      2: { duration: 12, transferPercent: 55, cooldown: 24, energyCost: 30 },
+      3: { duration: 14, transferPercent: 60, cooldown: 22, energyCost: 28 },
+      4: { duration: 16, transferPercent: 70, cooldown: 20, energyCost: 25 },
+      5: { duration: 20, transferPercent: 80, cooldown: 18, energyCost: 22 }
+    }
+  },
+
+  cataclysm: {
+    id: 'cataclysm',
+    name: 'Cataclysm',
+    description: 'Consume ALL status effects. Deal {damagePerEffect}% per effect + {stackBonus}% per stack. Requires 3+ effects.',
+    category: 'status',
+    type: 'active',
+    damageType: 'magic',
+    tags: ['status', 'attack', 'spell'],
+    mechanic: 'instant',
+    condition: { requiresStatusCount: 3 },
+    icon: '\uD83C\uDF0B',
+    unlockLevel: 90,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { damagePerEffect: 400, stackBonus: 50,  cooldown: 20, energyCost: 40 },
+      2: { damagePerEffect: 500, stackBonus: 60,  cooldown: 19, energyCost: 40 },
+      3: { damagePerEffect: 600, stackBonus: 70,  cooldown: 18, energyCost: 38 },
+      4: { damagePerEffect: 750, stackBonus: 85,  cooldown: 16, energyCost: 35 },
+      5: { damagePerEffect: 900, stackBonus: 100, cooldown: 14, energyCost: 30 }
+    }
+  },
+
+  // ===========================
+  // PASSIVE SKILLS (10 + 5 new = 15)
   // ===========================
 
   click_mastery: {
@@ -603,6 +1010,125 @@ export const SKILLS = {
       3: { idleRegen: 5 },
       4: { idleRegen: 6 },
       5: { idleRegen: 8 }
+    }
+  },
+
+  // ===========================
+  // STATUS PASSIVE SKILLS (5 new)
+  // ===========================
+
+  affliction_mastery: {
+    id: 'affliction_mastery',
+    name: 'Affliction Mastery',
+    description: '+{dmgPerEffect}% damage per active status effect on target (max {maxBonus}%).',
+    category: 'status',
+    type: 'passive',
+    tags: ['status'],
+    mechanic: 'passive',
+    icon: '\u2623\uFE0F',
+    unlockLevel: 38,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { dmgPerEffect: 6,  maxBonus: 30 },
+      2: { dmgPerEffect: 8,  maxBonus: 40 },
+      3: { dmgPerEffect: 9,  maxBonus: 45 },
+      4: { dmgPerEffect: 10, maxBonus: 50 },
+      5: { dmgPerEffect: 12, maxBonus: 60 }
+    }
+  },
+
+  toxic_resilience: {
+    id: 'toxic_resilience',
+    name: 'Toxic Resilience',
+    description: 'DoT damage you deal heals you for {healPercent}%.',
+    category: 'sustain',
+    type: 'passive',
+    tags: ['sustain', 'status'],
+    mechanic: 'passive',
+    icon: '\uD83E\uDDEA',
+    unlockLevel: 50,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { healPercent: 5 },
+      2: { healPercent: 7 },
+      3: { healPercent: 10 },
+      4: { healPercent: 12 },
+      5: { healPercent: 15 }
+    }
+  },
+
+  venom_efficiency: {
+    id: 'venom_efficiency',
+    name: 'Venom Efficiency',
+    description: 'Poison ticks restore {energyPerStack} energy per stack.',
+    category: 'status',
+    type: 'passive',
+    tags: ['status', 'energy'],
+    mechanic: 'passive',
+    icon: '\uD83E\uDDEB',
+    unlockLevel: 56,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { energyPerStack: 1 },
+      2: { energyPerStack: 1.5 },
+      3: { energyPerStack: 2 },
+      4: { energyPerStack: 2.5 },
+      5: { energyPerStack: 3 }
+    }
+  },
+
+  frostbite_passive: {
+    id: 'frostbite_passive',
+    name: 'Frostbite',
+    description: 'Applying Slow or Freeze reduces all skill cooldowns by {cdr}s.',
+    category: 'status',
+    type: 'passive',
+    tags: ['status'],
+    mechanic: 'passive',
+    icon: '\u2744\uFE0F',
+    unlockLevel: 70,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { cdr: 1.0 },
+      2: { cdr: 1.2 },
+      3: { cdr: 1.5 },
+      4: { cdr: 1.8 },
+      5: { cdr: 2.0 }
+    }
+  },
+
+  plague_doctor: {
+    id: 'plague_doctor',
+    name: 'Plague Doctor',
+    description: 'Status durations +{durationBonus}%. Status proc chances +{procBonus}%.',
+    category: 'status',
+    type: 'passive',
+    tags: ['status'],
+    mechanic: 'passive',
+    icon: '\uD83E\uDE7A',
+    unlockLevel: 82,
+    unlockCost: 1,
+    upgradeCost: 1,
+    maxLevel: 5,
+    mutation: null,
+    levels: {
+      1: { durationBonus: 15, procBonus: 5 },
+      2: { durationBonus: 20, procBonus: 7 },
+      3: { durationBonus: 25, procBonus: 10 },
+      4: { durationBonus: 30, procBonus: 12 },
+      5: { durationBonus: 40, procBonus: 15 }
     }
   }
 };

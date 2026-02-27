@@ -81,6 +81,41 @@ function updateSkillLevelState() {
 }
 
 /**
+ * Check if a conditional skill's requirements are met.
+ * @param {Object} condition - Skill condition definition
+ * @returns {{ met: boolean, reason: string|null }}
+ */
+export function checkSkillCondition(condition) {
+  if (!condition) return { met: true, reason: null };
+
+  const monster = state.currentMonster;
+  const effects = state.monsterStatusEffects;
+
+  // requiresStatusCount: need N different status effects active
+  if (condition.requiresStatusCount) {
+    const uniqueEffects = new Set(effects.map(e => e.id));
+    if (uniqueEffects.size < condition.requiresStatusCount) {
+      return { met: false, reason: `Requires ${condition.requiresStatusCount}+ status effects` };
+    }
+    return { met: true, reason: null };
+  }
+
+  // requiresStatus: need a specific status effect (optionally with minStacks)
+  if (condition.requiresStatus) {
+    const effect = effects.find(e => e.id === condition.requiresStatus);
+    if (!effect) {
+      return { met: false, reason: `Requires ${condition.requiresStatus} on target` };
+    }
+    if (condition.minStacks && effect.stacks < condition.minStacks) {
+      return { met: false, reason: `Requires ${condition.minStacks}+ ${condition.requiresStatus} stacks` };
+    }
+    return { met: true, reason: null };
+  }
+
+  return { met: true, reason: null };
+}
+
+/**
  * Use an active skill by ID.
  * @param {string} skillId
  * @returns {boolean} Whether the skill was used successfully
@@ -105,6 +140,15 @@ export function useSkill(skillId) {
 
   // Validate: not on cooldown
   if (getSkillCooldownRemaining(skillId) > 0) return false;
+
+  // Validate: condition met (status effects on target)
+  if (skillDef.condition) {
+    const condResult = checkSkillCondition(skillDef.condition);
+    if (!condResult.met) {
+      emit('skill:useFailed', { skillId, reason: 'condition', message: condResult.reason });
+      return false;
+    }
+  }
 
   // Validate: enough energy (with cost reduction from equipment)
   const stats = computeStats ? computeStats() : {};
@@ -136,8 +180,9 @@ export function useSkill(skillId) {
     } else if (skillDef.mechanic === 'instant') {
       // Instant skills: roll and apply now (damage is immediate)
       const se = skillDef.statusEffect;
-      if (state.currentMonster && state.combatState === 'active' && Math.random() < se.chance) {
-        const stats = computeStats ? computeStats() : {};
+      const stats = computeStats ? computeStats() : {};
+      const procBonus = stats.statusProcBonus || 0;
+      if (state.currentMonster && state.combatState === 'active' && Math.random() < (se.chance + procBonus)) {
         emit('statusEffect:tryApply', {
           target: 'monster',
           effectId: se.type,
@@ -416,7 +461,8 @@ export function releaseChannel() {
   const mult = ch.minMult + t * (ch.maxMult - ch.minMult);
 
   const stats = computeStats ? computeStats() : {};
-  let damage = Math.floor((stats.attack || 1) * (mult / 100));
+  const baseDmg = ch.damageType === 'magic' ? (stats.magicPower || 1) : (stats.attack || 1);
+  let damage = Math.floor(baseDmg * (mult / 100));
 
   const isCrit = Math.random() < (stats.critChance || 0);
   if (isCrit) damage = Math.floor(damage * (stats.critDamage || 2.0));
@@ -652,7 +698,7 @@ export function init(deps = {}) {
   getStatusPotency = deps.getStatusPotency || null;
 
   // Initialize extracted modules with shared deps
-  initEffects({ invalidateStatCache: deps.invalidateStatCache, notifyCooldownReady, addEnergy: deps.addEnergy });
+  initEffects({ invalidateStatCache: deps.invalidateStatCache, notifyCooldownReady, addEnergy: deps.addEnergy, getComputedStats: deps.getComputedStats });
   initPassives({ invalidateStatCache: deps.invalidateStatCache, notifyCooldownReady, getEffectiveSkillLevel, addEnergy: deps.addEnergy });
 
   on('player:levelUp', onLevelUp);
@@ -662,10 +708,16 @@ export function init(deps = {}) {
   // Intent events from UI
   on('skill:requestUse', ({ skillId }) => {
     if (!useSkill(skillId)) {
+      // useSkill already emits for 'condition' failures, so check the other cases
       const player = getPlayer();
+      const skillDef = SKILLS[skillId];
       const remaining = getSkillCooldownRemaining(skillId);
       if (remaining > 0) {
         emit('skill:useFailed', { skillId, reason: 'cooldown' });
+      } else if (skillDef?.condition) {
+        const condResult = checkSkillCondition(skillDef.condition);
+        if (!condResult.met) return; // already emitted by useSkill
+        emit('skill:useFailed', { skillId, reason: 'energy' });
       } else {
         emit('skill:useFailed', { skillId, reason: 'energy' });
       }

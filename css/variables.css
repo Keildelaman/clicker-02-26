@@ -50,6 +50,7 @@
   --skill-color-mage: #64b5f6;
   --skill-color-crit: #a335ee;
   --skill-color-speed: #1eff00;
+  --skill-color-status: #e040fb;
 
   /* Status Effect Colors */
   --effect-bleed: #e53935;

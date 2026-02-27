@@ -184,6 +184,90 @@ export const PASSIVE_HANDLERS = {
   focused_mind: {
     onEquip(skillId, level) {},
     onUnequip(skillId) {}
+  },
+
+  // ===========================
+  // STATUS PASSIVE HANDLERS (5 new)
+  // ===========================
+
+  // Stat-only passive: bonus applied via getPassiveSkillBonus() in player.js.
+  // Damage bonus per active status effect on target. System-checked in combat.
+  affliction_mastery: {
+    onEquip(skillId, level) {},
+    onUnequip(skillId) {}
+  },
+
+  // DoT damage heals player
+  toxic_resilience: {
+    onEquip(skillId, level) {
+      const data = SKILLS[skillId].levels[level];
+      const fn = ({ target, effectId, damage }) => {
+        if (target !== 'monster') return;
+        const player = getPlayer();
+        if (!player) return;
+        const heal = Math.floor(damage * (data.healPercent / 100));
+        if (heal > 0) {
+          player.hp = Math.min(player.hp + heal, player.maxHP);
+          player.statistics.totalHealingDone += heal;
+          emit('player:hpChanged', { hp: player.hp, maxHP: player.maxHP });
+        }
+      };
+      passiveHandlerRefs[skillId] = [{ event: 'statusEffect:tick', fn }];
+      on('statusEffect:tick', fn);
+    },
+    onUnequip(skillId) { cleanupPassive(skillId); }
+  },
+
+  // Poison ticks restore energy per stack
+  venom_efficiency: {
+    onEquip(skillId, level) {
+      const data = SKILLS[skillId].levels[level];
+      const fn = ({ target, effectId, stacks }) => {
+        if (target !== 'monster' || effectId !== 'poison') return;
+        const energy = data.energyPerStack * (stacks || 1);
+        if (energy > 0 && addEnergy) addEnergy(energy);
+      };
+      passiveHandlerRefs[skillId] = [{ event: 'statusEffect:tick', fn }];
+      on('statusEffect:tick', fn);
+    },
+    onUnequip(skillId) { cleanupPassive(skillId); }
+  },
+
+  // Applying Slow or Freeze reduces all skill cooldowns
+  frostbite_passive: {
+    onEquip(skillId, level) {
+      const data = SKILLS[skillId].levels[level];
+      const fn = ({ target, effectId, refreshed }) => {
+        if (target !== 'monster') return;
+        if (effectId !== 'slow' && effectId !== 'freeze') return;
+        if (refreshed) return; // Only on fresh applications
+        const player = getPlayer();
+        if (!player) return;
+        for (const equippedId of player.equippedActive) {
+          if (!equippedId) continue;
+          if ((player.skillCooldowns[equippedId] || 0) > 0) {
+            player.skillCooldowns[equippedId] = Math.max(
+              player.skillCooldowns[equippedId] - data.cdr, 0
+            );
+            if (player.skillCooldowns[equippedId] <= 0) {
+              player.skillCooldowns[equippedId] = 0;
+              notifyCooldownReady(equippedId);
+            }
+          }
+        }
+        emit('skill:effectTriggered', { effect: 'frostbite_cdr', cdr: data.cdr });
+      };
+      passiveHandlerRefs[skillId] = [{ event: 'statusEffect:applied', fn }];
+      on('statusEffect:applied', fn);
+    },
+    onUnequip(skillId) { cleanupPassive(skillId); }
+  },
+
+  // Stat-only passive: status durations + proc chances.
+  // System-checked in status-effects.js (duration) and combat.js (proc chance).
+  plague_doctor: {
+    onEquip(skillId, level) {},
+    onUnequip(skillId) {}
   }
 };
 

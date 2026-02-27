@@ -18,16 +18,16 @@ import { beyondMaxSkillMultiplier } from '../data/balance.js';
 import { showToast } from './toasts.js';
 
 // Category grouping constants
-const CATEGORY_ORDER = ['speed', 'power', 'crit', 'mage', 'utility', 'sustain', 'combo', 'energy'];
+const CATEGORY_ORDER = ['speed', 'power', 'crit', 'mage', 'status', 'utility', 'sustain', 'combo', 'energy'];
 const CATEGORY_LABELS = {
   speed: 'Speed', power: 'Power', crit: 'Critical',
-  mage: 'Magic', utility: 'Utility', sustain: 'Sustain',
-  combo: 'Combo', energy: 'Energy'
+  mage: 'Magic', status: 'Status', utility: 'Utility',
+  sustain: 'Sustain', combo: 'Combo', energy: 'Energy'
 };
 const CATEGORY_COLORS = {
   speed: '#1eff00', power: '#ff8000', crit: '#a335ee',
-  mage: '#0070dd', utility: '#e6cc80', sustain: '#1eff00',
-  combo: '#ff8000', energy: '#ffdd00'
+  mage: '#0070dd', status: '#e040fb', utility: '#e6cc80',
+  sustain: '#1eff00', combo: '#ff8000', energy: '#ffdd00'
 };
 const MECHANIC_LABELS = {
   next_click_hit: 'Hit Mod', next_click_click: 'Click Mod',
@@ -36,11 +36,23 @@ const MECHANIC_LABELS = {
   passive: 'Passive'
 };
 
+// Status effect display info
+const STATUS_EFFECT_DISPLAY = {
+  bleed:  { color: 'var(--effect-bleed)',  label: 'Bleed',  icon: '\uD83E\uDE78' },
+  poison: { color: 'var(--effect-poison)', label: 'Poison', icon: '\u2620' },
+  burn:   { color: 'var(--effect-burn)',   label: 'Burn',   icon: '\uD83D\uDD25' },
+  slow:   { color: 'var(--effect-slow)',   label: 'Slow',   icon: '\u2744' },
+  freeze: { color: 'var(--effect-freeze)', label: 'Freeze', icon: '\u2748' }
+};
+
 // DOM refs
 let spDisplay;
 let skillsList;
 let equippedContainer;
+let categoryFilterContainer;
 let activeTab = 'active';
+let activeFilter = 'all'; // 'all' or category name
+let expandedSkillId = null; // accordion: only one expanded at a time
 let skillBarSlots = [];
 let cooldownIntervalId = null;
 
@@ -50,6 +62,7 @@ export function init() {
   spDisplay = document.getElementById('skills-sp-display');
   skillsList = document.getElementById('skills-list');
   equippedContainer = document.getElementById('skills-equipped');
+  categoryFilterContainer = document.getElementById('skills-category-filter');
 
   // Cache skill bar slot elements
   for (let i = 0; i < ACTIVE_SKILL_SLOTS; i++) {
@@ -77,7 +90,18 @@ export function init() {
     });
   }
 
-  // Delegated click handler for skill cards (unlock, upgrade, equip, unequip, respec)
+  // Category filter chip clicks
+  if (categoryFilterContainer) {
+    categoryFilterContainer.addEventListener('click', (e) => {
+      const chip = e.target.closest('.skills-filter-chip');
+      if (!chip) return;
+      activeFilter = chip.dataset.category;
+      expandedSkillId = null;
+      renderSkillsScreen();
+    });
+  }
+
+  // Delegated click handler for skill cards (unlock, upgrade, equip, unequip, respec, expand)
   if (skillsList) {
     skillsList.addEventListener('click', (e) => {
       const actionBtn = e.target.closest('[data-action]');
@@ -92,6 +116,17 @@ export function init() {
         const cost = RESPEC_COSTS[costIndex];
         if (confirm(`Reset ALL skills for ${cost.toLocaleString()} gold?\nYou'll get your SP back.`)) {
           emit('skill:requestRespec');
+        }
+        return;
+      }
+      // Expand/collapse accordion — click on card header area
+      const card = e.target.closest('.skill-card');
+      if (card && !e.target.closest('.skill-card__actions') && !e.target.closest('[data-action]')) {
+        const skillId = card.dataset.skillId;
+        if (skillId) {
+          expandedSkillId = expandedSkillId === skillId ? null : skillId;
+          renderSkillCards();
+          renderRespecButton();
         }
       }
     });
@@ -131,9 +166,11 @@ export function init() {
     showToast('Skills reset! SP refunded.', 'success', 3000);
     renderSkillsScreen(); renderSkillBar();
   });
-  on('skill:useFailed', ({ reason }) => {
+  on('skill:useFailed', ({ reason, message }) => {
     if (reason === 'energy') {
       showToast('Not enough energy!', 'error', 1500);
+    } else if (reason === 'condition') {
+      showToast(message || 'Condition not met!', 'error', 1500);
     }
   });
   on('sp:gained', ({ amount, source }) => {
@@ -169,6 +206,8 @@ export function onShow() {
 
 function switchTab(tab) {
   activeTab = tab;
+  activeFilter = 'all';
+  expandedSkillId = null;
   document.querySelectorAll('.skills-tab').forEach(t => {
     t.classList.toggle('skills-tab--active', t.dataset.tab === tab);
   });
@@ -187,9 +226,32 @@ function renderSkillsScreen() {
   if (!player || !skillsList) return;
 
   updateSP();
+  renderCategoryFilters();
   renderEquippedSlots();
   renderSkillCards();
   renderRespecButton();
+}
+
+function renderCategoryFilters() {
+  if (!categoryFilterContainer) return;
+
+  const filteredSkills = Object.values(SKILLS).filter(s =>
+    activeTab === 'active' ? s.type === 'active' : s.type === 'passive'
+  );
+
+  // Get unique categories present in current tab
+  const categories = new Set(filteredSkills.map(s => s.category));
+
+  let html = `<button class="skills-filter-chip ${activeFilter === 'all' ? 'skills-filter-chip--active' : ''}" data-category="all">All</button>`;
+
+  for (const cat of CATEGORY_ORDER) {
+    if (!categories.has(cat)) continue;
+    const color = CATEGORY_COLORS[cat] || '#fff';
+    const isActive = activeFilter === cat;
+    html += `<button class="skills-filter-chip ${isActive ? 'skills-filter-chip--active' : ''}" data-category="${cat}" style="${isActive ? `background:${color}33; border-color:${color}; color:${color}` : `border-color:${color}40; color:${color}90`}">${CATEGORY_LABELS[cat] || cat}</button>`;
+  }
+
+  categoryFilterContainer.innerHTML = html;
 }
 
 function renderEquippedSlots() {
@@ -224,9 +286,14 @@ function renderSkillCards() {
   const player = getPlayer();
   if (!skillsList || !player) return;
 
-  const filteredSkills = Object.values(SKILLS).filter(s =>
+  let filteredSkills = Object.values(SKILLS).filter(s =>
     activeTab === 'active' ? s.type === 'active' : s.type === 'passive'
   );
+
+  // Apply category filter
+  if (activeFilter !== 'all') {
+    filteredSkills = filteredSkills.filter(s => s.category === activeFilter);
+  }
 
   // Group by category
   const grouped = {};
@@ -244,11 +311,15 @@ function renderSkillCards() {
   for (const cat of CATEGORY_ORDER) {
     if (!grouped[cat] || grouped[cat].length === 0) continue;
     const color = CATEGORY_COLORS[cat] || '#fff';
-    html += `<div class="skills-tier-header" style="border-color: ${color}; color: ${color};">
-      ${CATEGORY_LABELS[cat] || cat}
-    </div>`;
+    // Only show category headers when showing all
+    if (activeFilter === 'all') {
+      html += `<div class="skills-tier-header" style="border-color: ${color}; color: ${color};">
+        ${CATEGORY_LABELS[cat] || cat}
+      </div>`;
+    }
     for (const skillDef of grouped[cat]) {
-      html += renderSkillCard(skillDef, player);
+      const isExpanded = expandedSkillId === skillDef.id;
+      html += renderSkillCard(skillDef, player, isExpanded);
     }
   }
 
@@ -276,7 +347,66 @@ function renderRespecButton() {
   skillsList.appendChild(section);
 }
 
-function renderSkillCard(skillDef, player) {
+/**
+ * Build status effect dot indicators (compact mode) or full badges (expanded mode).
+ */
+function renderStatusDots(skillDef) {
+  const dots = [];
+  // Direct status effect on skill
+  if (skillDef.statusEffect) {
+    const se = STATUS_EFFECT_DISPLAY[skillDef.statusEffect.type];
+    if (se) {
+      dots.push(`<span class="skill-card__status-dot" style="background:${se.color}" title="${se.label}${skillDef.statusEffect.chance < 1 ? ` ${Math.round(skillDef.statusEffect.chance * 100)}%` : ''}"></span>`);
+    }
+  }
+  // Multi-status from tags or known skill mechanics
+  if (skillDef.id === 'plague_touch') {
+    dots.push(`<span class="skill-card__status-dot" style="background:var(--effect-bleed)" title="Bleed"></span>`);
+    dots.push(`<span class="skill-card__status-dot" style="background:var(--effect-poison)" title="Poison"></span>`);
+    dots.push(`<span class="skill-card__status-dot" style="background:var(--effect-slow)" title="Slow"></span>`);
+  }
+  // Status-interacting skills (condition-based)
+  if (skillDef.condition?.requiresStatus) {
+    const se = STATUS_EFFECT_DISPLAY[skillDef.condition.requiresStatus];
+    if (se && !dots.length) {
+      dots.push(`<span class="skill-card__status-dot skill-card__status-dot--req" style="border-color:${se.color}" title="Requires ${se.label}"></span>`);
+    }
+  }
+  // Specific skills that interact with status effects
+  const statusSkills = { inferno: 'burn', immolate: 'burn', envenom: 'poison', frost_nova: 'freeze', frostbolt: 'slow', deep_chill: 'freeze', glacial_shatter: 'slow' };
+  if (statusSkills[skillDef.id] && !dots.length) {
+    const se = STATUS_EFFECT_DISPLAY[statusSkills[skillDef.id]];
+    if (se) dots.push(`<span class="skill-card__status-dot" style="background:${se.color}" title="${se.label}"></span>`);
+  }
+  return dots.join('');
+}
+
+function renderStatusBadges(skillDef) {
+  const badges = [];
+  if (skillDef.statusEffect) {
+    const se = STATUS_EFFECT_DISPLAY[skillDef.statusEffect.type];
+    if (se) {
+      const chanceText = skillDef.statusEffect.chance < 1 ? ` ${Math.round(skillDef.statusEffect.chance * 100)}%` : '';
+      const stackText = skillDef.statusEffect.stacks > 1 ? ` (${skillDef.statusEffect.stacks} stacks)` : '';
+      badges.push(`<span class="skill-card__status-badge" style="background:${se.color}22; border-color:${se.color}; color:${se.color}">${se.icon}${chanceText} ${se.label}${stackText}</span>`);
+    }
+  }
+  if (skillDef.condition) {
+    if (skillDef.condition.requiresStatus) {
+      const se = STATUS_EFFECT_DISPLAY[skillDef.condition.requiresStatus];
+      if (se) {
+        const minStacks = skillDef.condition.minStacks ? ` ${skillDef.condition.minStacks}+` : '';
+        badges.push(`<span class="skill-card__condition-badge">${se.icon} Requires${minStacks} ${se.label}</span>`);
+      }
+    }
+    if (skillDef.condition.requiresStatusCount) {
+      badges.push(`<span class="skill-card__condition-badge">Requires ${skillDef.condition.requiresStatusCount}+ effects</span>`);
+    }
+  }
+  return badges.join(' ');
+}
+
+function renderSkillCard(skillDef, player, isExpanded) {
   const level = player.unlockedSkills[skillDef.id];
   const isUnlocked = level !== undefined;
   const isMaxLevel = isUnlocked && level >= skillDef.maxLevel;
@@ -289,15 +419,16 @@ function renderSkillCard(skillDef, player) {
   const isEquippedPassive = player.equippedPassive.includes(skillDef.id);
   const isEquipped = isEquippedActive || isEquippedPassive;
 
+  const catColor = CATEGORY_COLORS[skillDef.category] || '#fff';
+
   const cardClass = [
     'skill-card',
     !isUnlocked ? 'skill-card--locked' : '',
-    isEquipped ? 'skill-card--equipped' : ''
+    isEquipped ? 'skill-card--equipped' : '',
+    isExpanded ? 'skill-card--expanded' : ''
   ].filter(Boolean).join(' ');
 
-  const catColor = CATEGORY_COLORS[skillDef.category] || '#fff';
-
-  // Description with effective level values (scaled by bmMult for numeric values)
+  // Description with effective level values
   let desc = skillDef.description;
   const cappedEffective = isUnlocked ? Math.min(effectiveLevel, maxLevel) : 1;
   const displayData = skillDef.levels[cappedEffective] || skillDef.levels[1];
@@ -307,7 +438,6 @@ function renderSkillCard(skillDef, player) {
       const val = displayData[key];
       if (val === undefined) return `{${key}}`;
       if (typeof val !== 'number') return val;
-      // Don't scale cooldown/energyCost in descriptions
       if (key === 'cooldown' || key === 'energyCost') return val;
       if (bmMult !== 1) {
         const scaled = Number.isInteger(val) ? Math.floor(val * bmMult) : +(val * bmMult).toFixed(1);
@@ -317,98 +447,122 @@ function renderSkillCard(skillDef, player) {
     });
   }
 
-  // Action button
-  let actionBtn = '';
-  if (!isUnlocked) {
-    const cost = skillDef.unlockCost;
-    const canAfford = player.skillPoints >= cost;
-    const costText = cost === 0 ? 'FREE' : `${cost} SP`;
-    actionBtn = `<button class="skill-card__btn skill-card__btn--unlock" data-action="unlock" data-skill="${skillDef.id}" ${!canAfford ? 'disabled' : ''}>UNLOCK (${costText})</button>`;
-  } else if (isEquipped) {
-    const type = skillDef.type === 'active' ? 'active' : 'passive';
-    actionBtn = `<button class="skill-card__btn skill-card__btn--unequip" data-action="unequip" data-skill="${skillDef.id}" data-type="${type}">UNEQUIP</button>`;
-    if (!isMaxLevel) {
-      const canUpgrade = player.skillPoints >= SP_UPGRADE_COST;
-      actionBtn += ` <button class="skill-card__btn" data-action="upgrade" data-skill="${skillDef.id}" ${!canUpgrade ? 'disabled' : ''}>UPGRADE (${SP_UPGRADE_COST} SP)</button>`;
+  // Level display
+  const levelText = isUnlocked
+    ? (isMaxLevel && !bonus ? 'MAX' : `Lv.${level}/${skillDef.maxLevel}${bonus > 0 ? ` <span class="skill-card__level-bonus">(+${bonus})</span>` : ''}`)
+    : `Lv.${skillDef.unlockLevel}`;
+
+  // Status dots for compact view
+  const statusDots = renderStatusDots(skillDef);
+  const statusDotsHtml = statusDots ? `<span class="skill-card__status-dots">${statusDots}</span>` : '';
+
+  // --- COMPACT VIEW (always shown) ---
+  let compactHtml = `<div class="skill-card__compact">
+    <span class="skill-card__icon">${skillDef.icon}</span>
+    <div class="skill-card__title-area">
+      <span class="skill-card__name">${skillDef.name}</span>
+      <span class="skill-card__meta">
+        <span class="skill-card__tier" style="color: ${catColor};">${skillDef.category}</span>
+        <span class="skill-card__badge">${MECHANIC_LABELS[skillDef.mechanic] || ''}</span>
+        ${statusDotsHtml}
+      </span>
+    </div>
+    <span class="skill-card__level">${levelText}</span>
+  </div>`;
+
+  // --- EXPANDED VIEW (only if expanded) ---
+  let expandedHtml = '';
+  if (isExpanded) {
+    // Status badges
+    const statusBadgesHtml = renderStatusBadges(skillDef);
+    const statusLine = statusBadgesHtml ? `<div class="skill-card__status-line">${statusBadgesHtml}</div>` : '';
+
+    // Damage type badge
+    let dtypeBadge = '';
+    if (skillDef.damageType) {
+      const dtLabel = skillDef.damageType === 'physical' ? '\u2694 Physical' : '\u2728 Magic';
+      dtypeBadge = `<span class="skill-card__dtype skill-card__dtype--${skillDef.damageType}">${dtLabel}</span>`;
     }
-  } else if (isMaxLevel) {
-    actionBtn = `<button class="skill-card__btn" data-action="equip" data-skill="${skillDef.id}">EQUIP</button>`;
-  } else {
-    // Unlocked, not equipped, not max
-    const canUpgrade = player.skillPoints >= SP_UPGRADE_COST;
-    actionBtn = `<button class="skill-card__btn" data-action="equip" data-skill="${skillDef.id}">EQUIP</button>`;
-    actionBtn += ` <button class="skill-card__btn" data-action="upgrade" data-skill="${skillDef.id}" ${!canUpgrade ? 'disabled' : ''}>UPGRADE (${SP_UPGRADE_COST} SP)</button>`;
-  }
 
-  // Damage type badge
-  let dtypeBadge = '';
-  if (skillDef.damageType) {
-    const dtLabel = skillDef.damageType === 'physical' ? '\u2694 Physical' : '\u2728 Magic';
-    dtypeBadge = `<span class="skill-card__dtype skill-card__dtype--${skillDef.damageType}">${dtLabel}</span>`;
-  }
-
-  // Info line for active skills (use effective level for cost/cd lookup)
-  let infoLine = '';
-  if (skillDef.type === 'active') {
-    const infoLevel = isUnlocked ? Math.min(effectiveLevel, maxLevel) : 1;
-    const infoData = skillDef.levels[infoLevel];
-    if (infoData) {
-      infoLine = `<div class="skill-card__info-line">
-        <span class="skill-card__energy">\u26A1 ${infoData.energyCost}</span>
-        <span class="skill-card__cooldown">\u23F1 ${infoData.cooldown}s</span>
-        ${dtypeBadge}
-      </div>`;
+    // Info line for active skills
+    let infoLine = '';
+    if (skillDef.type === 'active') {
+      const infoLevel = isUnlocked ? Math.min(effectiveLevel, maxLevel) : 1;
+      const infoData = skillDef.levels[infoLevel];
+      if (infoData) {
+        infoLine = `<div class="skill-card__info-line">
+          <span class="skill-card__energy">\u26A1 ${infoData.energyCost}</span>
+          <span class="skill-card__cooldown">\u23F1 ${infoData.cooldown}s</span>
+          ${dtypeBadge}
+        </div>`;
+      }
     }
-  }
 
-  // Next-level stat preview (reflects effective levels with item bonuses)
-  let previewLine = '';
-  if (isUnlocked && !isMaxLevel) {
-    // Current: effective level values (matches description)
-    const currCapped = Math.min(effectiveLevel, maxLevel);
-    const currentData = skillDef.levels[currCapped];
-    const currBmMult = bmMult;
+    // Next-level stat preview
+    let previewLine = '';
+    if (isUnlocked && !isMaxLevel) {
+      const currCapped = Math.min(effectiveLevel, maxLevel);
+      const currentData = skillDef.levels[currCapped];
+      const currBmMult = bmMult;
+      const nextEffective = (level + 1) + bonus;
+      const nextCapped = Math.min(nextEffective, maxLevel);
+      const nextData = skillDef.levels[nextCapped];
+      const nextBmMult = beyondMaxSkillMultiplier(nextEffective, maxLevel);
 
-    // Next: after SP upgrade, base+1 with same item bonus
-    const nextEffective = (level + 1) + bonus;
-    const nextCapped = Math.min(nextEffective, maxLevel);
-    const nextData = skillDef.levels[nextCapped];
-    const nextBmMult = beyondMaxSkillMultiplier(nextEffective, maxLevel);
-
-    if (nextData && currentData) {
-      const diffs = [];
-      for (const key of Object.keys(nextData)) {
-        if (key === 'cooldown' || key === 'energyCost') continue;
-        const rawCurr = currentData[key];
-        const rawNext = nextData[key];
-        if (typeof rawNext !== 'number' || typeof rawCurr !== 'number') continue;
-        const curr = Number.isInteger(rawCurr) ? Math.floor(rawCurr * currBmMult) : +(rawCurr * currBmMult).toFixed(1);
-        const next = Number.isInteger(rawNext) ? Math.floor(rawNext * nextBmMult) : +(rawNext * nextBmMult).toFixed(1);
-        if (curr !== next) {
-          const arrow = next > curr ? '\u2191' : '\u2193';
-          diffs.push(`${key}: ${curr} <span class="skill-card__preview-arrow">${arrow}</span> <span class="skill-card__preview-val">${next}</span>`);
+      if (nextData && currentData) {
+        const diffs = [];
+        for (const key of Object.keys(nextData)) {
+          if (key === 'cooldown' || key === 'energyCost') continue;
+          const rawCurr = currentData[key];
+          const rawNext = nextData[key];
+          if (typeof rawNext !== 'number' || typeof rawCurr !== 'number') continue;
+          const curr = Number.isInteger(rawCurr) ? Math.floor(rawCurr * currBmMult) : +(rawCurr * currBmMult).toFixed(1);
+          const next = Number.isInteger(rawNext) ? Math.floor(rawNext * nextBmMult) : +(rawNext * nextBmMult).toFixed(1);
+          if (curr !== next) {
+            const arrow = next > curr ? '\u2191' : '\u2193';
+            diffs.push(`${key}: ${curr} <span class="skill-card__preview-arrow">${arrow}</span> <span class="skill-card__preview-val">${next}</span>`);
+          }
+        }
+        if (diffs.length > 0) {
+          previewLine = `<div class="skill-card__preview">${diffs.join(' &middot; ')}</div>`;
         }
       }
-      if (diffs.length > 0) {
-        previewLine = `<div class="skill-card__preview">${diffs.join(' &middot; ')}</div>`;
-      }
     }
+
+    // Action buttons
+    let actionBtn = '';
+    if (!isUnlocked) {
+      const cost = skillDef.unlockCost;
+      const canAfford = player.skillPoints >= cost;
+      const costText = cost === 0 ? 'FREE' : `${cost} SP`;
+      actionBtn = `<button class="skill-card__btn skill-card__btn--unlock" data-action="unlock" data-skill="${skillDef.id}" ${!canAfford ? 'disabled' : ''}>UNLOCK (${costText})</button>`;
+    } else if (isEquipped) {
+      const type = skillDef.type === 'active' ? 'active' : 'passive';
+      actionBtn = `<button class="skill-card__btn skill-card__btn--unequip" data-action="unequip" data-skill="${skillDef.id}" data-type="${type}">UNEQUIP</button>`;
+      if (!isMaxLevel) {
+        const canUpgrade = player.skillPoints >= SP_UPGRADE_COST;
+        actionBtn += ` <button class="skill-card__btn" data-action="upgrade" data-skill="${skillDef.id}" ${!canUpgrade ? 'disabled' : ''}>UPGRADE (${SP_UPGRADE_COST} SP)</button>`;
+      }
+    } else if (isMaxLevel) {
+      actionBtn = `<button class="skill-card__btn" data-action="equip" data-skill="${skillDef.id}">EQUIP</button>`;
+    } else {
+      const canUpgrade = player.skillPoints >= SP_UPGRADE_COST;
+      actionBtn = `<button class="skill-card__btn" data-action="equip" data-skill="${skillDef.id}">EQUIP</button>`;
+      actionBtn += ` <button class="skill-card__btn" data-action="upgrade" data-skill="${skillDef.id}" ${!canUpgrade ? 'disabled' : ''}>UPGRADE (${SP_UPGRADE_COST} SP)</button>`;
+    }
+
+    expandedHtml = `<div class="skill-card__expanded">
+      <div class="skill-card__desc">${desc}</div>
+      ${statusLine}
+      ${infoLine}
+      ${previewLine}
+      <div class="skill-card__actions">${actionBtn}</div>
+    </div>`;
   }
 
-  return `<div class="${cardClass}">
-    <div class="skill-card__header">
-      <span class="skill-card__icon">${skillDef.icon}</span>
-      <div class="skill-card__title-area">
-        <span class="skill-card__name">${skillDef.name}</span>
-        <span class="skill-card__tier" style="color: ${catColor};">${skillDef.category}</span>
-      </div>
-      <span class="skill-card__level">${isUnlocked ? (isMaxLevel && !bonus ? 'MAX' : `Lv.${level}/${skillDef.maxLevel}${bonus > 0 ? ` <span class="skill-card__level-bonus">(+${bonus})</span>` : ''}`) : 'LOCKED'}</span>
-      <span class="skill-card__badge">${MECHANIC_LABELS[skillDef.mechanic] || ''}</span>
-    </div>
-    <div class="skill-card__desc">${desc}</div>
-    ${infoLine}
-    ${previewLine}
-    <div class="skill-card__actions">${actionBtn}</div>
+  return `<div class="${cardClass}" data-skill-id="${skillDef.id}">
+    ${compactHtml}
+    ${expandedHtml}
   </div>`;
 }
 
@@ -523,10 +677,18 @@ function renderSkillBar() {
     const noEnergy = player.energy < energyCost;
     const onCooldown = remaining > 0;
 
+    // Check condition for conditional skills
+    let conditionNotMet = false;
+    if (skillDef.condition && !onCooldown) {
+      conditionNotMet = !checkConditionMet(skillDef.condition);
+    }
+
     let cls = 'skill-btn';
     if (onCooldown) cls += ' skill-btn--cooldown';
+    else if (conditionNotMet) cls += ' skill-btn--condition-not-met';
     else if (noEnergy) cls += ' skill-btn--no-energy';
 
+    if (skillDef.damageType) cls += ' skill-btn--dtype-' + skillDef.damageType;
     el.className = cls;
     el.title = `${skillDef.name} (\u26A1${energyCost})`;
 
@@ -535,10 +697,35 @@ function renderSkillBar() {
       timerText = `<span class="skill-btn__timer">${remaining.toFixed(1)}s</span>`;
     }
 
+    // Lock icon for condition-gated skills
+    let lockIcon = '';
+    if (conditionNotMet) {
+      lockIcon = `<span class="skill-btn__lock">\uD83D\uDD12</span>`;
+    }
+
     el.innerHTML = `<span class="skill-btn__icon">${skillDef.icon}</span>
       <span class="skill-btn__cost">\u26A1${energyCost}</span>
-      ${timerText}`;
+      ${timerText}${lockIcon}`;
   }
+}
+
+/**
+ * Check if a skill condition is met (UI-side, reads state directly).
+ */
+function checkConditionMet(condition) {
+  if (!condition) return true;
+  const effects = state.monsterStatusEffects || [];
+  if (condition.requiresStatusCount) {
+    const unique = new Set(effects.map(e => e.id));
+    return unique.size >= condition.requiresStatusCount;
+  }
+  if (condition.requiresStatus) {
+    const effect = effects.find(e => e.id === condition.requiresStatus);
+    if (!effect) return false;
+    if (condition.minStacks && effect.stacks < condition.minStacks) return false;
+    return true;
+  }
+  return true;
 }
 
 function updateCooldowns() {

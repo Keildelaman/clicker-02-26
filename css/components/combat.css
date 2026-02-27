@@ -86,6 +86,42 @@
 }
 
 
+/* Monster Defense Badges */
+.monster-defense-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  min-height: 0;
+  margin-bottom: var(--spacing-xs);
+}
+
+.monster-defense-row:empty {
+  display: none;
+}
+
+.monster-defense-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 8px;
+  line-height: 1.2;
+}
+
+.monster-defense-badge--armor {
+  background: rgba(158, 158, 158, 0.15);
+  border: 1px solid var(--armor-color);
+  color: var(--armor-color);
+}
+
+.monster-defense-badge--mr {
+  background: rgba(124, 77, 255, 0.15);
+  border: 1px solid var(--damage-magic);
+  color: var(--damage-magic);
+}
+
 /* Monster HP */
 .monster-hp {
   width: 100%;
